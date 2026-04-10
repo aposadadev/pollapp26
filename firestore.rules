@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ⚠️ REGLAS DE DESARROLLO - ABRIENDO TODO
+    // En producción, reemplazar con reglas específicas
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+    function isAdmin() {
+      return isAuth() && request.auth.token.admin == true;
+    }
+
+    function isOwner(uid) {
+      return isAuth() && request.auth.uid == uid;
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    // El usuario puede leer/escribir su propio perfil; admins leen todo.
+
+    match /users/{userId} {
+      allow read: if isAuth();
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Teams ─────────────────────────────────────────────────────────────────
+    // Cualquier usuario autenticado puede leer. Solo admins escriben.
+
+    match /teams/{teamId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Matches ───────────────────────────────────────────────────────────────
+    // Cualquier usuario autenticado puede leer. Solo admins escriben.
+
+    match /matches/{matchId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Groups ────────────────────────────────────────────────────────────────
+    // Cualquier usuario autenticado puede leer. Admins y propietario pueden crear/editar.
+
+    match /groups/{groupId} {
+      allow read: if isAuth();
+      allow create: if isAuth();
+      allow update: if isAdmin() || isOwner(resource.data.ownerId);
+      allow delete: if isAdmin();
+    }
+
+    // ── Boards ────────────────────────────────────────────────────────────────
+    // El dueño del board puede leerlo. Todos los autenticados pueden leer boards
+    // de su grupo para ver posiciones. Solo admins pueden activar/eliminar.
+
+    match /boards/{boardId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && request.auth.uid == request.resource.data.userId;
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── Predictions ───────────────────────────────────────────────────────────
+    // El dueño del board puede leer y editar sus predicciones.
+    // Todos los autenticados pueden leer predicciones de su grupo (para vista de partido).
+    // Solo Firebase Functions (admin SDK) actualiza los puntos.
+
+    match /predictions/{predId} {
+      allow read: if isAuth();
+      allow create: if isAdmin(); // Las crea activateBoard (admin SDK)
+      allow update: if isAuth() && (
+        // El usuario dueño puede editar localGoalPrediction y visitorGoalPrediction
+        // siempre que el partido no esté cerrado (validado en servicio cliente)
+        isOwner(get(/databases/$(database)/documents/boards/$(resource.data.boardId)).data.userId)
+      ) || isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

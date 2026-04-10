@@ -1,0 +1,7 @@
+{
+  "name": "seed",
+  "type": "module",
+  "scripts": {
+    "seed": "npx tsx scripts/seed.ts"
+  }
+}
