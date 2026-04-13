@@ -22,7 +22,7 @@ export function useMatches(tournamentId: string) {
   async function loadActive(): Promise<void> {
     loading.value = true
     try {
-      matches.value = await matchService.findActive(tournamentId)
+      matches.value = await matchService.findActive()
     } finally {
       loading.value = false
     }

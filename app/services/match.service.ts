@@ -15,12 +15,12 @@ export class MatchService {
     return matchRepository.findByTournament(tournamentId)
   }
 
-  async findActive(tournamentId: string): Promise<Match[]> {
-    return matchRepository.findActive(tournamentId)
+  async findActive(): Promise<Match[]> {
+    return matchRepository.findActive()
   }
 
-  async findClosed(tournamentId: string): Promise<Match[]> {
-    return matchRepository.findClosed(tournamentId)
+  async findClosed(): Promise<Match[]> {
+    return matchRepository.findClosed()
   }
 
   async findById(matchId: string): Promise<Match | null> {
