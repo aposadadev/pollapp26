@@ -1,8 +1,5 @@
-import type { Firestore } from 'firebase/firestore'
 import { BaseRepository } from './base.repository'
 import type { Match } from '~/types'
-
-
 
 export class MatchRepository extends BaseRepository<Match> {
   constructor() {
