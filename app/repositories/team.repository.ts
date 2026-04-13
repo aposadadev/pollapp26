@@ -1,4 +1,3 @@
-import { where } from 'firebase/firestore'
 import { BaseRepository } from './base.repository'
 import type { Team } from '~/types'
 

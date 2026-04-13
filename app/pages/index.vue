@@ -4,7 +4,6 @@ import { mundial2026 } from '~/config/tournaments/mundial2026'
 definePageMeta({ middleware: 'auth' })
 
 const appStore = useAppStore()
-const authStore = useAuthStore()
 const groupContextStore = useGroupContextStore()
 const groupsComposable = useGroups(mundial2026.id)
 
@@ -12,7 +11,6 @@ const groups = groupsComposable.groups
 const loading = groupsComposable.loading
 const loadGroups = groupsComposable.loadGroups
 
-const TOURNAMENT_ID = mundial2026.id
 const requestingBoardId = ref<string | null>(null)
 
 onMounted(async () => {
@@ -33,23 +31,6 @@ onMounted(async () => {
   }
 })
 
-const stats = computed(() => [
-  {
-    icon: 'i-heroicons-user-group',
-    label: 'Grupos',
-    value: groups.value.length.toString()
-  },
-  { icon: 'i-heroicons-star', label: 'Puntos', value: '145' },
-  {
-    icon: 'i-heroicons-chart-bar',
-    label: 'Tablas',
-    value: groups.value.filter(g => g.userBoardIsActive).length.toString()
-  }
-])
-
-const searchCode = ref('')
-const searchLoading = ref(false)
-
 // Usa el contexto activo — si no, cae al primer board activo
 const firstActiveBoardId = computed(
   () =>
@@ -58,10 +39,7 @@ const firstActiveBoardId = computed(
     ?? null
 )
 
-async function handleSearch() {
-  /* ... existing logic ... */
-}
-async function handleRequestBoard(groupId: string) {
+async function handleRequestBoard(_groupId: string) {
   /* ... existing logic ... */
 }
 </script>

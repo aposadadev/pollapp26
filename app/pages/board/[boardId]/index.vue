@@ -9,7 +9,7 @@ const route = useRoute()
 const router = useRouter()
 const boardId = computed(() => route.params.boardId as string)
 
-const { board, loading: boardLoading, loadBoard } = useBoard()
+const { board, loadBoard } = useBoard()
 const {
   upcoming,
   previous,

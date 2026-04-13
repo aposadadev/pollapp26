@@ -175,7 +175,10 @@ async function cleanTestData() {
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
-  if (isClean) { await cleanTestData(); return }
+  if (isClean) {
+    await cleanTestData()
+    return
+  }
 
   console.log('🚀 Seed de datos de prueba\n')
   console.log(`   Proyecto: ${firebaseConfig.projectId}\n`)

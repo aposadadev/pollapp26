@@ -1,4 +1,4 @@
-import { where, orderBy, writeBatch, doc, collection, type Firestore } from 'firebase/firestore'
+import { where, writeBatch, doc, type Firestore } from 'firebase/firestore'
 import { BaseRepository } from './base.repository'
 import type { Board } from '~/types'
 

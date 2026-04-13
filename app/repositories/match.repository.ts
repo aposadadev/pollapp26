@@ -1,10 +1,8 @@
-import { where, query, getDocs, collection, type Firestore } from 'firebase/firestore'
+import type { Firestore } from 'firebase/firestore'
 import { BaseRepository } from './base.repository'
 import type { Match } from '~/types'
 
-function getDb(): Firestore {
-  return useNuxtApp().$firestore as Firestore
-}
+
 
 export class MatchRepository extends BaseRepository<Match> {
   constructor() {
@@ -18,14 +16,14 @@ export class MatchRepository extends BaseRepository<Match> {
       .sort((a, b) => a.matchNumber - b.matchNumber)
   }
 
-  async findActive(tournamentId: string): Promise<Match[]> {
+  async findActive(): Promise<Match[]> {
     const all = await this.findAll()
     return all
       .filter(m => !m.isClosed)
       .sort((a, b) => a.date.getTime() - b.date.getTime())
   }
 
-  async findClosed(tournamentId: string): Promise<Match[]> {
+  async findClosed(): Promise<Match[]> {
     const all = await this.findAll()
     return all
       .filter(m => m.isClosed)

@@ -5,7 +5,7 @@
 import dayjs from 'dayjs'
 import { predictionRepository } from '~/repositories/prediction.repository'
 import { matchRepository } from '~/repositories/match.repository'
-import type { Prediction, PredictionWithMatch } from '~/types'
+import type { PredictionWithMatch } from '~/types'
 
 export class PredictionError extends Error {
   constructor(message: string, public code: string) {

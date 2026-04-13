@@ -14,7 +14,6 @@ const isOpen = computed({
   set: val => emit('update:modelValue', val)
 })
 
-const authStore = useAuthStore()
 const groupContextStore = useGroupContextStore()
 const toast = useToast()
 

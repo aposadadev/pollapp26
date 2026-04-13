@@ -8,7 +8,6 @@ onMounted(() => appStore.setPageTitle('Panel Admin'))
 
 const {
   matches: allMatches,
-  loading: matchLoading,
   loadAll
 } = useMatches(mundial2026.id)
 

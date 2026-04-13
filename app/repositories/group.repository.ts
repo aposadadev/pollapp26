@@ -1,6 +1,5 @@
-import { where } from 'firebase/firestore'
 import { BaseRepository } from './base.repository'
-import type { Group, GroupWithBoardStatus } from '~/types'
+import type { Group } from '~/types'
 
 export class GroupRepository extends BaseRepository<Group> {
   constructor() {

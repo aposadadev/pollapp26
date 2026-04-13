@@ -4,7 +4,6 @@
 import { matchService } from '~/services/match.service'
 import { predictionRepository } from '~/repositories/prediction.repository'
 import { boardRepository } from '~/repositories/board.repository'
-import { userRepository } from '~/repositories/user.repository'
 import type { Match, MatchPredictionEntry } from '~/types'
 
 export function useMatches(tournamentId: string) {

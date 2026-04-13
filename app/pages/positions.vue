@@ -29,11 +29,7 @@ watch(
   { immediate: true }
 )
 
-const positionsComposable = usePositions(selectedGroupId)
-const entries = positionsComposable.entries
-const currentUserEntry = positionsComposable.currentUserEntry
-const loadingPositions = positionsComposable.loading
-const lastUpdated = positionsComposable.lastUpdated
+const { entries, loading: loadingPositions, lastUpdated } = usePositions(selectedGroupId)
 
 const formattedUpdate = computed(() =>
   lastUpdated.value

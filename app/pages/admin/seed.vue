@@ -121,10 +121,11 @@ async function seed() {
     log(`   ✓ ${matchData.length} partidos creados`)
 
     toast.add({ title: '✅ Seed completado', description: 'Datos de prueba creados exitosamente', color: 'secondary' })
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('Seed error:', err)
-    log(`❌ Error: ${err.message}`)
-    toast.add({ title: '❌ Error en seed', description: err.message, color: 'error' })
+    const message = err instanceof Error ? err.message : String(err)
+    log(`❌ Error: ${message}`)
+    toast.add({ title: '❌ Error en seed', description: message, color: 'error' })
   } finally {
     loading.value = false
   }
