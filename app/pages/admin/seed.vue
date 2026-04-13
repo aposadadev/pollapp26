@@ -99,8 +99,8 @@ async function seed() {
     ]
 
     for (const m of matchData) {
-      const localTeam = teams[m.localIdx]
-      const visitorTeam = teams[m.visitorIdx]
+      const localTeam = teams[m.localIdx]!
+      const visitorTeam = teams[m.visitorIdx]!
       await addDoc(collection(db, 'matches'), {
         tournamentId: TOURNAMENT_ID,
         localTeamId: teamRefs[m.localIdx],

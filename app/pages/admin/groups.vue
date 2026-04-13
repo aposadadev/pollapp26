@@ -119,7 +119,7 @@ async function handleActivate(boardId: string, groupId: string) {
               variant="solid"
               size="sm"
             >
-              {{ pendingBoardsByGroup[group.id].length }} pendiente(s)
+              {{ pendingBoardsByGroup[group.id]?.length }} pendiente(s)
             </UBadge>
             <UIcon
               :name="expandedGroup === group.id ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"

@@ -88,9 +88,9 @@ watch(
   <UCard
     class="overflow-hidden transition-all duration-300 hover:shadow-xl border-none glass-card"
     :ui="{
-      header: { padding: 'px-6 pt-6 pb-2' },
-      body: { padding: 'px-6 py-6' },
-      footer: { padding: 'px-6 pb-6 pt-2' }
+      header: 'px-6 pt-6 pb-2',
+      body: 'px-6 py-6',
+      footer: 'px-6 pb-6 pt-2'
     }"
   >
     <!-- Fase + fecha -->
@@ -137,7 +137,7 @@ watch(
             <MatchTeamLogo
               :logo-url="prediction.match.localTeamLogo"
               :name="prediction.match.localTeamName"
-              size="xl"
+              size="lg"
               class="w-16 h-16"
             />
           </div>
@@ -198,7 +198,7 @@ watch(
             <MatchTeamLogo
               :logo-url="prediction.match.visitorTeamLogo"
               :name="prediction.match.visitorTeamName"
-              size="xl"
+              size="lg"
               class="w-16 h-16"
             />
           </div>

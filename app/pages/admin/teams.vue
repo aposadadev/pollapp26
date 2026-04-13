@@ -129,7 +129,7 @@ function cancelCreate() {
             :src="form.logoUrl"
             :alt="form.name"
             class="size-10 object-contain rounded"
-            @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
+            @error="(e: Event) => ((e.target as HTMLImageElement).style.display = 'none')"
           >
           <span class="text-xs text-(--ui-text-muted)">Vista previa del logo</span>
         </div>

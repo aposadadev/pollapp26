@@ -23,6 +23,7 @@ export interface Match {
   phase: MatchPhase
   matchNumber: number
   status: MatchStatus
+  stadium?: string
   isActive: boolean
   isClosed: boolean
   createdAt: Date
