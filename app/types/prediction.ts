@@ -21,6 +21,7 @@ export interface PredictionWithMatch extends Prediction {
     date: Date
     phase: string
     matchNumber: number
+    stadium?: string
     isClosed: boolean
     isActive: boolean
   }

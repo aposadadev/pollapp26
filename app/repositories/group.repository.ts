@@ -26,7 +26,7 @@ export class GroupRepository extends BaseRepository<Group> {
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   }
 
-  async findAll(): Promise<Group[]> {
+  override async findAll(): Promise<Group[]> {
     const all = await super.findAll()
     return all.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   }

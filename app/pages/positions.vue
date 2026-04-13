@@ -23,7 +23,7 @@ watch(
   (g) => {
     if (g.length && !selectedGroupId.value) {
       const activeGroup = g.find(gr => gr.userBoardIsActive) ?? g[0]
-      selectedGroupId.value = activeGroup.id
+      selectedGroupId.value = activeGroup!.id
     }
   },
   { immediate: true }

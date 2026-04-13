@@ -7,7 +7,7 @@ export class TeamRepository extends BaseRepository<Team> {
     super('teams')
   }
 
-  async findAll(): Promise<Team[]> {
+  override async findAll(): Promise<Team[]> {
     const all = await super.findAll()
     return all.sort((a, b) => a.name.localeCompare(b.name))
   }

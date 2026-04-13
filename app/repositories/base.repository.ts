@@ -92,7 +92,7 @@ export class BaseRepository<T extends { id: string }> {
       ...data,
       id,
       createdAt: data['createdAt']?.toDate?.() ?? new Date()
-    } as T
+    } as unknown as T
   }
 
   // Helpers re-exportados para usar en subclases
