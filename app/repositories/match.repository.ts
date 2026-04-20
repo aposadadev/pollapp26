@@ -7,24 +7,27 @@ export class MatchRepository extends BaseRepository<Match> {
   }
 
   async findByTournament(tournamentId: string): Promise<Match[]> {
-    const all = await this.findAll()
+    const all = await this.findAll([
+      this.where('tournamentId', '==', tournamentId),
+      this.orderBy('matchNumber')
+    ])
     return all
-      .filter(m => m.tournamentId === tournamentId)
-      .sort((a, b) => a.matchNumber - b.matchNumber)
   }
 
   async findActive(): Promise<Match[]> {
-    const all = await this.findAll()
+    const all = await this.findAll([
+      this.where('isClosed', '==', false),
+      this.orderBy('date')
+    ])
     return all
-      .filter(m => !m.isClosed)
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
   }
 
   async findClosed(): Promise<Match[]> {
-    const all = await this.findAll()
+    const all = await this.findAll([
+      this.where('isClosed', '==', true),
+      this.orderBy('date', 'desc')
+    ])
     return all
-      .filter(m => m.isClosed)
-      .sort((a, b) => b.date.getTime() - a.date.getTime())
   }
 
   async closeMatch(matchId: string, localGoals: number, visitorGoals: number): Promise<void> {
@@ -37,8 +40,23 @@ export class MatchRepository extends BaseRepository<Match> {
     })
   }
 
-  async updateTeams(matchId: string, localTeamId: string, visitorTeamId: string): Promise<void> {
-    await this.update(matchId, { localTeamId, visitorTeamId })
+  async updateTeams(
+    matchId: string,
+    localTeamId: string,
+    visitorTeamId: string,
+    localTeamName: string,
+    localTeamLogo: string,
+    visitorTeamName: string,
+    visitorTeamLogo: string
+  ): Promise<void> {
+    await this.update(matchId, {
+      localTeamId,
+      visitorTeamId,
+      localTeamName,
+      localTeamLogo,
+      visitorTeamName,
+      visitorTeamLogo
+    })
   }
 
   protected override mapDoc(id: string, data: Record<string, unknown>): Match {

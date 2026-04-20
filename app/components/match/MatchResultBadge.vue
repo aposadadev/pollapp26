@@ -14,7 +14,7 @@ const config = computed(() => {
     1: { label: '1 pt', class: 'badge-1pt', icon: 'i-lucide-check' },
     0: { label: '0 pts', class: 'badge-0pts', icon: 'i-lucide-x' }
   }
-  return map[props.points]
+  return map[props.points] ?? map[0]
 })
 
 const sizeClass = computed(() => ({

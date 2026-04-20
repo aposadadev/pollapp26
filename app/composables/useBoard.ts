@@ -9,7 +9,6 @@ export function useBoard() {
   const toast = useToast()
 
   const board = ref<Board | null>(null)
-  const userBoards = ref<Board[]>([])
   const loading = ref(false)
 
   async function loadBoard(boardId: string): Promise<boolean> {
@@ -26,41 +25,9 @@ export function useBoard() {
     }
   }
 
-  async function loadUserBoards(): Promise<void> {
-    if (!authStore.user) return
-    loading.value = true
-    try {
-      userBoards.value = await boardService.findByUser(authStore.user.id)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  async function requestBoard(groupId: string, tournamentId: string): Promise<Board | null> {
-    if (!authStore.user) return null
-    loading.value = true
-    try {
-      const newBoard = await boardService.requestBoard(authStore.user.id, groupId, tournamentId)
-      toast.add({
-        title: 'Tabla solicitada',
-        description: 'Tu solicitud está pendiente de activación por el administrador.',
-        color: 'secondary'
-      })
-      return newBoard
-    } catch (err: unknown) {
-      toast.add({ title: 'Error', description: (err as Error).message, color: 'error' })
-      return null
-    } finally {
-      loading.value = false
-    }
-  }
-
   return {
     board: readonly(board),
-    userBoards: readonly(userBoards),
     loading: readonly(loading),
-    loadBoard,
-    loadUserBoards,
-    requestBoard
+    loadBoard
   }
 }

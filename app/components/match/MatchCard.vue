@@ -8,7 +8,8 @@ dayjs.locale('es')
 interface Props {
   prediction: PredictionWithMatch
   saving?: boolean
-  readonly?: boolean
+  isReadonly?: boolean
+  boardId?: string
 }
 
 const props = defineProps<Props>()
@@ -20,20 +21,30 @@ const emit = defineEmits<{
 const localGoals = ref(props.prediction.localGoalPrediction ?? 0)
 const visitorGoals = ref(props.prediction.visitorGoalPrediction ?? 0)
 
-// Sincronizar cuando cambien las props (ej. después de cargar)
+// "Saved" baseline: tracks the last value successfully written to Firestore.
+// We compare the live controls against this, NOT against props, so that after
+// randomize() the button stays enabled (randomized ≠ saved) and after save()
+// the button correctly disables again (live === saved).
+const savedLocal = ref(props.prediction.localGoalPrediction ?? 0)
+const savedVisitor = ref(props.prediction.visitorGoalPrediction ?? 0)
+
+// Sync when the prediction prop is replaced from the outside (initial load,
+// optimistic update after save). Reset both controls AND the saved baseline.
 watch(
   () => props.prediction,
   (p) => {
     localGoals.value = p.localGoalPrediction ?? 0
     visitorGoals.value = p.visitorGoalPrediction ?? 0
+    savedLocal.value = p.localGoalPrediction ?? 0
+    savedVisitor.value = p.visitorGoalPrediction ?? 0
   },
   { deep: true }
 )
 
 const hasChanged = computed(
   () =>
-    localGoals.value !== (props.prediction.localGoalPrediction ?? 0)
-    || visitorGoals.value !== (props.prediction.visitorGoalPrediction ?? 0)
+    localGoals.value !== savedLocal.value
+    || visitorGoals.value !== savedVisitor.value
 )
 
 const matchStarted = computed(() => {
@@ -42,7 +53,7 @@ const matchStarted = computed(() => {
 })
 
 const isLocked = computed(
-  () => props.readonly || matchStarted.value || props.prediction.match.isClosed
+  () => props.isReadonly || matchStarted.value || props.prediction.match.isClosed
 )
 
 const formattedDate = computed(() =>
@@ -70,23 +81,11 @@ function handleRandomize() {
   if (isLocked.value) return
   emit('randomize', props.prediction.id)
 }
-
-// Sincronizar si el padre hace randomize
-watch(
-  () => [
-    props.prediction.localGoalPrediction,
-    props.prediction.visitorGoalPrediction
-  ],
-  ([l, v]) => {
-    localGoals.value = l ?? 0
-    visitorGoals.value = v ?? 0
-  }
-)
 </script>
 
 <template>
   <UCard
-    class="overflow-hidden transition-all duration-300 hover:shadow-xl border-none glass-card"
+    class="overflow-hidden transition-all duration-300 hover:shadow-xl border border-(--ui-border)"
     :ui="{
       header: 'px-6 pt-6 pb-2',
       body: 'px-6 py-6',
@@ -98,27 +97,22 @@ watch(
       <div
         class="flex items-center justify-between text-[11px] text-neutral-500 font-bold tracking-widest uppercase"
       >
-        <span class="font-heading">{{ prediction.match.phase }}</span>
-        <span
-          :class="
-            !prediction.match.isClosed
-              && prediction.match.localGoals !== null
-              && prediction.match.visitorGoals !== null
-              ? 'live-indicator text-secondary-500'
-              : ''
-          "
-        >
-          <template
-            v-if="
-              !prediction.match.isClosed && prediction.match.localGoals !== null
-            "
+        <div class="flex flex-col gap-0.5">
+          <span class="font-heading text-primary-500 dark:text-primary-400">{{ prediction.match.phase }}</span>
+          <span class="text-[10px] text-(--ui-text-muted) font-mono normal-case tracking-normal">{{ formattedDate }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            v-if="prediction.match.isActive && !prediction.match.isClosed"
+            class="live-indicator"
+          />
+          <span
+            v-if="prediction.match.isActive && !prediction.match.isClosed"
+            class="text-error-500 font-black"
           >
-            🔴 EN VIVO
-          </template>
-          <template v-else>
-            {{ formattedDate }}
-          </template>
-        </span>
+            EN VIVO
+          </span>
+        </div>
       </div>
     </template>
 
@@ -174,7 +168,7 @@ watch(
             class="rounded-full px-2"
           >
             <UIcon
-              name="i-heroicons-lock-closed"
+              name="i-lucide-lock"
               class="size-3 mr-1"
             />
             Cerrado
@@ -265,7 +259,17 @@ watch(
             {{ prediction.visitorGoalPrediction }}
           </span>
         </div>
-        <MatchResultBadge :points="prediction.points" />
+        <div class="flex items-center gap-2">
+          <MatchResultBadge :points="prediction.points" />
+          <NuxtLink
+            v-if="boardId"
+            :to="`/board/${boardId}/match/${prediction.match.id}`"
+            class="text-[10px] font-bold uppercase tracking-wider text-primary-500 hover:text-primary-400 transition-colors flex items-center gap-1"
+          >
+            <UIcon name="i-lucide-users" class="size-3" />
+            Ver todos
+          </NuxtLink>
+        </div>
       </div>
     </template>
   </UCard>

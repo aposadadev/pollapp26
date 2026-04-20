@@ -3,6 +3,8 @@
  * Puente entre las vistas y el AuthStore/AuthService.
  * Las páginas solo usan este composable, nunca el store directamente.
  */
+import { parseFirebaseError } from '~/utils/firebase-error'
+
 export function useAuth() {
   const store = useAuthStore()
   const toast = useToast()
@@ -16,7 +18,7 @@ export function useAuth() {
     } catch (err: unknown) {
       toast.add({
         title: 'Error al iniciar sesión',
-        description: (err as Error).message,
+        description: parseFirebaseError(err, 'No pudimos iniciar sesión. Verifica tus datos.'),
         color: 'error'
       })
       return false
@@ -36,7 +38,7 @@ export function useAuth() {
     } catch (err: unknown) {
       toast.add({
         title: 'Error al registrarse',
-        description: (err as Error).message,
+        description: parseFirebaseError(err, 'No pudimos crear tu cuenta. Intenta de nuevo.'),
         color: 'error'
       })
       return false
@@ -44,8 +46,17 @@ export function useAuth() {
   }
 
   async function logout(): Promise<void> {
-    await store.logout()
-    await router.push('/login')
+    try {
+      await store.logout()
+    } catch (err: unknown) {
+      toast.add({
+        title: 'Error al cerrar sesión',
+        description: parseFirebaseError(err),
+        color: 'error'
+      })
+    } finally {
+      await router.push('/login')
+    }
   }
 
   async function sendPasswordReset(email: string): Promise<boolean> {
@@ -60,7 +71,7 @@ export function useAuth() {
     } catch (err: unknown) {
       toast.add({
         title: 'Error',
-        description: (err as Error).message,
+        description: parseFirebaseError(err, 'No pudimos enviar el correo. Verifica tu dirección.'),
         color: 'error'
       })
       return false

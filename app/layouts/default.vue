@@ -1,9 +1,12 @@
 <script setup lang="ts">
 defineOptions({ name: 'DefaultLayout' })
+
+const appStore = useAppStore()
+useHead({ title: () => appStore.pageTitle ? `${appStore.pageTitle} · Mundial 2026` : 'Mundial 2026' })
 </script>
 
 <template>
-  <UApp>
+  <div>
     <!-- Header fijo superior -->
     <LayoutAppHeader />
 
@@ -16,7 +19,5 @@ defineOptions({ name: 'DefaultLayout' })
 
     <!-- Bottom Nav fijo -->
     <LayoutAppBottomNav />
-
-    <UToaster />
-  </UApp>
+  </div>
 </template>

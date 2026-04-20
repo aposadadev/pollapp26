@@ -1,13 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ⚠️ REGLAS DE DESARROLLO - ABRIENDO TODO
-    // En producción, reemplazar con reglas específicas
-    match /{document=**} {
-      allow read, write: if true;
+
+    function isAuth() {
+      return request.auth != null;
     }
-  }
-}
 
     function isAdmin() {
       return isAuth() && request.auth.token.admin == true;
@@ -79,5 +76,14 @@ service cloud.firestore {
       ) || isAdmin();
       allow delete: if isAdmin();
     }
+
+    // ── Counters (internal, read/write by any authenticated user) ────────────
+    // Used by board.repository.ts to atomically assign sequential board numbers
+    // per group. Clients only read/increment; the field is an integer counter.
+
+    match /_counters/{counterId} {
+      allow read, write: if isAuth();
+    }
+
   }
 }

@@ -26,7 +26,9 @@ useSeoMeta({
   description: `Quiniela del ${mundial2026.name} — ${mundial2026.hosts.join(', ')} ${mundial2026.season}`,
   ogTitle: mundial2026.name,
   ogDescription: `Predice los marcadores y compite con tus amigos en la quiniela del ${mundial2026.name}.`,
-  twitterCard: 'summary_large_image'
+  ogImage: '/img/tournaments/mundial2026/banner-light.jpg',
+  twitterCard: 'summary_large_image',
+  twitterImage: '/img/tournaments/mundial2026/banner-light.jpg'
 })
 
 // ── Theme ─────────────────────────────────────────────────────────────────────

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { mundial2026 } from '~/config/tournaments/mundial2026'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import type { Firestore } from 'firebase/firestore'
 
@@ -7,6 +6,8 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const appStore = useAppStore()
 const toast = useToast()
+
+const TOURNAMENT_ID = appStore.activeTournamentId
 
 const loading = ref(false)
 const status = ref<string[]>([])
@@ -122,7 +123,6 @@ async function seed() {
 
     toast.add({ title: '✅ Seed completado', description: 'Datos de prueba creados exitosamente', color: 'secondary' })
   } catch (err: unknown) {
-    console.error('Seed error:', err)
     const message = err instanceof Error ? err.message : String(err)
     log(`❌ Error: ${message}`)
     toast.add({ title: '❌ Error en seed', description: message, color: 'error' })
@@ -131,76 +131,93 @@ async function seed() {
   }
 }
 
-const TOURNAMENT_ID = mundial2026.id
-
 onMounted(() => appStore.setPageTitle('Seed — Admin'))
 </script>
 
 <template>
-  <div class="space-y-5">
-    <div>
-      <h1 class="text-lg font-bold text-(--ui-text-highlighted)">
-        Seed de Datos
-      </h1>
-      <p class="text-sm text-(--ui-text-muted)">
-        Crea datos de prueba para desarrollo.
-      </p>
-    </div>
+  <div class="space-y-6 pb-20">
+    <LayoutPageHeader
+      title="Seed de Datos"
+      subtitle="Puebla la base de datos con información de prueba para desarrollo."
+    />
 
-    <UCard>
-      <template #header>
-        <div class="flex items-center gap-2">
-          <UIcon
-            name="i-lucide-database"
-            class="size-4"
-          />
-          <span class="font-semibold">Poblar base de datos</span>
+    <div class="px-4 space-y-6">
+      <div class="card-elevated p-6 stagger-up">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="size-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500">
+            <UIcon name="i-lucide-database" class="size-6" />
+          </div>
+          <h2 class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+            Poblar Firestore
+          </h2>
         </div>
-      </template>
 
-      <p class="text-sm text-(--ui-text-muted) mb-4">
-        Este botón creará equipos, grupos y partidos de prueba en Firestore.
-        Puedes ejecutarlo varias veces — los datos se duplicarán si no los borras primero.
-      </p>
+        <p class="text-sm text-(--ui-text-muted) mb-6 leading-relaxed">
+          Este proceso creará equipos internacionales, grupos de ejemplo y un calendario inicial de partidos en tu base de datos de Firebase.
+          <span class="block mt-2 font-bold text-error-500">Nota: Los datos se duplicarán si ejecutas esto varias veces.</span>
+        </p>
 
-      <UButton
-        color="primary"
-        icon="i-lucide-play"
-        :loading="loading"
-        @click="seed"
-      >
-        Ejecutar Seed
-      </UButton>
-
-      <div
-        v-if="status.length"
-        class="mt-4 p-3 bg-(--ui-bg-elevated) rounded-lg font-mono text-xs space-y-1 max-h-60 overflow-auto"
-      >
-        <div
-          v-for="(line, i) in status"
-          :key="i"
+        <UButton
+          color="primary"
+          size="lg"
+          icon="i-lucide-play"
+          class="w-full font-bold shadow-lg shadow-primary-500/20 rounded-2xl"
+          :loading="loading"
+          @click="seed"
         >
-          {{ line }}
-        </div>
-      </div>
-    </UCard>
+          Ejecutar Proceso de Seed
+        </UButton>
 
-    <UCard>
-      <template #header>
-        <div class="flex items-center gap-2">
-          <UIcon
-            name="i-lucide-info"
-            class="size-4"
-          />
-          <span class="font-semibold">Notas</span>
+        <Transition
+          enter-active-class="transition duration-300 ease-out"
+          enter-from-class="opacity-0 scale-95"
+          enter-to-class="opacity-100 scale-100"
+        >
+          <div
+            v-if="status.length"
+            class="mt-6 p-4 bg-(--ui-bg-muted) rounded-2xl font-mono text-[11px] space-y-1.5 max-h-64 overflow-y-auto border border-(--ui-border) shadow-inner"
+          >
+            <div
+              v-for="(line, i) in status"
+              :key="i"
+              class="flex items-start gap-2"
+            >
+              <span class="text-primary-500 shrink-0">>></span>
+              <span class="text-(--ui-text-highlighted)">{{ line }}</span>
+            </div>
+          </div>
+        </Transition>
+      </div>
+
+      <div class="card-elevated p-6 stagger-up stagger-d1">
+        <div class="flex items-center gap-3 mb-4">
+          <div class="size-10 rounded-xl bg-secondary-500/10 flex items-center justify-center text-secondary-500">
+            <UIcon name="i-lucide-info" class="size-6" />
+          </div>
+          <h2 class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+            Instrucciones
+          </h2>
         </div>
-      </template>
-      <ul class="text-xs text-(--ui-text-muted) space-y-2">
-        <li>• Los equipos se crean con IDs aleatorios</li>
-        <li>• Los partidos referencian esos equipos</li>
-        <li>• No se crean usuarios ni boards — haz eso manualmente o usa Firebase Console</li>
-        <li>• Para borrar todo: Firebase Console → Firestore → "Eliminar colección"</li>
-      </ul>
-    </UCard>
+
+        <ul class="space-y-3">
+          <li class="flex gap-3 text-sm text-(--ui-text-muted)">
+            <UIcon name="i-lucide-circle-check" class="size-5 text-secondary-500 shrink-0" />
+            <span>Los equipos se generan con IDs únicos de Firestore.</span>
+          </li>
+          <li class="flex gap-3 text-sm text-(--ui-text-muted)">
+            <UIcon name="i-lucide-circle-check" class="size-5 text-secondary-500 shrink-0" />
+            <span>Los partidos se vinculan automáticamente a los equipos creados.</span>
+          </li>
+          <li class="flex gap-3 text-sm text-(--ui-text-muted)">
+            <UIcon name="i-lucide-circle-check" class="size-5 text-secondary-500 shrink-0" />
+            <span>No se crean usuarios. Debes registrarte normalmente en la app.</span>
+          </li>
+          <li class="flex gap-3 text-sm text-(--ui-text-muted)">
+            <UIcon name="i-lucide-triangle-alert" class="size-5 text-error-500 shrink-0" />
+            <span>Para limpiar la base de datos, ve a la consola de Firebase y elimina las colecciones.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 </template>

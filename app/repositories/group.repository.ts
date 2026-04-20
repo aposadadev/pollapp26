@@ -7,10 +7,12 @@ export class GroupRepository extends BaseRepository<Group> {
   }
 
   async findByTournament(tournamentId: string): Promise<Group[]> {
-    const all = await this.findAll()
-    return all
-      .filter(g => g.tournamentId === tournamentId && g.isActive)
-      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    const results = await this.findAll([
+      this.where('tournamentId', '==', tournamentId),
+      this.where('isActive', '==', true),
+      this.orderBy('createdAt', 'asc')
+    ])
+    return results
   }
 
   async findByCode(code: string): Promise<Group | null> {
@@ -19,15 +21,11 @@ export class GroupRepository extends BaseRepository<Group> {
   }
 
   async findByOwner(ownerId: string): Promise<Group[]> {
-    const all = await this.findAll()
-    return all
-      .filter(g => g.ownerId === ownerId)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-  }
-
-  override async findAll(): Promise<Group[]> {
-    const all = await super.findAll()
-    return all.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    const results = await this.findAll([
+      this.where('ownerId', '==', ownerId),
+      this.orderBy('createdAt', 'desc')
+    ])
+    return results
   }
 
   async deactivate(groupId: string): Promise<void> {

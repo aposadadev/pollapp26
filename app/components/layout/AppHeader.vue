@@ -16,11 +16,16 @@ const userMenuItems = computed(() => [
   [
     {
       label: authStore.displayName ?? authStore.user?.email ?? 'Usuario',
-      icon: 'i-lucide-user-circle',
+      icon: 'i-lucide-circle-user',
       disabled: true
     }
   ],
   [
+    {
+      label: 'Mi perfil',
+      icon: 'i-lucide-user',
+      to: '/profile'
+    },
     {
       label: 'Reglamento',
       icon: 'i-lucide-book-open',
@@ -31,7 +36,7 @@ const userMenuItems = computed(() => [
     {
       label: 'Cerrar sesión',
       icon: 'i-lucide-log-out',
-      color: 'error' as const,
+      class: 'text-error-500 dark:text-error-400',
       onSelect: logout
     }
   ]
@@ -111,7 +116,7 @@ const userMenuItems = computed(() => [
             aria-label="Menú de usuario"
           >
             <UIcon
-              name="i-lucide-user-circle"
+              name="i-lucide-circle-user"
               class="size-4"
             />
             <span class="hidden sm:block max-w-24 truncate">{{

@@ -1,10 +1,11 @@
 /**
  * usePredictions — Composable de predicciones
  */
+import { toValue, type MaybeRef } from 'vue'
 import { predictionService } from '~/services/prediction.service'
 import type { PredictionWithMatch } from '~/types'
 
-export function usePredictions(boardId: string) {
+export function usePredictions(boardId: MaybeRef<string>) {
   const toast = useToast()
 
   const predictions = ref<PredictionWithMatch[]>([])
@@ -17,7 +18,7 @@ export function usePredictions(boardId: string) {
   async function load(): Promise<void> {
     loading.value = true
     try {
-      predictions.value = await predictionService.getPredictionsWithMatches(boardId)
+      predictions.value = await predictionService.getPredictionsWithMatches(toValue(boardId))
     } finally {
       loading.value = false
     }

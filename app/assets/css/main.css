@@ -47,6 +47,19 @@
   --color-error-900: #2e0608;
   --color-error-950: #170304;
 
+  /* Accent — Alias de Secondary/Verde (para compatibilidad con componentes legacy) */
+  --color-accent-50: #e5f9e5;
+  --color-accent-100: #c0f1bf;
+  --color-accent-200: #82e381;
+  --color-accent-300: #52d451;
+  --color-accent-400: #34c433;
+  --color-accent-500: #28a527;
+  --color-accent-600: #1f841e;
+  --color-accent-700: #176317;
+  --color-accent-800: #104810;
+  --color-accent-900: #0a2f0a;
+  --color-accent-950: #071f07;
+
   /* Neutral — Gris Oscuro Heather (#474A4A) */
   --color-neutral-50: #f2f3f3;
   --color-neutral-100: #e0e1e1;
@@ -138,10 +151,10 @@
   --mundial-blue: #2d47a8;
   --mundial-green: #28a527;
 
-  /* Override dark mode: Slate grays for a deeper, more premium feel */
-  --ui-bg: #0f172a; /* Slate 900 */
-  --ui-bg-elevated: #1e293b; /* Slate 800 */
-  --ui-bg-muted: #334155; /* Slate 700 */
+  /* Override dark mode: gris azulado premium (world-cup-hub hsl(220,15%,10%)) */
+  --ui-bg: #1a1e26;
+  --ui-bg-elevated: #1e2230;
+  --ui-bg-muted: #232834;
 }
 
 /* ─── Tipografía ──────────────────────────────────────────────────────────── */
@@ -222,21 +235,6 @@ h6 {
   );
 }
 
-@utility gradient-brand {
-  background: linear-gradient(
-    135deg,
-    #3b82f6 0%,
-    #4f46e5 100%
-  );
-
-  .dark & {
-    background: linear-gradient(
-      135deg,
-      #2563eb 0%,
-      #4338ca 100%
-    );
-  }
-}
 
 @utility banner-placeholder {
   background: linear-gradient(
@@ -332,6 +330,20 @@ h6 {
   transform: translateY(-8px);
 }
 
+/* ─── Fade transition genérica (usada en tab switches) ───────────────────── */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fade-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
 /* ─── Animaciones staggered ───────────────────────────────────────────────── */
 @utility stagger-up {
   animation: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
@@ -357,14 +369,15 @@ h6 {
 @utility stagger-d12 { animation-delay: 550ms; }
 
 /* ─── Indicador EN VIVO ───────────────────────────────────────────────────── */
+/* Usado como <span class="live-indicator" /> — dot pulsante rojo */
 @utility live-indicator {
-  color: var(--ui-color-secondary-500);
-  font-weight: 700;
-  animation: pulse-glow 2s ease-in-out infinite;
-
-  .dark & {
-    color: var(--ui-color-secondary-400);
-  }
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--ui-color-error-500);
+  animation: pulse-glow 1.5s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 /* ─── Texto con gradiente ─────────────────────────────────────────────────── */
@@ -412,6 +425,15 @@ h6 {
     border-color: rgba(255, 255, 255, 0.06);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
   }
+}
+
+/* ─── Safe area ──────────────────────────────────────────────────────────── */
+@utility pt-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
 /* ─── Bottom sheet overlay ────────────────────────────────────────────────── */

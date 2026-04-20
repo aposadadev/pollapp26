@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { onAuthStateChanged } from 'firebase/auth'
 import { authService } from '~/services/auth.service'
 import type { UserProfile } from '~/types'
 
@@ -18,30 +17,14 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state): boolean => !!state.user,
+    // isAdmin is sourced from Firebase Custom Claims (token.admin), set by
+    // the Admin SDK. The firebase.client.ts plugin writes the claim value
+    // into user.isAdmin — it is NOT read from the plain Firestore document field.
     isAdmin: (state): boolean => state.user?.isAdmin ?? false,
     displayName: (state): string => state.user?.displayName ?? ''
   },
 
   actions: {
-    /** Inicializa el listener de Firebase Auth. Llamar una vez en app.vue */
-    init(): Promise<void> {
-      return new Promise((resolve) => {
-        // Obtener auth desde el plugin ya inicializado (evita importar Firebase
-        // a nivel de módulo antes de que el plugin haya corrido)
-        const { $firebaseAuth } = useNuxtApp()
-        onAuthStateChanged($firebaseAuth as ReturnType<typeof import('firebase/auth').getAuth>, async (firebaseUser) => {
-          if (firebaseUser) {
-            const profile = await authService.getProfile(firebaseUser.uid)
-            this.user = profile
-          } else {
-            this.user = null
-          }
-          this.initialized = true
-          resolve()
-        })
-      })
-    },
-
     async login(email: string, password: string): Promise<void> {
       this.loading = true
       try {

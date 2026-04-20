@@ -6,7 +6,9 @@ export default defineNuxtRouteMiddleware(() => {
   const authStore = useAuthStore()
 
   if (!authStore.initialized) {
-    return navigateTo('/login')
+    // Auth state not yet known — plugin awaits first resolution, so this is
+    // belt-and-suspenders: abort to prevent flash of protected content.
+    return abortNavigation()
   }
 
   if (!authStore.isAuthenticated) {

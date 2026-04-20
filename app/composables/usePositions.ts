@@ -13,7 +13,10 @@ export function usePositions(groupId: MaybeRef<string>) {
 
   function subscribe(id: string) {
     unsubscribe?.()
-    if (!id) return
+    if (!id) {
+      loading.value = false
+      return
+    }
     loading.value = true
     try {
       unsubscribe = rankingsRepository.subscribe(id, (data) => {
@@ -22,7 +25,9 @@ export function usePositions(groupId: MaybeRef<string>) {
       })
     } catch (err) {
       // RTDB no configurado o bloqueado por ad blocker — falla silenciosa
-      console.warn('[usePositions] No se pudo conectar al Realtime DB:', (err as Error).message)
+      if (import.meta.dev) {
+        console.warn('[usePositions] No se pudo conectar al Realtime DB:', (err as Error).message)
+      }
       loading.value = false
     }
   }
@@ -34,7 +39,7 @@ export function usePositions(groupId: MaybeRef<string>) {
   watch(
     () => toValue(groupId),
     (newId) => {
-      if (newId) subscribe(newId)
+      subscribe(newId)
     }
   )
 

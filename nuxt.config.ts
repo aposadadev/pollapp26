@@ -15,7 +15,19 @@ export default defineNuxtConfig({
   },
 
   app: {
-    pageTransition: { name: 'page', mode: 'out-in' }
+    pageTransition: { name: 'page', mode: 'out-in' },
+    head: {
+      htmlAttrs: { lang: 'es' },
+      meta: [
+        { name: 'theme-color', content: '#2D47A8' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: 'apple-mobile-web-app-title', content: 'Mundial 26' }
+      ],
+      link: [
+        { rel: 'apple-touch-icon', href: '/pwa/icon-192.png' }
+      ]
+    }
   },
 
   css: ['~/assets/css/main.css'],
@@ -78,7 +90,7 @@ export default defineNuxtConfig({
     },
     workbox: {
       globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
-      navigateFallback: '/index.html',
+      navigateFallback: '/',
       runtimeCaching: [
         {
           urlPattern: /^https:\/\/firebasestorage\.googleapis\.com\/.*/i,

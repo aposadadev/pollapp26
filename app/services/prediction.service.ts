@@ -82,6 +82,7 @@ export class PredictionService {
           date: match.date,
           phase: match.phase,
           matchNumber: match.matchNumber,
+          stadium: match.stadium,
           isClosed: match.isClosed,
           isActive: match.isActive
         }

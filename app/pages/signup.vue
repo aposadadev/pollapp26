@@ -34,7 +34,7 @@ async function handleSubmit() {
 </script>
 
 <template>
-  <div class="page-content bg-(--ui-bg) min-h-screen relative font-sans">
+  <div class="bg-(--ui-bg) min-h-screen relative font-sans">
     <!-- Hero / Branding Massive Gradient -->
     <div
       class="relative w-full pb-[100px] rounded-b-[48px] bg-gradient-to-b from-[#0a1028] to-[#1b2b66] dark:from-[#050815] dark:to-[#0f172a] px-6 pt-16 flex flex-col items-center"

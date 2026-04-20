@@ -40,7 +40,7 @@ const faqs = [
 </script>
 
 <template>
-  <div class="page-content bg-(--ui-bg) min-h-screen relative font-sans">
+  <div class="relative font-sans">
     <LayoutPageHeader
       title="REGLAMENTO"
       subtitle="GUÍA VISUAL 2026"
@@ -91,22 +91,22 @@ const faqs = [
             <ul class="space-y-4 text-sm font-medium text-secondary-50/90">
               <li class="flex gap-3 items-start">
                 <UIcon
-                  name="i-lucide-check-circle-2"
+                 name="i-lucide-circle-check"
                   class="size-5 shrink-0 text-secondary-300"
-                />
-                <span>Las predicciones se bloquean exactamente al pitazo inicial de cada partido.</span>
-              </li>
-              <li class="flex gap-3 items-start">
-                <UIcon
-                  name="i-lucide-check-circle-2"
-                  class="size-5 shrink-0 text-secondary-300"
-                />
-                <span>Las tablas de posiciones se actualizan en tiempo real (Live Table).</span>
-              </li>
-              <li class="flex gap-3 items-start">
-                <UIcon
-                  name="i-lucide-check-circle-2"
-                  class="size-5 shrink-0 text-secondary-300"
+                 />
+                 <span>Las predicciones se bloquean exactamente al pitazo inicial de cada partido.</span>
+               </li>
+               <li class="flex gap-3 items-start">
+                 <UIcon
+                   name="i-lucide-circle-check"
+                   class="size-5 shrink-0 text-secondary-300"
+                 />
+                 <span>Las tablas de posiciones se actualizan en tiempo real (Live Table).</span>
+               </li>
+               <li class="flex gap-3 items-start">
+                 <UIcon
+                   name="i-lucide-circle-check"
+                   class="size-5 shrink-0 text-secondary-300"
                 />
                 <span>Puedes tener estrategias distintas en cada una de tus tablas.</span>
               </li>
@@ -129,13 +129,17 @@ const faqs = [
           <UAccordion
             :items="faqs.map((faq, i) => ({
               label: faq.q,
-              slot: `faq-${i}`,
-              icon: 'i-lucide-chevron-down'
+              slot: `faq-${i}`
             }))"
+            :ui="{ item: 'border-b border-(--ui-border) last:border-b-0', label: 'font-bold text-sm text-(--ui-text-highlighted) py-4 px-5' }"
           >
-            <template #item="{ item }">
+            <template
+              v-for="(faq, i) in faqs"
+              :key="i"
+              #[`faq-${i}`]
+            >
               <p class="text-[13.5px] font-medium text-neutral-500 dark:text-neutral-400 px-5 pb-5 leading-relaxed">
-                {{ faqs.find((f) => f.q === item.label)?.a }}
+                {{ faq.a }}
               </p>
             </template>
           </UAccordion>

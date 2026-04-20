@@ -4,12 +4,10 @@ import { mundial2026 } from '~/config/tournaments/mundial2026'
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const appStore = useAppStore()
-onMounted(() => appStore.setPageTitle('Panel Admin'))
-
 const {
   matches: allMatches,
   loadAll
-} = useMatches(mundial2026.id)
+} = useMatches(appStore.activeTournamentId)
 
 const stats = computed(() => {
   const total = allMatches.value.length
@@ -20,6 +18,7 @@ const stats = computed(() => {
 })
 
 onMounted(async () => {
+  appStore.setPageTitle('Panel Admin')
   await loadAll()
 })
 
@@ -27,29 +26,29 @@ const adminActions = [
   {
     to: '/admin/groups',
     label: 'Gestionar Grupos',
-    icon: 'i-heroicons-user-group',
+    icon: 'i-lucide-users',
     color: 'bg-secondary-500/10 text-secondary-600',
     description: 'Tablas pendientes y nuevos grupos'
   },
   {
     to: '/admin/matches',
     label: 'Cerrar Partidos',
-    icon: 'i-heroicons-trophy',
+    icon: 'i-lucide-trophy',
     color: 'bg-primary-500/10 text-primary-600',
     description: 'Resultados finales y puntajes'
   },
   {
     to: '/admin/teams',
     label: 'Equipos y Sedes',
-    icon: 'i-heroicons-shield-check',
-    color: 'bg-accent-500/10 text-accent-600',
+    icon: 'i-lucide-shield-check',
+    color: 'bg-secondary-500/10 text-secondary-600',
     description: 'Configuración de participantes'
   }
 ]
 </script>
 
 <template>
-  <div class="page-content bg-(--ui-bg) min-h-screen relative font-sans">
+  <div class="space-y-0 pb-20 font-sans relative">
     <LayoutPageHeader
       title="PANEL ADMIN"
       :subtitle="`TORNEO: ${mundial2026.name}`"

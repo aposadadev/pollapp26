@@ -17,9 +17,10 @@ export class PredictionRepository extends BaseRepository<Prediction> {
 
   async findByBoardAndMatch(boardId: string, matchId: string): Promise<Prediction | null> {
     const results = await this.findAll([
-      where('boardId', '==', boardId)
+      where('boardId', '==', boardId),
+      where('matchId', '==', matchId)
     ])
-    return results.find(p => p.matchId === matchId) ?? null
+    return results[0] ?? null
   }
 
   async findByMatch(matchId: string): Promise<Prediction[]> {

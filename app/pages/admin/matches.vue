@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { mundial2026 } from '~/config/tournaments/mundial2026'
 import type { Match, Team } from '~/types'
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const appStore = useAppStore()
-onMounted(() => appStore.setPageTitle('Partidos — Admin'))
-
 const { loading, closeMatch, updateMatchTeams, getTeams } = useAdmin()
-const { matches, loadAll } = useMatches(mundial2026.id)
+const { matches, loadAll } = useMatches(appStore.activeTournamentId)
 
 const teams = ref<Team[]>([])
 const closingMatchId = ref<string | null>(null)
@@ -38,7 +35,7 @@ const closedMatches = computed(() => matches.value.filter(m => m.isClosed))
 const tabItems = computed(() => [
   { label: `Activos (${activeMatches.value.length})`, value: 'active', icon: 'i-lucide-zap' },
   { label: `Programados (${scheduledMatches.value.length})`, value: 'scheduled', icon: 'i-lucide-clock' },
-  { label: `Cerrados (${closedMatches.value.length})`, value: 'closed', icon: 'i-lucide-check-circle' }
+  { label: `Cerrados (${closedMatches.value.length})`, value: 'closed', icon: 'i-lucide-circle-check' }
 ])
 
 const currentList = computed<Match[]>(() => {
@@ -56,6 +53,7 @@ function teamName(teamId: string) {
 }
 
 onMounted(async () => {
+  appStore.setPageTitle('Partidos — Admin')
   const [_m, t] = await Promise.all([loadAll(), getTeams()])
   teams.value = t
 })
@@ -74,7 +72,11 @@ function openTeamsModal(match: Match) {
 
 async function handleCloseMatch() {
   if (!closingMatchId.value) return
-  const ok = await closeMatch(closingMatchId.value, closeForm.localGoals, closeForm.visitorGoals)
+  const ok = await closeMatch(
+    closingMatchId.value,
+    Number(closeForm.localGoals),
+    Number(closeForm.visitorGoals)
+  )
   if (ok) {
     closingMatchId.value = null
     await loadAll()
@@ -92,22 +94,36 @@ async function handleUpdateTeams() {
 </script>
 
 <template>
-  <div class="admin-matches-page">
-    <div class="space-y-4">
-      <div>
-        <h1 class="text-lg font-bold text-(--ui-text-highlighted)">
-          Partidos
-        </h1>
-        <p class="text-sm text-(--ui-text-muted)">
-          Cierra partidos y actualiza equipos (fases eliminatorias).
-        </p>
+  <div class="space-y-6 pb-20">
+    <LayoutPageHeader
+      title="Gestión de Partidos"
+      subtitle="Cierra partidos y actualiza equipos clasificados en fases eliminatorias."
+    />
+
+    <!-- Filter Chips -->
+    <div class="px-4 -mt-2 overflow-x-auto scrollbar-hide">
+      <div class="flex items-center gap-2 pb-2 min-w-max">
+        <button
+          v-for="item in tabItems"
+          :key="item.value"
+          class="flex items-center gap-2 px-4 py-2 rounded-full border-2 transition-all duration-200 active:scale-95 whitespace-nowrap"
+          :class="[
+            tab === item.value
+              ? 'border-secondary-500 bg-secondary-500 text-white shadow-md shadow-secondary-500/20'
+              : 'border-(--ui-border) bg-(--ui-bg-elevated) text-(--ui-text-muted) hover:border-(--ui-border-muted)'
+          ]"
+          @click="tab = item.value as 'active' | 'scheduled' | 'closed'"
+        >
+          <UIcon
+            :name="item.icon"
+            class="size-4"
+          />
+          <span class="text-xs font-bold uppercase tracking-wider">{{ item.label }}</span>
+        </button>
       </div>
+    </div>
 
-      <UTabs
-        v-model="tab"
-        :items="tabItems"
-      />
-
+    <div class="px-4 space-y-4">
       <div
         v-if="loading && !matches.length"
         class="space-y-3"
@@ -115,18 +131,23 @@ async function handleUpdateTeams() {
         <USkeleton
           v-for="i in 4"
           :key="i"
-          class="h-20 rounded-xl"
+          class="h-24 rounded-2xl"
         />
       </div>
 
       <div
         v-else-if="!currentList.length"
-        class="text-center py-8"
+        class="text-center py-12 stagger-up"
       >
-        <UIcon
-          name="i-lucide-trophy"
-          class="size-10 text-(--ui-text-muted) mx-auto mb-2"
-        />
+        <div class="size-16 bg-(--ui-bg-elevated) rounded-full flex items-center justify-center mx-auto mb-4 border border-(--ui-border)">
+          <UIcon
+            name="i-lucide-trophy"
+            class="size-8 text-(--ui-text-muted)"
+          />
+        </div>
+        <p class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+          Sin partidos
+        </p>
         <p class="text-sm text-(--ui-text-muted)">
           No hay partidos en esta categoría.
         </p>
@@ -134,57 +155,80 @@ async function handleUpdateTeams() {
 
       <div
         v-else
-        class="space-y-2"
+        class="space-y-3"
       >
         <div
-          v-for="match in currentList"
+          v-for="(match, i) in currentList"
           :key="match.id"
-          class="bg-(--ui-bg) border border-(--ui-border) rounded-xl p-3"
+          class="card-elevated p-4 stagger-left"
+          :class="`stagger-d${Math.min(i + 1, 12)}`"
         >
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center justify-between gap-4">
             <div class="flex-1 min-w-0">
-              <p class="text-sm font-semibold text-(--ui-text-highlighted) truncate">
-                {{ match.localTeamName ?? teamName(match.localTeamId) }}
-                <span class="text-(--ui-text-muted) font-normal"> vs </span>
-                {{ match.visitorTeamName ?? teamName(match.visitorTeamId) }}
-              </p>
-              <p class="text-xs text-(--ui-text-muted)">
-                #{{ match.matchNumber }} · {{ match.phase }}
-              </p>
-              <p
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-[10px] font-mono text-primary-500 dark:text-primary-400 font-bold uppercase tracking-widest">
+                  #{{ match.matchNumber }} · {{ match.phase }}
+                </span>
+                <span
+                  v-if="match.isActive && !match.isClosed"
+                  class="live-indicator"
+                />
+              </div>
+
+              <div class="flex items-center gap-2">
+                <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-tight truncate">
+                  {{ match.localTeamName ?? teamName(match.localTeamId) }}
+                </p>
+                <span class="text-xs text-(--ui-text-muted) font-bold">VS</span>
+                <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-tight truncate">
+                  {{ match.visitorTeamName ?? teamName(match.visitorTeamId) }}
+                </p>
+              </div>
+
+              <div
                 v-if="match.isClosed"
-                class="text-xs font-mono mt-0.5 text-[var(--ui-color-secondary-600)] dark:text-[var(--ui-color-secondary-400)]"
+                class="mt-2"
               >
-                {{ match.localGoals }} – {{ match.visitorGoals }}
-              </p>
+                <span class="score-pill inline-flex">
+                  {{ match.localGoals }} – {{ match.visitorGoals }}
+                </span>
+              </div>
             </div>
+
             <div class="flex gap-2 shrink-0">
               <UButton
                 v-if="!match.isClosed"
-                size="xs"
+                size="sm"
                 color="neutral"
                 variant="outline"
-                icon="i-lucide-shield"
+                icon="i-lucide-shield-plus"
+                class="rounded-xl shadow-sm"
                 @click="openTeamsModal(match)"
               />
               <UButton
                 v-if="!match.isClosed"
-                size="xs"
+                size="sm"
                 color="error"
                 variant="solid"
                 icon="i-lucide-flag"
+                class="font-bold rounded-xl shadow-sm shadow-error-500/10"
                 @click="openCloseModal(match)"
               >
                 Cerrar
               </UButton>
-              <UBadge
+              <div
                 v-else
-                color="neutral"
-                variant="soft"
-                size="sm"
+                class="flex flex-col items-end"
               >
-                Cerrado
-              </UBadge>
+                <UBadge
+                  color="neutral"
+                  variant="soft"
+                  size="sm"
+                  class="font-bold uppercase tracking-wider rounded-lg"
+                >
+                  Cerrado
+                </UBadge>
+              </div>
             </div>
           </div>
         </div>
@@ -194,37 +238,53 @@ async function handleUpdateTeams() {
     <!-- Modal: Cerrar partido -->
     <UModal
       v-model:open="showCloseModal"
-      title="Cerrar partido"
-      description="Ingresa el marcador final."
+      :ui="{
+        content: 'rounded-[32px] sm:max-w-md',
+        header: 'p-6 border-b border-(--ui-border)',
+        body: 'p-6'
+      }"
     >
+      <template #header>
+        <div class="flex flex-col gap-1">
+          <h3 class="font-heading text-xl font-black uppercase tracking-tight text-(--ui-text-highlighted)">
+            Cerrar Partido
+          </h3>
+          <p class="text-xs text-(--ui-text-muted)">
+            Ingresa el marcador final para calcular puntos.
+          </p>
+        </div>
+      </template>
       <template #body>
-        <div class="space-y-4 p-1">
-          <div class="grid grid-cols-2 gap-4">
-            <UFormField label="Goles local">
+        <div class="space-y-6">
+          <div class="grid grid-cols-2 gap-6">
+            <UFormField label="Goles Local">
               <UInput
                 v-model="closeForm.localGoals"
                 type="number"
                 :min="0"
                 :max="20"
-                size="md"
-                class="w-full"
+                size="lg"
+                class="w-full font-heading text-2xl font-bold text-center"
+                :ui="{ base: 'text-center' }"
               />
             </UFormField>
-            <UFormField label="Goles visitante">
+            <UFormField label="Goles Visitante">
               <UInput
                 v-model="closeForm.visitorGoals"
                 type="number"
                 :min="0"
                 :max="20"
-                size="md"
-                class="w-full"
+                size="lg"
+                class="w-full font-heading text-2xl font-bold text-center"
+                :ui="{ base: 'text-center' }"
               />
             </UFormField>
           </div>
-          <div class="flex gap-2 justify-end">
+          <div class="flex gap-3">
             <UButton
               color="neutral"
               variant="ghost"
+              class="flex-1"
               @click="closingMatchId = null"
             >
               Cancelar
@@ -233,9 +293,10 @@ async function handleUpdateTeams() {
               color="error"
               :loading="loading"
               icon="i-lucide-flag"
+              class="flex-1 font-bold"
               @click="handleCloseMatch"
             >
-              Confirmar cierre
+              Confirmar
             </UButton>
           </div>
         </div>
@@ -245,31 +306,45 @@ async function handleUpdateTeams() {
     <!-- Modal: Actualizar equipos -->
     <UModal
       v-model:open="showTeamsModal"
-      title="Actualizar equipos"
-      description="Asigna los equipos clasificados."
+      :ui="{
+        content: 'rounded-[32px] sm:max-w-md',
+        header: 'p-6 border-b border-(--ui-border)',
+        body: 'p-6'
+      }"
     >
+      <template #header>
+        <div class="flex flex-col gap-1">
+          <h3 class="font-heading text-xl font-black uppercase tracking-tight text-(--ui-text-highlighted)">
+            Equipos Clasificados
+          </h3>
+          <p class="text-xs text-(--ui-text-muted)">
+            Asigna los equipos para esta llave.
+          </p>
+        </div>
+      </template>
       <template #body>
-        <div class="space-y-4 p-1">
-          <UFormField label="Equipo local">
+        <div class="space-y-6">
+          <UFormField label="Equipo Local">
             <USelect
               v-model="teamsForm.localTeamId"
-              :options="teamOptions"
-              size="md"
+              :items="teamOptions"
+              size="lg"
               class="w-full"
             />
           </UFormField>
-          <UFormField label="Equipo visitante">
+          <UFormField label="Equipo Visitante">
             <USelect
               v-model="teamsForm.visitorTeamId"
-              :options="teamOptions"
-              size="md"
+              :items="teamOptions"
+              size="lg"
               class="w-full"
             />
           </UFormField>
-          <div class="flex gap-2 justify-end">
+          <div class="flex gap-3">
             <UButton
               color="neutral"
               variant="ghost"
+              class="flex-1"
               @click="editingTeamsMatchId = null"
             >
               Cancelar
@@ -278,6 +353,7 @@ async function handleUpdateTeams() {
               color="primary"
               :loading="loading"
               icon="i-lucide-save"
+              class="flex-1 font-bold"
               @click="handleUpdateTeams"
             >
               Guardar

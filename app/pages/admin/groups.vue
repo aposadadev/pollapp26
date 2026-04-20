@@ -1,28 +1,19 @@
 <script setup lang="ts">
-import { mundial2026 } from '~/config/tournaments/mundial2026'
-
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const appStore = useAppStore()
-const authStore = useAuthStore()
-
-console.log('Admin page - user:', authStore.user)
-console.log('Admin page - isAdmin:', authStore.isAdmin)
-
-onMounted(() => {
-  appStore.setPageTitle('Grupos — Admin')
-  console.log('Admin page mounted')
-})
-
-const { loading, getPendingBoards, activateBoard } = useAdmin()
-const { groups, loadGroups } = useGroups(mundial2026.id)
+const { getPendingBoards, activateBoard } = useAdmin()
+const { groups, loading: loadingGroups, loadGroups } = useGroups(appStore.activeTournamentId)
 
 // Per-group pending boards
 const pendingBoardsByGroup = ref<Record<string, import('~/types').Board[]>>({})
 const expandedGroup = ref<string | null>(null)
 const loadingGroup = ref<string | null>(null)
+// Track which board is currently being activated (to show per-board loading)
+const activatingBoardId = ref<string | null>(null)
 
 onMounted(async () => {
+  appStore.setPageTitle('Grupos — Admin')
   await loadGroups()
 })
 
@@ -36,148 +27,178 @@ async function toggleGroup(groupId: string) {
     loadingGroup.value = groupId
     try {
       pendingBoardsByGroup.value[groupId] = await getPendingBoards(groupId)
-      console.log('Pending boards for group', groupId, ':', pendingBoardsByGroup.value[groupId])
-    } catch (err) {
-      console.error('Error getting pending boards:', err)
+    } catch {
+      // silently fail
     }
     loadingGroup.value = null
   }
 }
 
 async function handleActivate(boardId: string, groupId: string) {
-  console.log('Activating board:', boardId, groupId)
-  const ok = await activateBoard(boardId, mundial2026.id)
-  console.log('Activate result:', ok)
-  if (ok) {
-    // Refresh pending list for this group
-    pendingBoardsByGroup.value[groupId] = await getPendingBoards(groupId)
+  activatingBoardId.value = boardId
+  try {
+    const ok = await activateBoard(boardId, appStore.activeTournamentId)
+    if (ok) {
+      // Refresh pending list for this group
+      pendingBoardsByGroup.value[groupId] = await getPendingBoards(groupId)
+    }
+  } finally {
+    activatingBoardId.value = null
   }
 }
 </script>
 
 <template>
-  <div class="space-y-5">
-    <div>
-      <h1 class="text-lg font-bold text-(--ui-text-highlighted)">
-        Grupos
-      </h1>
-      <p class="text-sm text-(--ui-text-muted)">
-        Activa las tablas pendientes de aprobación.
-      </p>
-    </div>
+  <div class="space-y-6 pb-20">
+    <LayoutPageHeader
+      title="Gestión de Grupos"
+      subtitle="Activa las tablas pendientes de aprobación para cada liga."
+    />
 
-    <div
-      v-if="loading && !groups.length"
-      class="space-y-3"
-    >
-      <USkeleton
-        v-for="i in 4"
-        :key="i"
-        class="h-16 rounded-xl"
-      />
-    </div>
-
-    <div
-      v-else-if="!groups.length"
-      class="text-center py-10"
-    >
-      <UIcon
-        name="i-lucide-users"
-        class="size-10 text-(--ui-text-muted) mx-auto mb-2"
-      />
-      <p class="text-sm text-(--ui-text-muted)">
-        No hay grupos registrados.
-      </p>
-    </div>
-
-    <div
-      v-else
-      class="space-y-2"
-    >
+    <div class="px-4 space-y-4">
       <div
-        v-for="group in groups"
-        :key="group.id"
-        class="bg-(--ui-bg) border border-(--ui-border) rounded-xl overflow-hidden"
+        v-if="loadingGroups && !groups.length"
+        class="space-y-3"
       >
-        <!-- Cabecera del grupo -->
-        <button
-          class="w-full flex items-center justify-between px-4 py-3 hover:bg-(--ui-bg-elevated) transition-colors"
-          @click="toggleGroup(group.id)"
-        >
-          <div class="text-left">
-            <p class="text-sm font-semibold text-(--ui-text-highlighted)">
-              {{ group.name }}
-            </p>
-            <p class="text-xs text-(--ui-text-muted) font-mono">
-              {{ group.code }}
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <UBadge
-              v-if="pendingBoardsByGroup[group.id]?.length"
-              color="error"
-              variant="solid"
-              size="sm"
-            >
-              {{ pendingBoardsByGroup[group.id]?.length }} pendiente(s)
-            </UBadge>
-            <UIcon
-              :name="expandedGroup === group.id ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
-              class="size-4 text-(--ui-text-muted)"
-            />
-          </div>
-        </button>
+        <USkeleton
+          v-for="i in 4"
+          :key="i"
+          class="h-16 rounded-2xl"
+        />
+      </div>
 
-        <!-- Tablas pendientes -->
+      <div
+        v-else-if="!groups.length"
+        class="text-center py-12 stagger-up"
+      >
+        <div class="size-16 bg-(--ui-bg-elevated) rounded-full flex items-center justify-center mx-auto mb-4 border border-(--ui-border)">
+          <UIcon
+            name="i-lucide-users"
+            class="size-8 text-(--ui-text-muted)"
+          />
+        </div>
+        <p class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+          No hay grupos
+        </p>
+        <p class="text-sm text-(--ui-text-muted)">
+          No hay grupos registrados en el sistema.
+        </p>
+      </div>
+
+      <div
+        v-else
+        class="space-y-3"
+      >
         <div
-          v-if="expandedGroup === group.id"
-          class="border-t border-(--ui-border) px-4 py-3 space-y-2"
+          v-for="(group, i) in groups"
+          :key="group.id"
+          class="card-elevated overflow-hidden stagger-up"
+          :class="`stagger-d${Math.min(i + 1, 12)}`"
         >
-          <div
-            v-if="loadingGroup === group.id"
-            class="space-y-2"
+          <!-- Cabecera del grupo -->
+          <button
+            class="w-full flex items-center justify-between px-5 py-4 hover:bg-(--ui-bg-muted)/50 transition-colors group"
+            @click="toggleGroup(group.id)"
           >
-            <USkeleton
-              v-for="i in 2"
-              :key="i"
-              class="h-12 rounded-lg"
-            />
-          </div>
+            <div class="text-left">
+              <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-wide group-hover:text-primary-500 transition-colors">
+                {{ group.name }}
+              </p>
+              <p class="text-[11px] text-(--ui-text-muted) font-mono uppercase tracking-widest mt-0.5">
+                Código: {{ group.code }}
+              </p>
+            </div>
+            <div class="flex items-center gap-3">
+              <UBadge
+                v-if="pendingBoardsByGroup[group.id]?.length"
+                color="error"
+                variant="solid"
+                size="sm"
+                class="font-bold animate-pulse"
+              >
+                {{ pendingBoardsByGroup[group.id]?.length }}
+              </UBadge>
+              <UIcon
+                :name="expandedGroup === group.id ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'"
+                class="size-5 text-(--ui-text-muted) group-hover:text-(--ui-text-highlighted) transition-colors"
+              />
+            </div>
+          </button>
 
-          <div
-            v-else-if="pendingBoardsByGroup[group.id]?.length"
+          <!-- Tablas pendientes -->
+          <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="transform -translate-y-2 opacity-0"
+            enter-to-class="transform translate-y-0 opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="transform translate-y-0 opacity-100"
+            leave-to-class="transform -translate-y-2 opacity-0"
           >
             <div
-              v-for="board in pendingBoardsByGroup[group.id]"
-              :key="board.id"
-              class="flex items-center justify-between py-2 border-b border-(--ui-border) last:border-0"
+              v-if="expandedGroup === group.id"
+              class="border-t border-(--ui-border) bg-(--ui-bg-muted)/20 px-5 py-4 space-y-3"
             >
-              <div>
-                <p class="text-sm font-medium text-(--ui-text-highlighted)">
-                  {{ board.userDisplayName || 'Sin nombre' }}
-                </p>
-                <p class="text-xs text-(--ui-text-muted)">
-                  Tabla #{{ board.number }}
+              <div
+                v-if="loadingGroup === group.id"
+                class="space-y-2"
+              >
+                <USkeleton
+                  v-for="i in 2"
+                  :key="i"
+                  class="h-14 rounded-xl"
+                />
+              </div>
+
+              <div
+                v-else-if="pendingBoardsByGroup[group.id]?.length"
+                class="space-y-2"
+              >
+                <div
+                  v-for="board in pendingBoardsByGroup[group.id]"
+                  :key="board.id"
+                  class="flex items-center justify-between p-3 bg-(--ui-bg) border border-(--ui-border) rounded-xl shadow-sm"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="size-9 rounded-full bg-primary-500/10 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold text-sm">
+                      {{ board.userDisplayName?.charAt(0).toUpperCase() || '?' }}
+                    </div>
+                    <div>
+                      <p class="text-sm font-bold text-(--ui-text-highlighted)">
+                        {{ board.userDisplayName || 'Sin nombre' }}
+                      </p>
+                      <p class="text-[10px] text-(--ui-text-muted) font-mono uppercase">
+                        Tabla #{{ board.number }}
+                      </p>
+                    </div>
+                  </div>
+                  <UButton
+                    color="secondary"
+                    size="sm"
+                    variant="solid"
+                    icon="i-lucide-check"
+                    class="font-bold"
+                    :loading="activatingBoardId === board.id"
+                    @click="handleActivate(board.id, group.id)"
+                  >
+                    Activar
+                  </UButton>
+                </div>
+              </div>
+
+              <div
+                v-else
+                class="flex flex-col items-center py-4 text-center"
+              >
+                <UIcon
+                  name="i-lucide-circle-check"
+                  class="size-8 text-secondary-500/50 mb-2"
+                />
+                <p class="text-xs font-medium text-(--ui-text-muted) uppercase tracking-widest">
+                  No hay tablas pendientes
                 </p>
               </div>
-              <UButton
-                color="secondary"
-                size="xs"
-                icon="i-lucide-check"
-                :loading="loading"
-                @click="handleActivate(board.id, group.id)"
-              >
-                Activar
-              </UButton>
             </div>
-          </div>
-
-          <p
-            v-else
-            class="text-xs text-(--ui-text-muted) text-center py-2"
-          >
-            No hay tablas pendientes en este grupo.
-          </p>
+          </Transition>
         </div>
       </div>
     </div>

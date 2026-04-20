@@ -1,4 +1,4 @@
-import { where, writeBatch, doc, type Firestore } from 'firebase/firestore'
+import { where, writeBatch, doc, runTransaction, type Firestore } from 'firebase/firestore'
 import { BaseRepository } from './base.repository'
 import type { Board } from '~/types'
 
@@ -27,24 +27,52 @@ export class BoardRepository extends BaseRepository<Board> {
 
   async findActiveByGroup(groupId: string): Promise<Board[]> {
     const all = await this.findAll([
-      where('groupId', '==', groupId)
+      where('groupId', '==', groupId),
+      where('isActive', '==', true)
     ])
-    return all.filter(b => b.isActive).sort((a, b) => a.currentPos - b.currentPos)
+    return all.sort((a, b) => a.currentPos - b.currentPos)
   }
 
   async findPendingByGroup(groupId: string): Promise<Board[]> {
     const all = await this.findAll([
-      where('groupId', '==', groupId)
+      where('groupId', '==', groupId),
+      where('isActive', '==', false)
     ])
-    return all.filter(b => !b.isActive).sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+    return all.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
   }
 
   async findByUserAndGroup(userId: string, groupId: string): Promise<Board | null> {
-    // Consulta simple - luego filtramos en memoria para evitar índice
     const results = await this.findAll([
-      where('userId', '==', userId)
+      where('userId', '==', userId),
+      where('groupId', '==', groupId)
     ])
-    return results.find(b => b.groupId === groupId) ?? null
+    return results[0] ?? null
+  }
+
+  /**
+   * Creates a board and atomically assigns it a unique sequential number within
+   * the group, using a Firestore transaction on a counter document so that
+   * concurrent requests can never collide on the same number.
+   */
+  async createWithNumber(data: Omit<Board, 'id' | 'createdAt' | 'number'>): Promise<{ id: string; number: number }> {
+    const db = getDb()
+    const counterRef = doc(db, '_counters', `board_count_${data.groupId}`)
+
+    return runTransaction(db, async (txn) => {
+      const counterSnap = await txn.get(counterRef)
+      const currentCount: number = counterSnap.exists() ? (counterSnap.data()['count'] as number ?? 0) : 0
+      const number = 1000 + currentCount + 1
+
+      const newBoardRef = doc(db, 'boards')
+      txn.set(newBoardRef, {
+        ...data,
+        number,
+        createdAt: new Date()
+      })
+      txn.set(counterRef, { count: currentCount + 1 }, { merge: true })
+
+      return { id: newBoardRef.id, number }
+    })
   }
 
   async activate(boardId: string): Promise<void> {

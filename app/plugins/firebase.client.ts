@@ -1,10 +1,13 @@
 /**
  * Plugin de Firebase — inicializa la app y provee los servicios via useNuxtApp().
  * También inicializa el auth store para que esté listo para el middleware.
+ *
+ * isAdmin se lee de Firebase Custom Claims (request.auth.token.admin), no de un
+ * campo Firestore. Esto garantiza que solo el Admin SDK puede elevar privilegios.
  */
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
 import { getFirestore, type Firestore } from 'firebase/firestore'
-import { getAuth, type Auth } from 'firebase/auth'
+import { getAuth, type Auth, type User } from 'firebase/auth'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
 import { getDatabase, type Database } from 'firebase/database'
 
@@ -36,28 +39,67 @@ export default defineNuxtPlugin(async () => {
     ? getDatabase(app)
     : null
 
-  // Inicializar el auth store
+  /**
+   * Loads the Firestore profile and reads the `admin` Custom Claim from the
+   * Firebase ID token. The claim is set server-side via Admin SDK / Cloud
+   * Functions — it cannot be self-assigned by a client.
+   */
+  async function resolveUser(firebaseUser: User) {
+    const { authService } = await import('~/services/auth.service')
+    const [profile, tokenResult] = await Promise.all([
+      authService.getProfile(firebaseUser.uid),
+      firebaseUser.getIdTokenResult()
+    ])
+    if (profile) {
+      // Override isAdmin from custom claim — not from the Firestore document field
+      profile.isAdmin = tokenResult.claims['admin'] === true
+    }
+    return profile
+  }
+
+  // Inicializar el auth store.
+  // Await the FIRST onAuthStateChanged resolution so that by the time this plugin
+  // returns — and route middleware runs — authStore.initialized is already true.
   const authStore = useAuthStore()
-  if (import.meta.client) {
-    const { onAuthStateChanged } = await import('firebase/auth')
-    onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('Auth state changed:', firebaseUser?.uid)
+  const { onAuthStateChanged } = await import('firebase/auth')
+
+  await new Promise<void>((resolve) => {
+    const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+      unsub() // unsubscribe after first emission; re-subscribe below for ongoing updates
+
       if (firebaseUser) {
         try {
-          const { authService } = await import('~/services/auth.service')
-          const profile = await authService.getProfile(firebaseUser.uid)
-          console.log('Profile loaded:', profile)
-          authStore.user = profile
+          authStore.user = await resolveUser(firebaseUser)
         } catch (err) {
-          console.error('Error loading profile:', err)
+          if (import.meta.dev) console.error('Error loading profile:', err)
           authStore.user = null
         }
       } else {
         authStore.user = null
       }
       authStore.initialized = true
-      console.log('Auth initialized:', authStore.isAuthenticated)
+      resolve()
     })
+  })
+
+  // Ongoing listener for session changes (login / logout after initial load)
+  const unsubOngoing = onAuthStateChanged(auth, async (firebaseUser) => {
+    if (firebaseUser) {
+      try {
+        authStore.user = await resolveUser(firebaseUser)
+      } catch (err) {
+        if (import.meta.dev) console.error('Error loading profile:', err)
+        authStore.user = null
+      }
+    } else {
+      authStore.user = null
+    }
+    authStore.initialized = true
+  })
+
+  // Clean up the auth listener when the window unloads
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => unsubOngoing(), { once: true })
   }
 
   return {

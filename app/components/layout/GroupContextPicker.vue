@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { mundial2026 } from '~/config/tournaments/mundial2026'
-
 interface Props {
   modelValue: boolean
 }
@@ -15,9 +13,10 @@ const isOpen = computed({
 })
 
 const groupContextStore = useGroupContextStore()
+const appStore = useAppStore()
 const toast = useToast()
 
-const groupsComposable = useGroups(mundial2026.id)
+const groupsComposable = useGroups(appStore.activeTournamentId)
 const { groups, loading } = groupsComposable
 
 onMounted(async () => {
@@ -25,8 +24,16 @@ onMounted(async () => {
 })
 
 // Grupo que el usuario está eligiendo antes de confirmar
-const pendingGroupId = ref<string | null>(groupContextStore.groupId)
-const pendingBoardId = ref<string | null>(groupContextStore.boardId)
+const pendingGroupId = ref<string | null>(null)
+const pendingBoardId = ref<string | null>(null)
+
+// Sync with store whenever the sheet opens (or store context changes externally)
+watchEffect(() => {
+  if (isOpen.value) {
+    pendingGroupId.value = groupContextStore.groupId
+    pendingBoardId.value = groupContextStore.boardId
+  }
+})
 
 const pendingGroup = computed(() =>
   groups.value.find(g => g.id === pendingGroupId.value) ?? null
@@ -235,7 +242,7 @@ const hasActiveGroups = computed(() =>
             <UButton
               color="secondary"
               variant="solid"
-              class="flex-1 font-bold"
+              class="flex-1 font-heading font-bold uppercase tracking-wide"
               :disabled="!pendingGroupId || !pendingBoardId"
               @click="confirm"
             >

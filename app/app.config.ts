@@ -1,11 +1,5 @@
 export default defineAppConfig({
   ui: {
-    colors: {
-      primary: 'primary',
-      secondary: 'secondary',
-      error: 'error',
-      neutral: 'neutral'
-    },
     button: {
       slots: {
         base: 'rounded-xl font-bold transition-transform active:scale-[0.98]'

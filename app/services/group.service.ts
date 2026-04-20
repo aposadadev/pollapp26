@@ -59,19 +59,20 @@ export class GroupService {
   /** Obtiene los grupos del torneo enriquecidos con el estado de la tabla del usuario actual */
   async findForUser(tournamentId: string, userId: string): Promise<GroupWithBoardStatus[]> {
     const groups = await groupRepository.findByTournament(tournamentId)
-    const enriched: GroupWithBoardStatus[] = []
 
-    for (const group of groups) {
-      const board = await boardRepository.findByUserAndGroup(userId, group.id)
-      enriched.push({
+    const boards = await Promise.all(
+      groups.map(g => boardRepository.findByUserAndGroup(userId, g.id))
+    )
+
+    return groups.map((group, i) => {
+      const board = boards[i]
+      return {
         ...group,
         userBoardId: board?.id,
         userBoardIsActive: board?.isActive ?? false,
         userBoardIsPending: board ? !board.isActive : false
-      })
-    }
-
-    return enriched
+      }
+    })
   }
 }
 

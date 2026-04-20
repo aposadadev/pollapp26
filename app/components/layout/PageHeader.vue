@@ -2,10 +2,13 @@
 interface Props {
   title: string
   subtitle?: string
+  supertitle?: string
   showBack?: boolean
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  supertitle: 'FIFA WORLD CUP 2026™'
+})
 </script>
 
 <template>
@@ -36,12 +39,12 @@ defineProps<Props>()
       <span
         class="text-secondary-400 text-[11px] font-bold tracking-[0.2em] font-heading uppercase opacity-90 drop-shadow-sm"
       >
-        {{ subtitle ? title : "FIFA WORLD CUP 2026™" }}
+        {{ subtitle ?? props.supertitle }}
       </span>
       <span
         class="text-white text-4xl font-black font-heading leading-none drop-shadow-md text-center max-w-xs tracking-tight"
       >
-        {{ subtitle || title }}
+        {{ title }}
       </span>
     </div>
 

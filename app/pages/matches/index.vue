@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
-import { mundial2026 } from '~/config/tournaments/mundial2026'
 import type { Match } from '~/types'
 
 dayjs.locale('es')
@@ -9,11 +8,11 @@ dayjs.locale('es')
 definePageMeta({ middleware: 'auth' })
 
 const appStore = useAppStore()
-onMounted(() => appStore.setPageTitle('Partidos'))
 
-const { matches, loading, loadAll } = useMatches(mundial2026.id)
+const { matches, loading, error, loadAll } = useMatches(appStore.activeTournamentId)
 
 onMounted(async () => {
+  appStore.setPageTitle('Partidos')
   await loadAll()
 })
 
@@ -51,7 +50,7 @@ function getStatusLabel(match: Match) {
 </script>
 
 <template>
-  <div>
+  <div class="font-sans">
     <!-- Header con gradiente tri-color -->
     <LayoutPageHeader
       title="Partidos"
@@ -90,6 +89,33 @@ function getStatusLabel(match: Match) {
       </div>
 
       <div
+        v-else-if="error"
+        class="text-center py-12 stagger-up"
+      >
+        <div class="size-16 bg-error-50 dark:bg-error-950 rounded-full flex items-center justify-center mx-auto mb-4 border border-error-200 dark:border-error-800">
+          <UIcon
+            name="i-lucide-wifi-off"
+            class="size-8 text-error-500"
+          />
+        </div>
+        <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+          No pudimos cargar los partidos
+        </p>
+        <p class="text-sm text-(--ui-text-muted) mt-1">
+          {{ error }}
+        </p>
+        <UButton
+          class="mt-4"
+          color="primary"
+          variant="soft"
+          size="sm"
+          @click="loadAll"
+        >
+          Reintentar
+        </UButton>
+      </div>
+
+      <div
         v-else-if="filteredMatches.length"
         class="space-y-3"
       >
@@ -99,27 +125,28 @@ function getStatusLabel(match: Match) {
           class="stagger-left"
           :class="`stagger-d${Math.min(i + 2, 12)}`"
         >
-          <UCard class="overflow-hidden transition-all duration-200 hover:shadow-md">
-            <template #header>
-              <div class="flex items-center justify-between text-xs text-(--ui-text-muted)">
-                <span class="font-heading uppercase tracking-wider">{{ match.phase }}</span>
+          <div class="card-elevated overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
+            <!-- Header de la card -->
+            <div class="flex items-center justify-between px-4 pt-4 pb-2">
+              <span class="font-heading text-[10px] font-black text-primary-500 dark:text-primary-400 uppercase tracking-widest">
+                {{ match.phase }}
+              </span>
+              <div class="flex items-center gap-2">
                 <span
-                  :class="match.isActive && !match.isClosed
-                    ? 'live-indicator'
-                    : ''"
+                  v-if="match.isActive && !match.isClosed"
+                  class="live-indicator"
+                />
+                <span
+                  class="text-[11px] font-bold uppercase tracking-wider"
+                  :class="match.isActive && !match.isClosed ? 'text-error-500' : 'text-(--ui-text-muted)'"
                 >
-                  <template v-if="match.isActive && !match.isClosed">
-                    🔴 {{ getStatusLabel(match) }}
-                  </template>
-                  <template v-else>
-                    {{ getStatusLabel(match) }}
-                  </template>
+                  {{ getStatusLabel(match) }}
                 </span>
               </div>
-            </template>
+            </div>
 
             <!-- Equipos -->
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 px-4 pb-4">
               <!-- Equipo local -->
               <div class="flex-1 flex flex-col items-center gap-2">
                 <MatchTeamLogo
@@ -127,30 +154,27 @@ function getStatusLabel(match: Match) {
                   :name="match.localTeamName ?? ''"
                   size="lg"
                 />
-                <span class="text-xs font-heading font-semibold text-(--ui-text-highlighted) text-center leading-tight line-clamp-2 uppercase tracking-wide">
+                <span class="text-xs font-heading font-black text-(--ui-text-highlighted) text-center leading-tight line-clamp-2 uppercase tracking-wide">
                   {{ match.localTeamName ?? 'TBD' }}
                 </span>
               </div>
 
-              <!-- Marcador -->
-              <div class="flex flex-col items-center gap-1 shrink-0">
+              <!-- Marcador / VS -->
+              <div class="flex flex-col items-center gap-1 shrink-0 min-w-[60px]">
                 <div
                   v-if="match.isClosed || match.isActive"
-                  class="score-pill"
+                  class="score-pill inline-flex items-center justify-center"
                 >
-                  <span class="font-heading text-lg font-bold text-(--ui-text-highlighted)">
-                    {{ match.localGoals ?? '-' }}
-                  </span>
-                  <span class="text-xs text-(--ui-text-muted) mx-1">-</span>
-                  <span class="font-heading text-lg font-bold text-(--ui-text-highlighted)">
-                    {{ match.visitorGoals ?? '-' }}
-                  </span>
+                  {{ match.localGoals ?? '-' }} - {{ match.visitorGoals ?? '-' }}
                 </div>
                 <span
                   v-else
-                  class="font-heading text-xs font-bold text-(--ui-text-muted) tracking-widest"
+                  class="font-heading text-sm font-black text-(--ui-text-muted) tracking-widest"
                 >
                   VS
+                </span>
+                <span class="text-[9px] text-(--ui-text-muted) font-mono uppercase tracking-widest">
+                  #{{ match.matchNumber }}
                 </span>
               </div>
 
@@ -161,24 +185,29 @@ function getStatusLabel(match: Match) {
                   :name="match.visitorTeamName ?? ''"
                   size="lg"
                 />
-                <span class="text-xs font-heading font-semibold text-(--ui-text-highlighted) text-center leading-tight line-clamp-2 uppercase tracking-wide">
+                <span class="text-xs font-heading font-black text-(--ui-text-highlighted) text-center leading-tight line-clamp-2 uppercase tracking-wide">
                   {{ match.visitorTeamName ?? 'TBD' }}
                 </span>
               </div>
             </div>
-          </UCard>
+          </div>
         </div>
       </div>
 
       <div
         v-else
-        class="text-center py-10"
+        class="text-center py-12 stagger-up"
       >
-        <UIcon
-          name="i-lucide-trophy"
-          class="size-12 text-(--ui-text-muted) mx-auto mb-3"
-        />
-        <p class="text-sm text-(--ui-text-muted)">
+        <div class="size-16 bg-(--ui-bg-elevated) rounded-full flex items-center justify-center mx-auto mb-4 border border-(--ui-border)">
+          <UIcon
+            name="i-lucide-trophy"
+            class="size-8 text-(--ui-text-muted)"
+          />
+        </div>
+        <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+          Sin partidos
+        </p>
+        <p class="text-sm text-(--ui-text-muted) mt-1">
           No hay partidos en esta categoría.
         </p>
       </div>

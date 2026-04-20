@@ -14,7 +14,7 @@ defineProps<Props>()
     <div
       v-for="(entry, i) in entries"
       :key="entry.boardId"
-      class="glass-card flex items-center justify-between p-4 transition-all duration-300 stagger-up active:scale-[0.98]"
+      class="card-elevated flex items-center justify-between p-4 transition-all duration-300 stagger-up active:scale-[0.98]"
       :class="[
         entry.userId === currentUserId ? 'border-primary-500/30' : '',
         `stagger-d${Math.min(i + 1, 12)}`
@@ -70,17 +70,17 @@ defineProps<Props>()
         <div class="w-6 flex justify-center">
           <UIcon
             v-if="entry.positionDelta === 'up'"
-            name="i-heroicons-chevron-up"
-            class="size-5 text-accent-500"
+            name="i-lucide-chevron-up"
+            class="size-5 text-secondary-500"
           />
           <UIcon
             v-else-if="entry.positionDelta === 'down'"
-            name="i-heroicons-chevron-down"
-            class="size-5 text-primary-500"
+            name="i-lucide-chevron-down"
+            class="size-5 text-error-500"
           />
           <UIcon
             v-else
-            name="i-heroicons-minus"
+            name="i-lucide-minus"
             class="size-4 text-neutral-300"
           />
         </div>

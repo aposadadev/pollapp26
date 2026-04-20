@@ -4,13 +4,15 @@ interface AppState {
   pageTitle: string
   showBottomNav: boolean
   isLoading: boolean
+  activeTournamentId: string
 }
 
 export const useAppStore = defineStore('app', {
   state: (): AppState => ({
     pageTitle: 'Mundial 2026',
     showBottomNav: true,
-    isLoading: false
+    isLoading: false,
+    activeTournamentId: 'mundial2026'
   }),
 
   actions: {

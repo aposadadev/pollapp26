@@ -6,6 +6,7 @@ import { matchRepository } from '~/repositories/match.repository'
 import { predictionRepository } from '~/repositories/prediction.repository'
 import { boardRepository } from '~/repositories/board.repository'
 import { rankingsRepository } from '~/repositories/rankings.repository'
+import { teamRepository } from '~/repositories/team.repository'
 import { scoringService } from './scoring.service'
 import { rankingService } from './ranking.service'
 import type { Match } from '~/types'
@@ -28,7 +29,19 @@ export class MatchService {
   }
 
   async updateTeams(matchId: string, localTeamId: string, visitorTeamId: string): Promise<void> {
-    await matchRepository.updateTeams(matchId, localTeamId, visitorTeamId)
+    const [local, visitor] = await Promise.all([
+      teamRepository.findById(localTeamId),
+      teamRepository.findById(visitorTeamId)
+    ])
+    await matchRepository.updateTeams(
+      matchId,
+      localTeamId,
+      visitorTeamId,
+      local?.name ?? '',
+      local?.logoUrl ?? '',
+      visitor?.name ?? '',
+      visitor?.logoUrl ?? ''
+    )
   }
 
   /**
@@ -58,34 +71,38 @@ export class MatchService {
 
     await predictionRepository.batchUpdatePoints(pointsUpdates)
 
-    // 4. Actualizar totales de cada board afectado
+    // 4. Actualizar totales de cada board afectado (en paralelo)
     const affectedBoardIds = [...new Set(predictions.map(p => p.boardId))]
-    for (const boardId of affectedBoardIds) {
-      const allBoardPreds = await predictionRepository.findByBoard(boardId)
-      const totalPoints = allBoardPreds.reduce((sum, p) => sum + p.points, 0)
-      const predsThreePoints = allBoardPreds.filter(p => p.points === 3).length
-      const predsOnePoints = allBoardPreds.filter(p => p.points === 1).length
-      // Solo actualizamos los stats de puntos — currentPos y previousPos
-      // se actualizan en el paso 5 vía batchUpdatePositions para preservar
-      // el historial de posición y que el delta (arriba/abajo) funcione.
-      await boardRepository.updatePointsStats(boardId, {
-        totalPoints,
-        predsThreePoints,
-        predsOnePoints
+    await Promise.all(
+      affectedBoardIds.map(async (boardId) => {
+        const allBoardPreds = await predictionRepository.findByBoard(boardId)
+        const totalPoints = allBoardPreds.reduce((sum, p) => sum + p.points, 0)
+        const predsThreePoints = allBoardPreds.filter(p => p.points === 3).length
+        const predsOnePoints = allBoardPreds.filter(p => p.points === 1).length
+        // Solo actualizamos los stats de puntos — currentPos y previousPos
+        // se actualizan en el paso 5 vía batchUpdatePositions para preservar
+        // el historial de posición y que el delta (arriba/abajo) funcione.
+        await boardRepository.updatePointsStats(boardId, {
+          totalPoints,
+          predsThreePoints,
+          predsOnePoints
+        })
       })
-    }
+    )
 
-    // 5. Recalcular posiciones por grupo
+    // 5. Recalcular posiciones por grupo (en paralelo)
     const affectedBoards = await Promise.all(affectedBoardIds.map(id => boardRepository.findById(id)))
     const groupIds = [...new Set(affectedBoards.filter(Boolean).map(b => b!.groupId))]
 
-    for (const groupId of groupIds) {
-      const groupBoards = await boardRepository.findActiveByGroup(groupId)
-      const rankingEntries = rankingService.recalculate(groupBoards)
-      const updates = rankingService.toBoardUpdates(rankingEntries)
-      await boardRepository.batchUpdatePositions(updates)
-      await rankingsRepository.write(groupId, rankingEntries)
-    }
+    await Promise.all(
+      groupIds.map(async (groupId) => {
+        const groupBoards = await boardRepository.findActiveByGroup(groupId)
+        const rankingEntries = rankingService.recalculate(groupBoards)
+        const updates = rankingService.toBoardUpdates(rankingEntries)
+        await boardRepository.batchUpdatePositions(updates)
+        await rankingsRepository.write(groupId, rankingEntries)
+      })
+    )
   }
 }
 

@@ -55,7 +55,15 @@ export function useAdmin() {
   // ── Tablas ────────────────────────────────────────────────────────────────
 
   async function getPendingBoards(groupId: string): Promise<Board[]> {
-    return boardService.findPendingByGroup(groupId)
+    loading.value = true
+    try {
+      return await boardService.findPendingByGroup(groupId)
+    } catch (err: unknown) {
+      toast.add({ title: 'Error al cargar tablas pendientes', description: (err as Error).message, color: 'error' })
+      return []
+    } finally {
+      loading.value = false
+    }
   }
 
   async function activateBoard(boardId: string, tournamentId: string): Promise<boolean> {

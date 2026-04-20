@@ -15,7 +15,7 @@ const emit = defineEmits<{
 
 <template>
   <div
-    class="glass-card p-5 group active:scale-[0.99] transition-all relative overflow-hidden"
+    class="card-elevated p-5 group active:scale-[0.99] transition-all relative overflow-hidden"
   >
     <div class="flex items-start justify-between mb-4">
       <div class="flex items-center gap-3">
@@ -42,7 +42,7 @@ const emit = defineEmits<{
       <!-- Group Specific Ranking Badge -->
       <div
         v-if="group.userBoardIsActive"
-        class="bg-accent-500/10 text-accent-600 px-3 py-1.5 rounded-full text-xs font-black shadow-sm"
+        class="bg-secondary-500/10 text-secondary-600 dark:text-secondary-400 px-3 py-1.5 rounded-full text-xs font-black shadow-sm"
       >
         #{{ ranking || "—" }}
       </div>
@@ -60,7 +60,7 @@ const emit = defineEmits<{
         class="rounded-full px-2"
       >
         <UIcon
-          name="i-heroicons-clock"
+          name="i-lucide-clock"
           class="mr-1"
         />
         Participación Pendiente
@@ -76,7 +76,7 @@ const emit = defineEmits<{
         block
         size="lg"
         class="rounded-xl font-bold uppercase text-[11px] flex-1 bg-secondary-50 hover:bg-secondary-100 dark:bg-secondary-900/20"
-        icon="i-heroicons-clipboard-document-list"
+        icon="i-lucide-clipboard-list"
       >
         Mi Tabla
       </UButton>
@@ -88,7 +88,7 @@ const emit = defineEmits<{
         size="lg"
         class="rounded-xl font-bold uppercase text-[11px] flex-1 opacity-50"
         disabled
-        icon="i-heroicons-clock"
+        icon="i-lucide-clock"
       >
         Esperando...
       </UButton>
@@ -100,7 +100,7 @@ const emit = defineEmits<{
         size="lg"
         :loading="loading"
         class="rounded-xl font-bold uppercase text-[11px] flex-1 shadow-lg shadow-primary-500/20"
-        icon="i-heroicons-plus-circle"
+        icon="i-lucide-circle-plus"
         @click="emit('requestBoard', group.id)"
       >
         Pedir Tabla
@@ -108,10 +108,10 @@ const emit = defineEmits<{
 
       <UButton
         v-if="group.userBoardIsActive"
-        :to="`/positions?group=${group.id}`"
+        :to="`/groups/${group.id}/positions`"
         color="neutral"
         variant="soft"
-        icon="i-heroicons-trophy"
+        icon="i-lucide-trophy"
         class="rounded-xl"
       />
     </div>
