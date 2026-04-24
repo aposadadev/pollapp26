@@ -22,7 +22,11 @@ export interface PredictionWithMatch extends Prediction {
     phase: string
     matchNumber: number
     stadium?: string
+    /** Fuente de verdad del estado del partido. */
+    status: import('./match').MatchStatus
+    /** @deprecated Usar `status`. Mantenido para compatibilidad con componentes aún no migrados. */
     isClosed: boolean
+    /** @deprecated Usar `status`. Mantenido para compatibilidad con componentes aún no migrados. */
     isActive: boolean
   }
 }

@@ -2,6 +2,7 @@
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import type { Match } from '~/types'
+import { isMatchActive, isMatchClosed } from '~/types/match'
 
 dayjs.locale('es')
 
@@ -25,16 +26,16 @@ const filteredMatches = computed(() => {
     const da = dayjs(a.date)
     const db = dayjs(b.date)
     // Active first, then scheduled, then closed
-    if (a.isActive && !b.isActive) return -1
-    if (!a.isActive && b.isActive) return 1
-    if (!a.isClosed && b.isClosed) return -1
-    if (a.isClosed && !b.isClosed) return 1
+    if (isMatchActive(a) && !isMatchActive(b)) return -1
+    if (!isMatchActive(a) && isMatchActive(b)) return 1
+    if (!isMatchClosed(a) && isMatchClosed(b)) return -1
+    if (isMatchClosed(a) && !isMatchClosed(b)) return 1
     return da.valueOf() - db.valueOf()
   })
 
-  if (activeFilter.value === 'En Vivo') return sorted.filter(m => m.isActive && !m.isClosed)
-  if (activeFilter.value === 'Programados') return sorted.filter(m => !m.isActive && !m.isClosed)
-  if (activeFilter.value === 'Cerrados') return sorted.filter(m => m.isClosed)
+  if (activeFilter.value === 'En Vivo') return sorted.filter(m => isMatchActive(m))
+  if (activeFilter.value === 'Programados') return sorted.filter(m => !isMatchActive(m) && !isMatchClosed(m))
+  if (activeFilter.value === 'Cerrados') return sorted.filter(m => isMatchClosed(m))
   return sorted
 })
 
@@ -43,8 +44,8 @@ function formatDate(date: Date) {
 }
 
 function getStatusLabel(match: Match) {
-  if (match.isClosed) return 'Finalizado'
-  if (match.isActive) return 'EN VIVO'
+  if (isMatchClosed(match)) return 'Finalizado'
+  if (isMatchActive(match)) return 'EN VIVO'
   return formatDate(match.date)
 }
 </script>
@@ -133,12 +134,12 @@ function getStatusLabel(match: Match) {
               </span>
               <div class="flex items-center gap-2">
                 <span
-                  v-if="match.isActive && !match.isClosed"
+                  v-if="isMatchActive(match)"
                   class="live-indicator"
                 />
                 <span
                   class="text-[11px] font-bold uppercase tracking-wider"
-                  :class="match.isActive && !match.isClosed ? 'text-error-500' : 'text-(--ui-text-muted)'"
+                  :class="isMatchActive(match) ? 'text-error-500' : 'text-(--ui-text-muted)'"
                 >
                   {{ getStatusLabel(match) }}
                 </span>
@@ -162,7 +163,7 @@ function getStatusLabel(match: Match) {
               <!-- Marcador / VS -->
               <div class="flex flex-col items-center gap-1 shrink-0 min-w-[60px]">
                 <div
-                  v-if="match.isClosed || match.isActive"
+                  v-if="isMatchClosed(match) || isMatchActive(match)"
                   class="score-pill inline-flex items-center justify-center"
                 >
                   {{ match.localGoals ?? '-' }} - {{ match.visitorGoals ?? '-' }}

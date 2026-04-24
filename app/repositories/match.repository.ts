@@ -14,15 +14,20 @@ export class MatchRepository extends BaseRepository<Match> {
   }
 
   async findActive(): Promise<Match[]> {
+    // Migrado a `status` — usa 'in' para obtener partidos scheduled + active.
+    // Semánticamente equivalente al legacy `isClosed == false`.
+    // Requiere que todos los docs tengan `status`; ejecutar backfill antes de
+    // desplegar en producción: `pnpm backfill:match-status`
     const all = await this.findAll([
-      this.where('isClosed', '==', false)
+      this.where('status', 'in', ['scheduled', 'active'])
     ])
     return all.sort((a, b) => a.date.getTime() - b.date.getTime())
   }
 
   async findClosed(): Promise<Match[]> {
+    // Migrado a `status` — closeMatch siempre escribe status='closed' desde PR3.
     const all = await this.findAll([
-      this.where('isClosed', '==', true)
+      this.where('status', '==', 'closed')
     ])
     return all.sort((a, b) => b.date.getTime() - a.date.getTime())
   }

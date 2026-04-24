@@ -4,6 +4,7 @@ import 'dayjs/locale/es'
 import { matchService } from '~/services/match.service'
 import { boardRepository } from '~/repositories/board.repository'
 import { predictionRepository } from '~/repositories/prediction.repository'
+import { isMatchActive, isMatchClosed } from '~/types/match'
 import type { MatchPredictionEntry } from '~/types'
 
 dayjs.locale('es')
@@ -133,7 +134,7 @@ const formattedDate = computed(() =>
                 </span>
               </div>
               <UBadge
-                v-if="match.isClosed"
+                v-if="isMatchClosed(match)"
                 color="neutral"
                 variant="soft"
                 size="sm"
@@ -142,7 +143,7 @@ const formattedDate = computed(() =>
                 Finalizado
               </UBadge>
               <div
-                v-else-if="match.isActive"
+                v-else-if="isMatchActive(match)"
                 class="flex items-center gap-1.5"
               >
                 <span class="live-indicator" />

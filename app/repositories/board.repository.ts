@@ -1,4 +1,4 @@
-import { where, writeBatch, doc, runTransaction, type Firestore } from 'firebase/firestore'
+import { where, writeBatch, doc, type Firestore } from 'firebase/firestore'
 import { BaseRepository } from './base.repository'
 import type { Board } from '~/types'
 
@@ -47,32 +47,6 @@ export class BoardRepository extends BaseRepository<Board> {
       where('groupId', '==', groupId)
     ])
     return results[0] ?? null
-  }
-
-  /**
-   * Creates a board and atomically assigns it a unique sequential number within
-   * the group, using a Firestore transaction on a counter document so that
-   * concurrent requests can never collide on the same number.
-   */
-  async createWithNumber(data: Omit<Board, 'id' | 'createdAt' | 'number'>): Promise<{ id: string, number: number }> {
-    const db = getDb()
-    const counterRef = doc(db, '_counters', `board_count_${data.groupId}`)
-
-    return runTransaction(db, async (txn) => {
-      const counterSnap = await txn.get(counterRef)
-      const currentCount: number = counterSnap.exists() ? (counterSnap.data()['count'] as number ?? 0) : 0
-      const number = 1000 + currentCount + 1
-
-      const newBoardRef = doc(db, 'boards')
-      txn.set(newBoardRef, {
-        ...data,
-        number,
-        createdAt: new Date()
-      })
-      txn.set(counterRef, { count: currentCount + 1 }, { merge: true })
-
-      return { id: newBoardRef.id, number }
-    })
   }
 
   async activate(boardId: string): Promise<void> {

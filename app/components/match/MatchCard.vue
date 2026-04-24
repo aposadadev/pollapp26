@@ -2,6 +2,7 @@
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
 import type { PredictionWithMatch } from '~/types'
+import { isMatchActive, isMatchClosed } from '~/types/match'
 
 dayjs.locale('es')
 
@@ -53,7 +54,7 @@ const matchStarted = computed(() => {
 })
 
 const isLocked = computed(
-  () => props.isReadonly || matchStarted.value || props.prediction.match.isClosed
+  () => props.isReadonly || matchStarted.value || isMatchClosed(props.prediction.match)
 )
 
 const formattedDate = computed(() =>
@@ -103,11 +104,11 @@ function handleRandomize() {
         </div>
         <div class="flex items-center gap-2">
           <span
-            v-if="prediction.match.isActive && !prediction.match.isClosed"
+            v-if="isMatchActive(prediction.match)"
             class="live-indicator"
           />
           <span
-            v-if="prediction.match.isActive && !prediction.match.isClosed"
+            v-if="isMatchActive(prediction.match)"
             class="text-error-500 font-black"
           >
             EN VIVO
@@ -161,7 +162,7 @@ function handleRandomize() {
             class="font-heading text-xs font-black text-neutral-300 tracking-widest"
           >VS</span>
           <UBadge
-            v-if="isLocked && !prediction.match.isClosed"
+            v-if="isLocked && !isMatchClosed(prediction.match)"
             color="neutral"
             variant="soft"
             size="xs"
@@ -174,7 +175,7 @@ function handleRandomize() {
             Cerrado
           </UBadge>
           <UBadge
-            v-if="prediction.match.isClosed"
+            v-if="isMatchClosed(prediction.match)"
             color="neutral"
             variant="outline"
             size="xs"
@@ -249,7 +250,7 @@ function handleRandomize() {
 
       <!-- Resultado + puntos para partidos cerrados -->
       <div
-        v-else-if="prediction.match.isClosed"
+        v-else-if="isMatchClosed(prediction.match)"
         class="flex items-center justify-between"
       >
         <div class="text-xs text-(--ui-text-muted)">

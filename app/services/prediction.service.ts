@@ -5,7 +5,8 @@
 import dayjs from 'dayjs'
 import { predictionRepository } from '~/repositories/prediction.repository'
 import { matchRepository } from '~/repositories/match.repository'
-import type { PredictionWithMatch } from '~/types'
+import { isMatchClosed } from '~/types/match'
+import type { PredictionWithMatch, MatchStatus } from '~/types'
 
 export class PredictionError extends Error {
   constructor(message: string, public code: string) {
@@ -28,7 +29,7 @@ export class PredictionService {
     const match = await matchRepository.findById(prediction.matchId)
     if (!match) throw new PredictionError('Partido no encontrado.', 'prediction/match-not-found')
 
-    if (match.isClosed) {
+    if (isMatchClosed(match)) {
       throw new PredictionError('Este partido ya terminó. No puedes modificar tu predicción.', 'prediction/match-closed')
     }
 
@@ -83,6 +84,7 @@ export class PredictionService {
           phase: match.phase,
           matchNumber: match.matchNumber,
           stadium: match.stadium,
+          status: match.status as MatchStatus,
           isClosed: match.isClosed,
           isActive: match.isActive
         }
@@ -93,13 +95,13 @@ export class PredictionService {
 
   getUpcoming(predictions: PredictionWithMatch[]): PredictionWithMatch[] {
     return predictions
-      .filter(p => !p.match.isClosed)
+      .filter(p => !isMatchClosed(p.match))
       .sort((a, b) => a.match.date.getTime() - b.match.date.getTime())
   }
 
   getPrevious(predictions: PredictionWithMatch[]): PredictionWithMatch[] {
     return predictions
-      .filter(p => p.match.isClosed)
+      .filter(p => isMatchClosed(p.match))
       .sort((a, b) => b.match.date.getTime() - a.match.date.getTime())
   }
 

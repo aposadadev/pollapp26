@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Match, Team } from '~/types'
+import { isMatchActive, isMatchClosed } from '~/types/match'
 
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
@@ -28,9 +29,9 @@ const closeForm = reactive({ localGoals: 0, visitorGoals: 0 })
 // Edit teams form
 const teamsForm = reactive({ localTeamId: '', visitorTeamId: '' })
 
-const activeMatches = computed(() => matches.value.filter(m => m.isActive && !m.isClosed))
-const scheduledMatches = computed(() => matches.value.filter(m => !m.isActive && !m.isClosed))
-const closedMatches = computed(() => matches.value.filter(m => m.isClosed))
+const activeMatches = computed(() => matches.value.filter(m => isMatchActive(m) && !isMatchClosed(m)))
+const scheduledMatches = computed(() => matches.value.filter(m => !isMatchActive(m) && !isMatchClosed(m)))
+const closedMatches = computed(() => matches.value.filter(m => isMatchClosed(m)))
 
 const tabItems = computed(() => [
   { label: `Activos (${activeMatches.value.length})`, value: 'active', icon: 'i-lucide-zap' },
@@ -175,7 +176,7 @@ async function handleUpdateTeams() {
                   #{{ match.matchNumber }} · {{ match.phase }}
                 </span>
                 <span
-                  v-if="match.isActive && !match.isClosed"
+                  v-if="isMatchActive(match) && !isMatchClosed(match)"
                   class="live-indicator"
                 />
               </div>
@@ -191,7 +192,7 @@ async function handleUpdateTeams() {
               </div>
 
               <div
-                v-if="match.isClosed"
+                v-if="isMatchClosed(match)"
                 class="mt-2"
               >
                 <span class="score-pill inline-flex">
@@ -202,7 +203,7 @@ async function handleUpdateTeams() {
 
             <div class="flex gap-2 shrink-0">
               <UButton
-                v-if="!match.isClosed"
+                v-if="!isMatchClosed(match)"
                 size="sm"
                 color="neutral"
                 variant="outline"
@@ -211,7 +212,7 @@ async function handleUpdateTeams() {
                 @click="openTeamsModal(match)"
               />
               <UButton
-                v-if="!match.isActive && !match.isClosed"
+                v-if="!isMatchActive(match) && !isMatchClosed(match)"
                 size="sm"
                 color="secondary"
                 variant="solid"
@@ -222,7 +223,7 @@ async function handleUpdateTeams() {
                 En Vivo
               </UButton>
               <UButton
-                v-if="!match.isClosed"
+                v-if="!isMatchClosed(match)"
                 size="sm"
                 color="error"
                 variant="solid"
