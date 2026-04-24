@@ -78,12 +78,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── Counters (internal, read/write by any authenticated user) ────────────
-    // Used by board.repository.ts to atomically assign sequential board numbers
-    // per group. Clients only read/increment; the field is an integer counter.
+    // ── Counters (internal, server-side only) ────────────────────────────────
+    // Managed exclusively by Cloud Functions via Admin SDK (requestBoard callable).
+    // Clients must NOT read or write this collection; board creation goes through
+    // the requestBoard callable which runs with elevated server privileges.
 
     match /_counters/{counterId} {
-      allow read, write: if isAuth();
+      allow read, write: if false;
     }
 
   }

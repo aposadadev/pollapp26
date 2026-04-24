@@ -2,5 +2,6 @@
 import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt(
-  // Your custom configs here
+  // Ignore compiled Cloud Functions output — only lint TypeScript sources
+  { ignores: ['functions/lib/**'] }
 )

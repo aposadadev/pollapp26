@@ -35,13 +35,17 @@ export const requestBoard = onCall(async (request) => {
     throw new HttpsError('already-exists', 'Ya tienes una tabla en este grupo.')
   }
 
-  // Determinar número correlativo
-  const boardsSnap = await db()
-    .collection('boards')
-    .where('groupId', '==', groupId)
-    .get()
-
-  const number = 1000 + boardsSnap.size + 1
+  // Asignar número correlativo atómicamente usando un contador transaccional
+  // por grupo. Esto elimina la race condition que existía al contar documentos
+  // con .size (lectura no atómica: varios clientes podían obtener el mismo número).
+  const counterRef = db().collection('_counters').doc(groupId)
+  const number = await db().runTransaction(async (tx) => {
+    const snap = await tx.get(counterRef)
+    const current = (snap.data()?.['boardCount'] as number | undefined) ?? 1000
+    const next = current + 1
+    tx.set(counterRef, { boardCount: next }, { merge: true })
+    return next
+  })
 
   // Obtener datos del usuario y del grupo
   const [userSnap, groupSnap] = await Promise.all([

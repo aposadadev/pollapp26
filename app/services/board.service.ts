@@ -5,8 +5,6 @@
 import { boardRepository } from '~/repositories/board.repository'
 import { predictionRepository } from '~/repositories/prediction.repository'
 import { matchRepository } from '~/repositories/match.repository'
-import { groupRepository } from '~/repositories/group.repository'
-import { userRepository } from '~/repositories/user.repository'
 import type { Board } from '~/types'
 
 export class BoardError extends Error {
@@ -17,62 +15,33 @@ export class BoardError extends Error {
 }
 
 export class BoardService {
-  /** Solicitar una tabla en un grupo (queda pendiente hasta que admin la active) */
+  /** Solicitar una tabla en un grupo (queda pendiente hasta que admin la active).
+   *
+   * La creación va a través del callable `requestBoard` (Cloud Function) para que
+   * el contador de número sea gestionado exclusivamente server-side vía Admin SDK,
+   * evitando la race condition y garantizando que _counters no sea writeable por clientes.
+   */
   async requestBoard(userId: string, groupId: string, tournamentId: string): Promise<Board> {
-    // Validar que no exista ya una tabla para este usuario en este grupo
-    const existing = await boardRepository.findByUserAndGroup(userId, groupId)
-
-    if (existing) {
-      throw new BoardError(
-        'Ya tienes una tabla en este grupo.',
-        'board/already-exists'
-      )
+    const { httpsCallable } = await import('firebase/functions')
+    const { $firebaseFunctions } = useNuxtApp() as unknown as {
+      $firebaseFunctions: import('firebase/functions').Functions
     }
 
-    // Determine board number atomically to avoid TOCTOU collisions
-    const [user, group] = await Promise.all([
-      userRepository.findById(userId),
-      groupRepository.findById(groupId)
-    ])
+    const callFn = httpsCallable<
+      { groupId: string, tournamentId: string },
+      { success: boolean, boardId: string, number: number }
+    >($firebaseFunctions, 'requestBoard')
 
-    if (!user) {
-      throw new BoardError('Usuario no encontrado', 'user/not-found')
+    const result = await callFn({ groupId, tournamentId })
+    const { boardId, number } = result.data
+
+    // Obtener el board recién creado desde Firestore
+    const board = await boardRepository.findById(boardId)
+    if (!board) {
+      throw new BoardError('Tabla creada pero no encontrada al releer.', 'board/not-found-after-create')
     }
 
-    if (!group) {
-      throw new BoardError('Grupo no encontrado', 'group/not-found')
-    }
-
-    const { id, number } = await boardRepository.createWithNumber({
-      userId,
-      userDisplayName: user.displayName ?? '',
-      groupId,
-      groupName: group.name ?? '',
-      tournamentId,
-      isActive: false,
-      totalPoints: 0,
-      predsThreePoints: 0,
-      predsOnePoints: 0,
-      currentPos: 0,
-      previousPos: 0
-    })
-
-    return {
-      id,
-      userId,
-      userDisplayName: user.displayName ?? '',
-      groupId,
-      groupName: group.name ?? '',
-      tournamentId,
-      number,
-      isActive: false,
-      totalPoints: 0,
-      predsThreePoints: 0,
-      predsOnePoints: 0,
-      currentPos: 0,
-      previousPos: 0,
-      createdAt: new Date()
-    }
+    return { ...board, number }
   }
 
   /** Activar una tabla pendiente y crear todas las predicciones vacías */
