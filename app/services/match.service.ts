@@ -16,6 +16,11 @@ export class MatchService {
     return matchRepository.findByTournament(tournamentId)
   }
 
+  /** Retorna solo los partidos visibles para usuarios finales. */
+  async findVisibleByTournament(tournamentId: string): Promise<Match[]> {
+    return matchRepository.findVisibleByTournament(tournamentId)
+  }
+
   async findActive(): Promise<Match[]> {
     return matchRepository.findActive()
   }
@@ -46,6 +51,11 @@ export class MatchService {
       visitor?.name ?? '',
       visitor?.logoUrl ?? ''
     )
+    // Publicación progresiva: al definir ambos equipos, el partido se vuelve
+    // visible para usuarios finales automáticamente.
+    if (localTeamId && visitorTeamId) {
+      await matchRepository.update(matchId, { visible: true })
+    }
   }
 
   /**

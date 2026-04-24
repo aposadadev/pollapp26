@@ -1,4 +1,5 @@
 import { BaseRepository } from './base.repository'
+import { isMatchVisible } from '~/types/match'
 import type { Match } from '~/types'
 
 export class MatchRepository extends BaseRepository<Match> {
@@ -6,11 +7,34 @@ export class MatchRepository extends BaseRepository<Match> {
     super('matches')
   }
 
+  /**
+   * Retorna todos los partidos de un torneo, sin filtro de visibilidad.
+   * Semántica legacy — conservada para no romper callers existentes.
+   * @deprecated Preferir `findVisibleByTournament` (usuarios) o
+   *             `findByTournamentAdmin` (admin) según el contexto.
+   */
   async findByTournament(tournamentId: string): Promise<Match[]> {
     const all = await this.findAll([
       this.where('tournamentId', '==', tournamentId)
     ])
     return all.sort((a, b) => a.matchNumber - b.matchNumber)
+  }
+
+  /**
+   * Ruta para usuarios finales: retorna solo los partidos visibles del torneo.
+   * Un partido es visible si `visible !== false` (fallback seguro para legacy).
+   */
+  async findVisibleByTournament(tournamentId: string): Promise<Match[]> {
+    const all = await this.findByTournament(tournamentId)
+    return all.filter(m => isMatchVisible(m))
+  }
+
+  /**
+   * Ruta para admin: retorna todos los partidos del torneo sin filtro de
+   * visibilidad. Equivalente a `findByTournament` pero con semántica explícita.
+   */
+  async findByTournamentAdmin(tournamentId: string): Promise<Match[]> {
+    return this.findByTournament(tournamentId)
   }
 
   async findActive(): Promise<Match[]> {
@@ -86,6 +110,7 @@ export class MatchRepository extends BaseRepository<Match> {
       status: data['status'] as Match['status'] ?? 'scheduled',
       isActive: data['isActive'] as boolean ?? false,
       isClosed: data['isClosed'] as boolean ?? false,
+      visible: data['visible'] as boolean | undefined,
       createdAt: (data['createdAt'] as { toDate?: () => Date })?.toDate?.() ?? new Date()
     }
   }

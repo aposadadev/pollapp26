@@ -14,7 +14,7 @@ export function useMatches(tournamentId: string) {
     loading.value = true
     error.value = null
     try {
-      matches.value = await matchService.findByTournament(tournamentId)
+      matches.value = await matchService.findVisibleByTournament(tournamentId)
     } catch (err: unknown) {
       error.value = parseFirebaseError(err, 'No se pudieron cargar los partidos.')
     } finally {

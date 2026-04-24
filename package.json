@@ -17,7 +17,8 @@
     "seed:test": "npx tsx scripts/seed-test.ts",
     "seed:clean": "npx tsx scripts/seed-test.ts --clean",
     "reset": "npx tsx scripts/reset.ts",
-    "backfill:match-status": "npx tsx scripts/backfill-match-status.ts"
+    "backfill:match-status": "npx tsx scripts/backfill-match-status.ts",
+    "backfill:match-visibility": "npx tsx scripts/backfill-match-visibility.ts"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.98",

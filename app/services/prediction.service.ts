@@ -60,7 +60,7 @@ export class PredictionService {
     // 2 queries en paralelo en lugar de N+1 secuenciales
     const [predictions, matches] = await Promise.all([
       predictionRepository.findByBoard(boardId),
-      matchRepository.findByTournament(tournamentId)
+      matchRepository.findVisibleByTournament(tournamentId)
     ])
 
     // Índice de partidos para O(1) lookup

@@ -43,6 +43,14 @@ export interface Match {
    */
   isClosed: boolean
   createdAt: Date
+  /**
+   * Controla si el partido es visible para usuarios finales.
+   * Un partido puede existir en Firestore pero estar oculto hasta que el admin
+   * lo publique (e.g., partidos de eliminatorias con equipos aún sin definir).
+   * - `true` o `undefined` (legacy) → visible para usuarios
+   * - `false` → oculto para usuarios; solo admin puede verlo
+   */
+  visible?: boolean
 }
 
 export interface MatchWithTeams extends Match {
@@ -77,4 +85,13 @@ export function isMatchClosed(match: Pick<Match, 'status' | 'isClosed'>): boolea
  */
 export function isMatchScheduled(match: Pick<Match, 'status' | 'isActive' | 'isClosed'>): boolean {
   return !isMatchActive(match) && !isMatchClosed(match)
+}
+
+/**
+ * Retorna true si el partido es visible para usuarios finales.
+ * Fallback seguro: si el campo `visible` no existe en el documento (legacy),
+ * se considera visible=true para no romper partidos existentes.
+ */
+export function isMatchVisible(match: Pick<Match, 'visible'>): boolean {
+  return match.visible !== false
 }
