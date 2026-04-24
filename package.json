@@ -7,12 +7,16 @@
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "lint": "eslint .",
     "typecheck": "nuxt typecheck",
     "seed": "npx tsx scripts/seed.ts",
     "seed:tournament": "npx tsx scripts/seed-tournament.ts",
     "seed:test": "npx tsx scripts/seed-test.ts",
-    "seed:clean": "npx tsx scripts/seed-test.ts --clean"
+    "seed:clean": "npx tsx scripts/seed-test.ts --clean",
+    "reset": "npx tsx scripts/reset.ts"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.98",
@@ -30,10 +34,12 @@
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.15.2",
+    "@vitest/coverage-v8": "^4.1.5",
     "eslint": "^10.0.3",
     "firebase-admin": "^13.7.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "vitest": "^4.1.5",
     "vue-tsc": "^3.2.5"
   },
   "packageManager": "pnpm@10.32.1"

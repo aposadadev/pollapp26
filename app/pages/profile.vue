@@ -91,6 +91,41 @@ const memberSince = computed(() => {
     date instanceof Date ? date : new Date(date)
   )
 })
+
+// ── Notificaciones ────────────────────────────────────────────────────────────
+const {
+  isSupported: notifSupported,
+  isSubscribed,
+  permission: notifPermission,
+  prefs: notifPrefs,
+  loading: notifLoading,
+  enableNotifications,
+  disableNotifications,
+  savePrefs
+} = useNotifications()
+
+const localPrefs = ref({ ...notifPrefs.value })
+watch(notifPrefs, (p) => {
+  localPrefs.value = { ...p }
+})
+
+const reminderOptions = [
+  { label: '1 hora antes', value: 1 },
+  { label: '2 horas antes', value: 2 },
+  { label: '4 horas antes', value: 4 }
+]
+
+async function handleToggleNotifications() {
+  if (isSubscribed.value) {
+    await disableNotifications()
+  } else {
+    await enableNotifications()
+  }
+}
+
+async function handleSavePrefs() {
+  await savePrefs(localPrefs.value)
+}
 </script>
 
 <template>
@@ -127,7 +162,10 @@ const memberSince = computed(() => {
           size="sm"
           class="rounded-full font-bold uppercase tracking-wider"
         >
-          <UIcon name="i-lucide-shield-check" class="size-3 mr-1" />
+          <UIcon
+            name="i-lucide-shield-check"
+            class="size-3 mr-1"
+          />
           Admin
         </UBadge>
       </div>
@@ -136,7 +174,10 @@ const memberSince = computed(() => {
       <div class="card-elevated p-4 stagger-up stagger-d2">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-user" class="size-4 text-primary-500" />
+            <UIcon
+              name="i-lucide-user"
+              class="size-4 text-primary-500"
+            />
             <span class="font-heading text-sm font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
               Nombre
             </span>
@@ -198,7 +239,10 @@ const memberSince = computed(() => {
       <div class="card-elevated p-4 stagger-up stagger-d3">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-2">
-            <UIcon name="i-lucide-lock" class="size-4 text-primary-500" />
+            <UIcon
+              name="i-lucide-lock"
+              class="size-4 text-primary-500"
+            />
             <span class="font-heading text-sm font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
               Contraseña
             </span>
@@ -215,7 +259,10 @@ const memberSince = computed(() => {
           </UButton>
         </div>
 
-        <div v-if="showPasswordForm" class="space-y-3">
+        <div
+          v-if="showPasswordForm"
+          class="space-y-3"
+        >
           <UInput
             v-model="currentPassword"
             type="password"
@@ -272,8 +319,107 @@ const memberSince = computed(() => {
         </p>
       </div>
 
+      <!-- Notificaciones Push -->
+      <div
+        v-if="notifSupported"
+        class="card-elevated p-4 stagger-up stagger-d4"
+      >
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <UIcon
+              name="i-lucide-bell"
+              class="size-4 text-primary-500"
+            />
+            <span class="font-heading text-sm font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+              Notificaciones
+            </span>
+          </div>
+          <UToggle
+            :model-value="isSubscribed"
+            :loading="notifLoading"
+            color="secondary"
+            @update:model-value="handleToggleNotifications"
+          />
+        </div>
+
+        <!-- Permiso denegado -->
+        <p
+          v-if="notifPermission === 'denied'"
+          class="text-xs text-error-500"
+        >
+          Las notificaciones están bloqueadas en tu navegador. Ve a Configuración → Privacidad para habilitarlas.
+        </p>
+
+        <!-- Configuración de prefs cuando está activo -->
+        <div
+          v-else-if="isSubscribed"
+          class="space-y-3 mt-2 pt-3 border-t border-(--ui-border)/50"
+        >
+          <!-- Recordatorio de partido -->
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-semibold text-(--ui-text)">
+                Recordatorio de partido
+              </p>
+              <p class="text-xs text-(--ui-text-muted)">
+                Te avisamos antes de que empiece
+              </p>
+            </div>
+            <UToggle
+              v-model="localPrefs.matchReminder"
+              color="secondary"
+              size="sm"
+            />
+          </div>
+
+          <!-- Cuántas horas antes -->
+          <div
+            v-if="localPrefs.matchReminder"
+            class="flex items-center justify-between"
+          >
+            <p class="text-sm text-(--ui-text-muted)">
+              Anticipación
+            </p>
+            <div class="flex gap-1">
+              <button
+                v-for="opt in reminderOptions"
+                :key="opt.value"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                :class="[
+                  localPrefs.reminderHoursBeforeMatch === opt.value
+                    ? 'bg-secondary-500 text-white'
+                    : 'bg-(--ui-bg-muted) text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)'
+                ]"
+                @click="localPrefs.reminderHoursBeforeMatch = opt.value as 1 | 2 | 4"
+              >
+                {{ opt.label.split(' ')[0] }}h
+              </button>
+            </div>
+          </div>
+
+          <UButton
+            color="secondary"
+            variant="soft"
+            size="xs"
+            class="w-full font-bold"
+            :loading="notifLoading"
+            @click="handleSavePrefs"
+          >
+            Guardar preferencias
+          </UButton>
+        </div>
+
+        <!-- Descripción cuando no está activo -->
+        <p
+          v-else
+          class="text-xs text-(--ui-text-muted)"
+        >
+          Actívalas para recibir recordatorios antes de los partidos.
+        </p>
+      </div>
+
       <!-- Cerrar sesión -->
-      <div class="stagger-up stagger-d4">
+      <div class="stagger-up stagger-d5">
         <UButton
           color="error"
           variant="soft"
