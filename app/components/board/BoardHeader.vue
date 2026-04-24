@@ -88,13 +88,19 @@ const positionIcon = (board: Board) => {
         class="flex items-center justify-start gap-4 mt-8 stagger-up stagger-d3"
       >
         <div class="flex items-center gap-2">
-          <UIcon name="i-lucide-crosshair" class="size-4 text-secondary-400 shrink-0" />
+          <UIcon
+            name="i-lucide-crosshair"
+            class="size-4 text-secondary-400 shrink-0"
+          />
           <div class="flex flex-col">
             <span class="text-white text-[12px] font-black leading-none">{{ board.predsThreePoints }} Exactos</span>
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <UIcon name="i-lucide-circle-check" class="size-4 text-primary-400 shrink-0" />
+          <UIcon
+            name="i-lucide-circle-check"
+            class="size-4 text-primary-400 shrink-0"
+          />
           <div class="flex flex-col">
             <span class="text-white text-[12px] font-black leading-none">{{ board.predsOnePoints }} Parciales</span>
           </div>

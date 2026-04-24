@@ -25,7 +25,7 @@ const navItems = computed(() => {
   return items
 })
 
-const isActive = (item: { to: string; matchPrefix?: string }) => {
+const isActive = (item: { to: string, matchPrefix?: string }) => {
   const prefix = item.matchPrefix ?? item.to
   if (item.to === '/') return route.path === '/'
   return route.path.startsWith(prefix)

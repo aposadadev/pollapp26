@@ -105,7 +105,10 @@ async function handleRandomize(predictionId: string) {
           ]"
           @click="activeTab = 'upcoming'"
         >
-          <UIcon name="i-lucide-clock" class="size-4" />
+          <UIcon
+            name="i-lucide-clock"
+            class="size-4"
+          />
           <span class="text-xs font-bold uppercase tracking-wider">Próximos ({{ upcoming.length }})</span>
         </button>
         <button
@@ -117,7 +120,10 @@ async function handleRandomize(predictionId: string) {
           ]"
           @click="activeTab = 'previous'"
         >
-          <UIcon name="i-lucide-history" class="size-4" />
+          <UIcon
+            name="i-lucide-history"
+            class="size-4"
+          />
           <span class="text-xs font-bold uppercase tracking-wider">Anteriores ({{ previous.length }})</span>
         </button>
       </div>

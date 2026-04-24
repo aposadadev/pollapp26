@@ -360,13 +360,19 @@ async function handleRequestBoard(groupId: string) {
         >
           <div class="flex items-center gap-3">
             <div class="size-9 rounded-xl bg-primary-500/10 flex items-center justify-center">
-              <UIcon name="i-lucide-calendar" class="size-5 text-primary-500" />
+              <UIcon
+                name="i-lucide-calendar"
+                class="size-5 text-primary-500"
+              />
             </div>
             <span class="font-heading font-black text-neutral-800 dark:text-white text-[15px] tracking-wide">
               Partidos
             </span>
           </div>
-          <UIcon name="i-lucide-chevron-right" class="size-4 text-neutral-400 group-hover:text-primary-500 transition-colors" />
+          <UIcon
+            name="i-lucide-chevron-right"
+            class="size-4 text-neutral-400 group-hover:text-primary-500 transition-colors"
+          />
         </NuxtLink>
 
         <NuxtLink
@@ -375,13 +381,19 @@ async function handleRequestBoard(groupId: string) {
         >
           <div class="flex items-center gap-3">
             <div class="size-9 rounded-xl bg-secondary-500/10 flex items-center justify-center">
-              <UIcon name="i-lucide-trophy" class="size-5 text-secondary-500" />
+              <UIcon
+                name="i-lucide-trophy"
+                class="size-5 text-secondary-500"
+              />
             </div>
             <span class="font-heading font-black text-neutral-800 dark:text-white text-[15px] tracking-wide">
               Tabla de Posiciones
             </span>
           </div>
-          <UIcon name="i-lucide-chevron-right" class="size-4 text-neutral-400 group-hover:text-primary-500 transition-colors" />
+          <UIcon
+            name="i-lucide-chevron-right"
+            class="size-4 text-neutral-400 group-hover:text-primary-500 transition-colors"
+          />
         </NuxtLink>
 
         <NuxtLink
@@ -390,13 +402,19 @@ async function handleRequestBoard(groupId: string) {
         >
           <div class="flex items-center gap-3">
             <div class="size-9 rounded-xl bg-error-500/10 flex items-center justify-center">
-              <UIcon name="i-lucide-book-open" class="size-5 text-error-500" />
+              <UIcon
+                name="i-lucide-book-open"
+                class="size-5 text-error-500"
+              />
             </div>
             <span class="font-heading font-black text-neutral-800 dark:text-white text-[15px] tracking-wide">
               Reglas del Juego
             </span>
           </div>
-          <UIcon name="i-lucide-chevron-right" class="size-4 text-neutral-400 group-hover:text-primary-500 transition-colors" />
+          <UIcon
+            name="i-lucide-chevron-right"
+            class="size-4 text-neutral-400 group-hover:text-primary-500 transition-colors"
+          />
         </NuxtLink>
       </div>
     </div>

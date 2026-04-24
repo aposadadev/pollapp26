@@ -266,7 +266,10 @@ function handleRandomize() {
             :to="`/board/${boardId}/match/${prediction.match.id}`"
             class="text-[10px] font-bold uppercase tracking-wider text-primary-500 hover:text-primary-400 transition-colors flex items-center gap-1"
           >
-            <UIcon name="i-lucide-users" class="size-3" />
+            <UIcon
+              name="i-lucide-users"
+              class="size-3"
+            />
             Ver todos
           </NuxtLink>
         </div>

@@ -8,26 +8,23 @@ export class MatchRepository extends BaseRepository<Match> {
 
   async findByTournament(tournamentId: string): Promise<Match[]> {
     const all = await this.findAll([
-      this.where('tournamentId', '==', tournamentId),
-      this.orderBy('matchNumber')
+      this.where('tournamentId', '==', tournamentId)
     ])
-    return all
+    return all.sort((a, b) => a.matchNumber - b.matchNumber)
   }
 
   async findActive(): Promise<Match[]> {
     const all = await this.findAll([
-      this.where('isClosed', '==', false),
-      this.orderBy('date')
+      this.where('isClosed', '==', false)
     ])
-    return all
+    return all.sort((a, b) => a.date.getTime() - b.date.getTime())
   }
 
   async findClosed(): Promise<Match[]> {
     const all = await this.findAll([
-      this.where('isClosed', '==', true),
-      this.orderBy('date', 'desc')
+      this.where('isClosed', '==', true)
     ])
-    return all
+    return all.sort((a, b) => b.date.getTime() - a.date.getTime())
   }
 
   async closeMatch(matchId: string, localGoals: number, visitorGoals: number): Promise<void> {
@@ -37,6 +34,13 @@ export class MatchRepository extends BaseRepository<Match> {
       isClosed: true,
       isActive: false,
       status: 'closed'
+    })
+  }
+
+  async activateMatch(matchId: string): Promise<void> {
+    await this.update(matchId, {
+      isActive: true,
+      status: 'active'
     })
   }
 

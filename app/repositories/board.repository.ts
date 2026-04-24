@@ -54,7 +54,7 @@ export class BoardRepository extends BaseRepository<Board> {
    * the group, using a Firestore transaction on a counter document so that
    * concurrent requests can never collide on the same number.
    */
-  async createWithNumber(data: Omit<Board, 'id' | 'createdAt' | 'number'>): Promise<{ id: string; number: number }> {
+  async createWithNumber(data: Omit<Board, 'id' | 'createdAt' | 'number'>): Promise<{ id: string, number: number }> {
     const db = getDb()
     const counterRef = doc(db, '_counters', `board_count_${data.groupId}`)
 

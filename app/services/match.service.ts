@@ -28,6 +28,10 @@ export class MatchService {
     return matchRepository.findById(matchId)
   }
 
+  async activateMatch(matchId: string): Promise<void> {
+    await matchRepository.activateMatch(matchId)
+  }
+
   async updateTeams(matchId: string, localTeamId: string, visitorTeamId: string): Promise<void> {
     const [local, visitor] = await Promise.all([
       teamRepository.findById(localTeamId),

@@ -16,6 +16,7 @@ service cloud.firestore {
 
     // ── Users ─────────────────────────────────────────────────────────────────
     // El usuario puede leer/escribir su propio perfil; admins leen todo.
+    // Incluye fcmTokens y notificationPrefs (escritura por el propio usuario).
 
     match /users/{userId} {
       allow read: if isAuth();
@@ -25,18 +26,18 @@ service cloud.firestore {
     }
 
     // ── Teams ─────────────────────────────────────────────────────────────────
-    // Cualquier usuario autenticado puede leer. Solo admins escriben.
+    // Lectura pública (datos del torneo). Solo admins escriben.
 
     match /teams/{teamId} {
-      allow read: if isAuth();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     // ── Matches ───────────────────────────────────────────────────────────────
-    // Cualquier usuario autenticado puede leer. Solo admins escriben.
+    // Lectura pública (datos del torneo). Solo admins escriben.
 
     match /matches/{matchId} {
-      allow read: if isAuth();
+      allow read: if true;
       allow write: if isAdmin();
     }
 

@@ -48,7 +48,18 @@ onMounted(async () => {
           visitorGoalPrediction: pred.visitorGoalPrediction,
           points: pred.points
         }
-      }).sort((a, b) => b.points - a.points)
+      }).sort((a, b) => {
+        // Primero los que tienen puntos (partido cerrado), luego los sin pronóstico
+        if (b.points !== null && a.points === null) return 1
+        if (a.points !== null && b.points === null) return -1
+        if (a.points !== null && b.points !== null) return b.points - a.points
+        // Ambos null: los que tienen pronóstico primero
+        const aHas = a.localGoalPrediction !== null
+        const bHas = b.localGoalPrediction !== null
+        if (aHas && !bHas) return -1
+        if (!aHas && bHas) return 1
+        return 0
+      })
     }
   } finally {
     loading.value = false
@@ -221,8 +232,17 @@ const formattedDate = computed(() =>
                     </div>
                   </td>
                   <td class="px-4 py-3.5 text-center">
-                    <span class="font-heading text-base font-black text-(--ui-text-highlighted) tabular-nums tracking-wider bg-(--ui-bg-muted) px-2.5 py-1 rounded-lg border border-(--ui-border)/50">
-                      {{ pred.localGoalPrediction ?? '-' }} - {{ pred.visitorGoalPrediction ?? '-' }}
+                    <span
+                      v-if="pred.localGoalPrediction !== null && pred.visitorGoalPrediction !== null"
+                      class="font-heading text-base font-black text-(--ui-text-highlighted) tabular-nums tracking-wider bg-(--ui-bg-muted) px-2.5 py-1 rounded-lg border border-(--ui-border)/50"
+                    >
+                      {{ pred.localGoalPrediction }} - {{ pred.visitorGoalPrediction }}
+                    </span>
+                    <span
+                      v-else
+                      class="text-[11px] font-bold text-(--ui-text-muted) uppercase tracking-wider italic"
+                    >
+                      Sin pronóstico
                     </span>
                   </td>
                   <td class="px-4 py-3.5 text-right">

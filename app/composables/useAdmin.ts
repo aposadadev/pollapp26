@@ -4,6 +4,7 @@
 import { matchService } from '~/services/match.service'
 import { boardService } from '~/services/board.service'
 import { teamRepository } from '~/repositories/team.repository'
+import { parseFirebaseError } from '~/utils/firebase-error'
 import type { Board, Team } from '~/types'
 
 export function useAdmin() {
@@ -11,6 +12,20 @@ export function useAdmin() {
   const loading = ref(false)
 
   // ── Partidos ──────────────────────────────────────────────────────────────
+
+  async function activateMatch(matchId: string): Promise<boolean> {
+    loading.value = true
+    try {
+      await matchService.activateMatch(matchId)
+      toast.add({ title: 'Partido en vivo', description: 'El partido fue marcado como activo.', color: 'secondary' })
+      return true
+    } catch (err: unknown) {
+      toast.add({ title: 'Error al activar partido', description: parseFirebaseError(err), color: 'error' })
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
 
   async function closeMatch(
     matchId: string,
@@ -27,7 +42,7 @@ export function useAdmin() {
       })
       return true
     } catch (err: unknown) {
-      toast.add({ title: 'Error al cerrar partido', description: (err as Error).message, color: 'error' })
+      toast.add({ title: 'Error al cerrar partido', description: parseFirebaseError(err), color: 'error' })
       return false
     } finally {
       loading.value = false
@@ -45,7 +60,7 @@ export function useAdmin() {
       toast.add({ title: 'Equipos actualizados', color: 'secondary' })
       return true
     } catch (err: unknown) {
-      toast.add({ title: 'Error', description: (err as Error).message, color: 'error' })
+      toast.add({ title: 'Error', description: parseFirebaseError(err), color: 'error' })
       return false
     } finally {
       loading.value = false
@@ -59,7 +74,7 @@ export function useAdmin() {
     try {
       return await boardService.findPendingByGroup(groupId)
     } catch (err: unknown) {
-      toast.add({ title: 'Error al cargar tablas pendientes', description: (err as Error).message, color: 'error' })
+      toast.add({ title: 'Error al cargar tablas pendientes', description: parseFirebaseError(err), color: 'error' })
       return []
     } finally {
       loading.value = false
@@ -73,7 +88,7 @@ export function useAdmin() {
       toast.add({ title: 'Tabla activada', description: 'El jugador ya puede hacer predicciones.', color: 'secondary' })
       return true
     } catch (err: unknown) {
-      toast.add({ title: 'Error al activar tabla', description: (err as Error).message, color: 'error' })
+      toast.add({ title: 'Error al activar tabla', description: parseFirebaseError(err), color: 'error' })
       return false
     } finally {
       loading.value = false
@@ -98,7 +113,7 @@ export function useAdmin() {
       toast.add({ title: 'Equipo creado', color: 'secondary' })
       return true
     } catch (err: unknown) {
-      toast.add({ title: 'Error', description: (err as Error).message, color: 'error' })
+      toast.add({ title: 'Error', description: parseFirebaseError(err), color: 'error' })
       return false
     } finally {
       loading.value = false
@@ -107,6 +122,7 @@ export function useAdmin() {
 
   return {
     loading: readonly(loading),
+    activateMatch,
     closeMatch,
     updateMatchTeams,
     getPendingBoards,

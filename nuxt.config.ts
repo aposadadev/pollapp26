@@ -41,7 +41,13 @@ export default defineNuxtConfig({
       firebaseStorageBucket: process.env.NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
       firebaseMessagingSenderId: process.env.NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
       firebaseAppId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID ?? '',
-      firebaseDatabaseURL: process.env.NUXT_PUBLIC_FIREBASE_DATABASE_URL ?? ''
+      firebaseDatabaseURL: process.env.NUXT_PUBLIC_FIREBASE_DATABASE_URL ?? '',
+      /**
+       * VAPID Key para Web Push / FCM.
+       * Obtenerla en: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
+       * Agregar al .env: NUXT_PUBLIC_FIREBASE_VAPID_KEY=BXXXX...
+       */
+      firebaseVapidKey: process.env.NUXT_PUBLIC_FIREBASE_VAPID_KEY ?? ''
     }
   },
 

@@ -78,7 +78,10 @@ function cancelCreate() {
           class="card-elevated p-5 space-y-4 relative overflow-hidden"
         >
           <h2 class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-wide flex items-center gap-2">
-            <UIcon name="i-lucide-circle-plus" class="size-5 text-primary-500" />
+            <UIcon
+              name="i-lucide-circle-plus"
+              class="size-5 text-primary-500"
+            />
             Nuevo Equipo
           </h2>
 
@@ -238,7 +241,10 @@ function cancelCreate() {
             </div>
           </div>
           <div class="shrink-0 opacity-20">
-            <UIcon name="i-lucide-chevron-right" class="size-4" />
+            <UIcon
+              name="i-lucide-chevron-right"
+              class="size-4"
+            />
           </div>
         </div>
       </div>

@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<Props>(), {
   subtitle: 'CLASIFICACIÓN',
   backTo: undefined,
   backLabel: undefined,
-  currentUserId: undefined,
+  currentUserId: undefined
 })
 
 const formattedUpdate = computed(() =>

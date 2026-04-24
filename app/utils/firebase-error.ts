@@ -24,7 +24,7 @@ const FIREBASE_ERROR_MAP: Record<string, string> = {
   'deadline-exceeded': 'La solicitud tardó demasiado. Intenta más tarde.',
   'unauthenticated': 'Necesitas iniciar sesión para continuar.',
   'cancelled': 'La operación fue cancelada.',
-  'internal': 'Error interno. Intenta más tarde.',
+  'internal': 'Error interno. Intenta más tarde.'
 }
 
 const NETWORK_MESSAGES = ['network', 'failed to fetch', 'fetch', 'timeout', 'net::err']
@@ -32,7 +32,7 @@ const NETWORK_MESSAGES = ['network', 'failed to fetch', 'fetch', 'timeout', 'net
 export function parseFirebaseError(err: unknown, fallback = 'Ocurrió un error. Intenta de nuevo.'): string {
   if (!err) return fallback
 
-  const error = err as { code?: string; message?: string }
+  const error = err as { code?: string, message?: string }
 
   // Firebase error code (e.g. "auth/wrong-password" or "permission-denied")
   if (error.code) {
@@ -47,7 +47,7 @@ export function parseFirebaseError(err: unknown, fallback = 'Ocurrió un error. 
   }
 
   // Don't expose internal Firebase messages to the user
-  if (msg.includes('firestore') || msg.includes('firebase') || msg.includes('[') ) {
+  if (msg.includes('firestore') || msg.includes('firebase') || msg.includes('[')) {
     return fallback
   }
 

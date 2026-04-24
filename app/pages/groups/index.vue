@@ -175,9 +175,15 @@ function closeCreateModal() {
                            hover:bg-primary-500/10 transition-colors"
                     @click="copyCode(group.code)"
                   >
-                    <UIcon name="i-lucide-hash" class="size-3" />
+                    <UIcon
+                      name="i-lucide-hash"
+                      class="size-3"
+                    />
                     {{ group.code }}
-                    <UIcon name="i-lucide-copy" class="size-3 opacity-60" />
+                    <UIcon
+                      name="i-lucide-copy"
+                      class="size-3 opacity-60"
+                    />
                   </button>
                   <UBadge
                     v-if="group.userBoardIsActive"
@@ -281,7 +287,10 @@ function closeCreateModal() {
             class="text-center space-y-4"
           >
             <div class="size-16 gradient-tricolor rounded-full flex items-center justify-center mx-auto">
-              <UIcon name="i-lucide-party-popper" class="size-8 text-white" />
+              <UIcon
+                name="i-lucide-party-popper"
+                class="size-8 text-white"
+              />
             </div>
             <div>
               <p class="font-heading text-lg font-black text-(--ui-text-highlighted) uppercase tracking-wide">
@@ -296,7 +305,10 @@ function closeCreateModal() {
               @click="copyCode(createdGroup.code)"
             >
               {{ createdGroup.code }}
-              <UIcon name="i-lucide-copy" class="size-5 opacity-60" />
+              <UIcon
+                name="i-lucide-copy"
+                class="size-5 opacity-60"
+              />
             </button>
             <p class="text-[11px] text-(--ui-text-muted)">
               Toca el código para copiarlo

@@ -21,29 +21,32 @@ const displayOrder = [1, 0, 2] // 2nd, 1st, 3rd
       class="flex-1 flex flex-col items-center gap-3 stagger-up transition-all duration-700"
       :class="`stagger-d${i + 2}`"
     >
-        <div class="relative">
-          <div
-            v-if="idx === 0"
-            class="absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce"
-          >
-            <UIcon name="i-lucide-crown" class="size-5 text-secondary-400" />
-          </div>
-          <div
-            class="rounded-full bg-(--ui-bg-elevated) border-2 flex items-center justify-center shadow-md transition-transform duration-500"
-            :class="
-              idx === 0
-                ? 'w-20 h-20 border-secondary-500 scale-110'
-                : 'w-16 h-16 border-(--ui-border)'
-            "
-          >
-            <span
-              class="font-heading font-bold text-secondary-600 dark:text-secondary-400"
-              :class="idx === 0 ? 'text-xl' : 'text-lg'"
-            >
-              {{ entries[idx]?.userDisplayName?.substring(0, 2).toUpperCase() }}
-            </span>
-          </div>
+      <div class="relative">
+        <div
+          v-if="idx === 0"
+          class="absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce"
+        >
+          <UIcon
+            name="i-lucide-crown"
+            class="size-5 text-secondary-400"
+          />
         </div>
+        <div
+          class="rounded-full bg-(--ui-bg-elevated) border-2 flex items-center justify-center shadow-md transition-transform duration-500"
+          :class="
+            idx === 0
+              ? 'w-20 h-20 border-secondary-500 scale-110'
+              : 'w-16 h-16 border-(--ui-border)'
+          "
+        >
+          <span
+            class="font-heading font-bold text-secondary-600 dark:text-secondary-400"
+            :class="idx === 0 ? 'text-xl' : 'text-lg'"
+          >
+            {{ entries[idx]?.userDisplayName?.substring(0, 2).toUpperCase() }}
+          </span>
+        </div>
+      </div>
 
       <span
         class="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-center truncate w-20"

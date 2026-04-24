@@ -4,7 +4,7 @@ import type { Match, Team } from '~/types'
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const appStore = useAppStore()
-const { loading, closeMatch, updateMatchTeams, getTeams } = useAdmin()
+const { loading, activateMatch, closeMatch, updateMatchTeams, getTeams } = useAdmin()
 const { matches, loadAll } = useMatches(appStore.activeTournamentId)
 
 const teams = ref<Team[]>([])
@@ -68,6 +68,11 @@ function openTeamsModal(match: Match) {
   editingTeamsMatchId.value = match.id
   teamsForm.localTeamId = match.localTeamId
   teamsForm.visitorTeamId = match.visitorTeamId
+}
+
+async function handleActivateMatch(matchId: string) {
+  const ok = await activateMatch(matchId)
+  if (ok) await loadAll()
 }
 
 async function handleCloseMatch() {
@@ -205,6 +210,17 @@ async function handleUpdateTeams() {
                 class="rounded-xl shadow-sm"
                 @click="openTeamsModal(match)"
               />
+              <UButton
+                v-if="!match.isActive && !match.isClosed"
+                size="sm"
+                color="secondary"
+                variant="solid"
+                icon="i-lucide-zap"
+                class="font-bold rounded-xl shadow-sm shadow-secondary-500/10"
+                @click="handleActivateMatch(match.id)"
+              >
+                En Vivo
+              </UButton>
               <UButton
                 v-if="!match.isClosed"
                 size="sm"

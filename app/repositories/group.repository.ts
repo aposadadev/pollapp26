@@ -9,23 +9,21 @@ export class GroupRepository extends BaseRepository<Group> {
   async findByTournament(tournamentId: string): Promise<Group[]> {
     const results = await this.findAll([
       this.where('tournamentId', '==', tournamentId),
-      this.where('isActive', '==', true),
-      this.orderBy('createdAt', 'asc')
+      this.where('isActive', '==', true)
     ])
-    return results
+    return results.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+  }
+
+  async findByOwner(ownerId: string): Promise<Group[]> {
+    const results = await this.findAll([
+      this.where('ownerId', '==', ownerId)
+    ])
+    return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
   }
 
   async findByCode(code: string): Promise<Group | null> {
     const results = await this.findWhere('code', '==', code.toUpperCase())
     return results[0] ?? null
-  }
-
-  async findByOwner(ownerId: string): Promise<Group[]> {
-    const results = await this.findAll([
-      this.where('ownerId', '==', ownerId),
-      this.orderBy('createdAt', 'desc')
-    ])
-    return results
   }
 
   async deactivate(groupId: string): Promise<void> {

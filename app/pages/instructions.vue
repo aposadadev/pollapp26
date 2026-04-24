@@ -91,22 +91,22 @@ const faqs = [
             <ul class="space-y-4 text-sm font-medium text-secondary-50/90">
               <li class="flex gap-3 items-start">
                 <UIcon
-                 name="i-lucide-circle-check"
+                  name="i-lucide-circle-check"
                   class="size-5 shrink-0 text-secondary-300"
-                 />
-                 <span>Las predicciones se bloquean exactamente al pitazo inicial de cada partido.</span>
-               </li>
-               <li class="flex gap-3 items-start">
-                 <UIcon
-                   name="i-lucide-circle-check"
-                   class="size-5 shrink-0 text-secondary-300"
-                 />
-                 <span>Las tablas de posiciones se actualizan en tiempo real (Live Table).</span>
-               </li>
-               <li class="flex gap-3 items-start">
-                 <UIcon
-                   name="i-lucide-circle-check"
-                   class="size-5 shrink-0 text-secondary-300"
+                />
+                <span>Las predicciones se bloquean exactamente al pitazo inicial de cada partido.</span>
+              </li>
+              <li class="flex gap-3 items-start">
+                <UIcon
+                  name="i-lucide-circle-check"
+                  class="size-5 shrink-0 text-secondary-300"
+                />
+                <span>Las tablas de posiciones se actualizan en tiempo real (Live Table).</span>
+              </li>
+              <li class="flex gap-3 items-start">
+                <UIcon
+                  name="i-lucide-circle-check"
+                  class="size-5 shrink-0 text-secondary-300"
                 />
                 <span>Puedes tener estrategias distintas en cada una de tus tablas.</span>
               </li>

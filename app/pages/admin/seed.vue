@@ -145,7 +145,10 @@ onMounted(() => appStore.setPageTitle('Seed — Admin'))
       <div class="card-elevated p-6 stagger-up">
         <div class="flex items-center gap-3 mb-4">
           <div class="size-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500">
-            <UIcon name="i-lucide-database" class="size-6" />
+            <UIcon
+              name="i-lucide-database"
+              class="size-6"
+            />
           </div>
           <h2 class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
             Poblar Firestore
@@ -192,7 +195,10 @@ onMounted(() => appStore.setPageTitle('Seed — Admin'))
       <div class="card-elevated p-6 stagger-up stagger-d1">
         <div class="flex items-center gap-3 mb-4">
           <div class="size-10 rounded-xl bg-secondary-500/10 flex items-center justify-center text-secondary-500">
-            <UIcon name="i-lucide-info" class="size-6" />
+            <UIcon
+              name="i-lucide-info"
+              class="size-6"
+            />
           </div>
           <h2 class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
             Instrucciones
@@ -201,19 +207,31 @@ onMounted(() => appStore.setPageTitle('Seed — Admin'))
 
         <ul class="space-y-3">
           <li class="flex gap-3 text-sm text-(--ui-text-muted)">
-            <UIcon name="i-lucide-circle-check" class="size-5 text-secondary-500 shrink-0" />
+            <UIcon
+              name="i-lucide-circle-check"
+              class="size-5 text-secondary-500 shrink-0"
+            />
             <span>Los equipos se generan con IDs únicos de Firestore.</span>
           </li>
           <li class="flex gap-3 text-sm text-(--ui-text-muted)">
-            <UIcon name="i-lucide-circle-check" class="size-5 text-secondary-500 shrink-0" />
+            <UIcon
+              name="i-lucide-circle-check"
+              class="size-5 text-secondary-500 shrink-0"
+            />
             <span>Los partidos se vinculan automáticamente a los equipos creados.</span>
           </li>
           <li class="flex gap-3 text-sm text-(--ui-text-muted)">
-            <UIcon name="i-lucide-circle-check" class="size-5 text-secondary-500 shrink-0" />
+            <UIcon
+              name="i-lucide-circle-check"
+              class="size-5 text-secondary-500 shrink-0"
+            />
             <span>No se crean usuarios. Debes registrarte normalmente en la app.</span>
           </li>
           <li class="flex gap-3 text-sm text-(--ui-text-muted)">
-            <UIcon name="i-lucide-triangle-alert" class="size-5 text-error-500 shrink-0" />
+            <UIcon
+              name="i-lucide-triangle-alert"
+              class="size-5 text-error-500 shrink-0"
+            />
             <span>Para limpiar la base de datos, ve a la consola de Firebase y elimina las colecciones.</span>
           </li>
         </ul>
