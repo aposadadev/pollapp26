@@ -14,7 +14,7 @@ const items = [
   },
   {
     title: 'Haz tus Pronósticos',
-    description: 'Ingresa tus marcadores antes de cada partido. Recuerda: el límite es el inicio del encuentro.',
+    description: 'Ingresa tus marcadores antes de cada partido. Recuerda: el límite es 30 minutos antes del pitazo inicial.',
     image: '/rules/predict.png',
     accent: 'secondary'
   },

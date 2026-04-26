@@ -2,7 +2,12 @@
 definePageMeta({ middleware: 'auth' })
 
 const appStore = useAppStore()
-onMounted(() => appStore.setPageTitle('Reglamento'))
+onMounted(() => {
+  appStore.setPageTitle('Reglamento')
+  if (import.meta.client) {
+    localStorage.setItem('hasSeenRules', 'true')
+  }
+})
 
 const pointsRules = [
   {
@@ -35,6 +40,10 @@ const faqs = [
   {
     q: '¿Cómo se desempata?',
     a: 'En caso de empate en puntos, gana quien tenga más marcadores exactos. Si persiste, gana quien tenga más resultados correctos.'
+  },
+  {
+    q: '¿Qué pasa en las fases de eliminación directa?',
+    a: 'Solo se tiene en cuenta el marcador de los 90 minutos reglamentarios (incluyendo el tiempo de adición). Los goles marcados en el alargue (prórroga) o en la tanda de penales NO suman para tu predicción.'
   }
 ]
 </script>

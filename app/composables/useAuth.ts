@@ -13,7 +13,12 @@ export function useAuth() {
   async function login(email: string, password: string): Promise<boolean> {
     try {
       await store.login(email, password)
-      await router.push('/')
+      const hasSeenRules = import.meta.client ? localStorage.getItem('hasSeenRules') : false
+      if (!hasSeenRules) {
+        await router.push('/instructions')
+      } else {
+        await router.push('/')
+      }
       return true
     } catch (err: unknown) {
       toast.add({
@@ -33,7 +38,12 @@ export function useAuth() {
   ): Promise<boolean> {
     try {
       await store.register(email, password, firstName, lastName)
-      await router.push('/')
+      const hasSeenRules = import.meta.client ? localStorage.getItem('hasSeenRules') : false
+      if (!hasSeenRules) {
+        await router.push('/instructions')
+      } else {
+        await router.push('/')
+      }
       return true
     } catch (err: unknown) {
       toast.add({
