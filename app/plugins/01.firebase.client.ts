@@ -10,7 +10,6 @@ import { getFirestore, type Firestore } from 'firebase/firestore'
 import { getAuth, type Auth, type User } from 'firebase/auth'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
 import { getDatabase, type Database } from 'firebase/database'
-import { getFunctions, type Functions } from 'firebase/functions'
 
 export default defineNuxtPlugin(async (nuxtApp) => {
   const config = useRuntimeConfig()
@@ -34,7 +33,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   const db: Firestore = getFirestore(app)
   const auth: Auth = getAuth(app)
   const storage: FirebaseStorage = getStorage(app)
-  const functions: Functions = getFunctions(app, 'us-central1')
 
   // RTDB is optional
   const rtdb: Database | null = config.public.firebaseDatabaseURL
@@ -110,7 +108,6 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       firestore: db,
       firebaseAuth: auth,
       firebaseStorage: storage,
-      firebaseFunctions: functions,
       firebaseRtdb: rtdb
     }
   }

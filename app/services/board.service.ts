@@ -17,23 +17,32 @@ export class BoardError extends Error {
 export class BoardService {
   /** Solicitar una tabla en un grupo (queda pendiente hasta que admin la active).
    *
-   * La creación va a través del callable `requestBoard` (Cloud Function) para que
-   * el contador de número sea gestionado exclusivamente server-side vía Admin SDK,
-   * evitando la race condition y garantizando que _counters no sea writeable por clientes.
+   * La creación va a través del endpoint `/api/board/request` (Nuxt server API)
+   * para que el contador de número sea gestionado exclusivamente server-side vía
+   * Admin SDK, evitando la race condition y garantizando que _counters no sea
+   * writeable por clientes.
    */
   async requestBoard(userId: string, groupId: string, tournamentId: string): Promise<Board> {
-    const { httpsCallable } = await import('firebase/functions')
-    const { $firebaseFunctions } = useNuxtApp() as unknown as {
-      $firebaseFunctions: import('firebase/functions').Functions
+    // Obtener el ID Token del usuario actual para autenticar la petición
+    const { $firebaseAuth } = useNuxtApp() as unknown as {
+      $firebaseAuth: import('firebase/auth').Auth
     }
+    const currentUser = $firebaseAuth.currentUser
+    if (!currentUser) {
+      throw new BoardError('No hay usuario autenticado.', 'auth/no-user')
+    }
+    const idToken = await currentUser.getIdToken()
 
-    const callFn = httpsCallable<
-      { groupId: string, tournamentId: string },
-      { success: boolean, boardId: string, number: number }
-    >($firebaseFunctions, 'requestBoard')
+    const result = await $fetch<{ success: boolean, boardId: string, number: number }>(
+      '/api/board/request',
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        body: { groupId, tournamentId }
+      }
+    )
 
-    const result = await callFn({ groupId, tournamentId })
-    const { boardId, number } = result.data
+    const { boardId, number } = result
 
     // Obtener el board recién creado desde Firestore
     const board = await boardRepository.findById(boardId)

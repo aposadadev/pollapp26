@@ -7,8 +7,9 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt'
   ],
 
-  // Disable SSR — Firebase SDK is browser-only; deploy as SPA to Firebase Hosting
-  ssr: false,
+  // SSR enabled — required for Nuxt server API routes (/api/*)
+  // The frontend remains an SPA via routeRules below
+  ssr: true,
 
   devtools: {
     enabled: true
@@ -34,6 +35,13 @@ export default defineNuxtConfig({
 
   // Firebase env vars exposed to the client via useRuntimeConfig().public
   runtimeConfig: {
+    // Server-side only (NOT exposed to browser)
+    firebaseAdminProjectId: process.env.FIREBASE_ADMIN_PROJECT_ID ?? '',
+    firebaseAdminClientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL ?? '',
+    firebaseAdminPrivateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? '',
+    firebaseDatabaseUrl: process.env.FIREBASE_DATABASE_URL ?? '',
+    cronSecret: process.env.CRON_SECRET ?? '',
+
     public: {
       firebaseApiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY ?? '',
       firebaseAuthDomain: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
@@ -49,6 +57,12 @@ export default defineNuxtConfig({
        */
       firebaseVapidKey: process.env.NUXT_PUBLIC_FIREBASE_VAPID_KEY ?? ''
     }
+  },
+
+  // All pages render as SPA (Firebase client SDK is browser-only).
+  // Server API routes (/api/**) work normally as SSR endpoints.
+  routeRules: {
+    '/**': { ssr: false }
   },
 
   compatibilityDate: '2025-01-15',
