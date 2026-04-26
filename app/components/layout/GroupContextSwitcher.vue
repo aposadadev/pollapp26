@@ -43,7 +43,7 @@ const emit = defineEmits<{
       {{
         groupContextStore.hasContext
           ? groupContextStore.activeGroupName
-          : 'Elige liga'
+          : 'Elige grupo'
       }}
     </span>
 

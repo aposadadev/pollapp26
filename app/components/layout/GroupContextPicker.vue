@@ -47,7 +47,7 @@ function selectGroup(groupId: string, boardId: string | undefined) {
 function confirm() {
   const group = pendingGroup.value
   if (!group || !pendingBoardId.value) {
-    toast.add({ title: 'Selecciona una liga y tabla', color: 'error' })
+    toast.add({ title: 'Selecciona un grupo y tabla', color: 'error' })
     return
   }
 
@@ -100,10 +100,10 @@ const hasActiveGroups = computed(() =>
           <!-- Header del sheet -->
           <div class="px-6 pt-2 pb-4 border-b border-(--ui-border)">
             <h2 class="font-heading text-lg font-black uppercase tracking-tight text-(--ui-text-highlighted)">
-              Elige tu liga
+              Elige tu grupo
             </h2>
             <p class="text-xs text-(--ui-text-muted) mt-0.5">
-              El ranking y tus predicciones se mostrarán según la liga activa.
+              El ranking y tus predicciones se mostrarán según el grupo activo.
             </p>
           </div>
 
@@ -131,7 +131,7 @@ const hasActiveGroups = computed(() =>
                 class="size-12 text-(--ui-text-muted)"
               />
               <p class="text-sm font-bold text-(--ui-text-muted) text-center">
-                No perteneces a ninguna liga aún.
+                No perteneces a ningún grupo aún.
               </p>
               <UButton
                 color="primary"
@@ -139,7 +139,7 @@ const hasActiveGroups = computed(() =>
                 icon="i-lucide-search"
                 @click="goToGroups"
               >
-                Buscar una liga
+                Buscar un grupo
               </UButton>
             </div>
 
@@ -160,7 +160,7 @@ const hasActiveGroups = computed(() =>
                 variant="outline"
                 @click="goToGroups"
               >
-                Ver mis ligas
+                Ver mis grupos
               </UButton>
             </div>
 

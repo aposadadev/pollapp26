@@ -3,9 +3,9 @@
  */
 import { matchService } from '~/services/match.service'
 import { boardService } from '~/services/board.service'
-import { teamRepository } from '~/repositories/team.repository'
+import { groupService } from '~/services/group.service'
 import { parseFirebaseError } from '~/utils/firebase-error'
-import type { Board, Team } from '~/types'
+import type { Board, Team, Group } from '~/types'
 
 export function useAdmin() {
   const toast = useToast()
@@ -97,6 +97,18 @@ export function useAdmin() {
 
   // ── Equipos ───────────────────────────────────────────────────────────────
 
+  async function getAllGroups(tournamentId: string): Promise<Group[]> {
+    loading.value = true
+    try {
+      return await groupService.findByTournament(tournamentId)
+    } catch (err: unknown) {
+      toast.add({ title: 'Error al cargar grupos', description: parseFirebaseError(err), color: 'error' })
+      return []
+    } finally {
+      loading.value = false
+    }
+  }
+
   async function getTeams(): Promise<Team[]> {
     return teamRepository.findAll()
   }
@@ -128,6 +140,7 @@ export function useAdmin() {
     getPendingBoards,
     activateBoard,
     getTeams,
-    createTeam
+    createTeam,
+    getAllGroups
   }
 }

@@ -8,7 +8,7 @@ const items = [
   },
   {
     title: 'Únete a la Acción',
-    description: 'Busca una liga por su código o crea la tuya para jugar con amigos y familiares de forma privada.',
+    description: 'Busca un grupo por su código o crea el tuyo para jugar con amigos y familiares de forma privada.',
     image: '/rules/join.png',
     accent: 'primary'
   },

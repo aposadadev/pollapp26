@@ -56,23 +56,36 @@ export class GroupService {
     return groupRepository.findAll()
   }
 
-  /** Obtiene los grupos del torneo enriquecidos con el estado de la tabla del usuario actual */
+  /** Obtiene los grupos del torneo donde el usuario tiene una tabla (activa o pendiente) */
   async findForUser(tournamentId: string, userId: string): Promise<GroupWithBoardStatus[]> {
-    const groups = await groupRepository.findByTournament(tournamentId)
+    // 1. Obtener las tablas del usuario para este torneo
+    const userBoards = await boardRepository.findByUser(userId)
+    const tournamentBoards = userBoards.filter(b => b.tournamentId === tournamentId)
+    
+    if (tournamentBoards.length === 0) return []
 
-    const boards = await Promise.all(
-      groups.map(g => boardRepository.findByUserAndGroup(userId, g.id))
+    // 2. Obtener los detalles de los grupos correspondientes
+    const groups = await Promise.all(
+      tournamentBoards.map(b => groupRepository.findById(b.groupId))
     )
 
-    return groups.map((group, i) => {
-      const board = boards[i]
-      return {
-        ...group,
-        userBoardId: board?.id,
-        userBoardIsActive: board?.isActive ?? false,
-        userBoardIsPending: board ? !board.isActive : false
-      }
-    })
+    // 3. Mapear y enriquecer los datos
+    const result: GroupWithBoardStatus[] = []
+    for (let i = 0; i < tournamentBoards.length; i++) {
+        const board = tournamentBoards[i]
+        const group = groups[i]
+        if (group) {
+           result.push({
+             ...group,
+             userBoardId: board.id,
+             userBoardIsActive: board.isActive,
+             userBoardIsPending: !board.isActive
+           })
+        }
+    }
+    
+    // Devolvemos ordenado por fecha de creación del grupo (o del board)
+    return result
   }
 }
 

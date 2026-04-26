@@ -20,7 +20,7 @@ const backTo = computed(() =>
 const backLabel = computed(() =>
   groupContextStore.activeGroupId === groupId.value && groupContextStore.activeBoardId
     ? 'Volver a mi tabla'
-    : 'Mis ligas'
+    : 'Mis grupos'
 )
 
 const fetchedGroupName = ref<string | null>(null)

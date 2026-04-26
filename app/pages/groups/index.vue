@@ -50,7 +50,7 @@ function copyCode(code: string) {
   useToast().add({ title: 'Código copiado', color: 'secondary' })
 }
 
-// Crear liga
+// Crear grupo
 const showCreateModal = ref(false)
 const newGroupName = ref('')
 const createdGroup = ref<import('~/types').Group | null>(null)
@@ -80,7 +80,7 @@ function closeCreateModal() {
     />
 
     <div class="p-4 space-y-5 pb-24">
-      <!-- Búsqueda por código + crear liga -->
+      <!-- Búsqueda por código + crear grupo -->
       <div class="stagger-up stagger-d1 space-y-3">
         <div class="flex gap-2">
           <UInput
@@ -132,7 +132,7 @@ function closeCreateModal() {
           class="w-full font-bold rounded-xl"
           @click="showCreateModal = true"
         >
-          Crear nueva liga
+          Crear nuevo grupo
         </UButton>
       </div>
 
@@ -274,7 +274,7 @@ function closeCreateModal() {
       </div>
     </div>
 
-    <!-- Modal Crear liga -->
+    <!-- Modal Crear grupo -->
     <UModal
       v-model:open="showCreateModal"
       :ui="{ content: 'max-w-sm mx-4' }"
@@ -294,7 +294,7 @@ function closeCreateModal() {
             </div>
             <div>
               <p class="font-heading text-lg font-black text-(--ui-text-highlighted) uppercase tracking-wide">
-                ¡Liga creada!
+                ¡Grupo creado!
               </p>
               <p class="text-sm text-(--ui-text-muted) mt-1">
                 Comparte este código con tus amigos
@@ -329,7 +329,7 @@ function closeCreateModal() {
           >
             <div>
               <p class="font-heading text-base font-black text-(--ui-text-highlighted) uppercase tracking-wide">
-                Nueva liga
+                Nuevo grupo
               </p>
               <p class="text-sm text-(--ui-text-muted) mt-1">
                 Se generará un código único para invitar a tus amigos.
@@ -337,7 +337,7 @@ function closeCreateModal() {
             </div>
             <UInput
               v-model="newGroupName"
-              placeholder="Nombre de la liga..."
+              placeholder="Nombre del grupo..."
               size="lg"
               icon="i-lucide-users"
               :maxlength="40"

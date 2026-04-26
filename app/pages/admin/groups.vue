@@ -2,8 +2,22 @@
 definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const appStore = useAppStore()
-const { getPendingBoards, activateBoard } = useAdmin()
-const { groups, loading: loadingGroups, loadGroups } = useGroups(appStore.activeTournamentId)
+const { getPendingBoards, activateBoard, getAllGroups } = useAdmin()
+const toast = useToast()
+
+const copyCode = (code: string) => {
+  navigator.clipboard.writeText(code)
+  toast.add({ title: 'Código copiado', color: 'secondary' })
+}
+
+const groups = ref<import('~/types').Group[]>([])
+const loadingGroups = ref(false)
+
+const loadGroups = async () => {
+  loadingGroups.value = true
+  groups.value = await getAllGroups(appStore.activeTournamentId)
+  loadingGroups.value = false
+}
 
 // Per-group pending boards
 const pendingBoardsByGroup = ref<Record<string, import('~/types').Board[]>>({})
@@ -52,7 +66,7 @@ async function handleActivate(boardId: string, groupId: string) {
   <div class="space-y-6 pb-20">
     <LayoutPageHeader
       title="Gestión de Grupos"
-      subtitle="Activa las tablas pendientes de aprobación para cada liga."
+      subtitle="Activa las tablas pendientes de aprobación para cada grupo."
     />
 
     <div class="px-4 space-y-4">
@@ -96,17 +110,22 @@ async function handleActivate(boardId: string, groupId: string) {
           :class="`stagger-d${Math.min(i + 1, 12)}`"
         >
           <!-- Cabecera del grupo -->
-          <button
-            class="w-full flex items-center justify-between px-5 py-4 hover:bg-(--ui-bg-muted)/50 transition-colors group"
+          <div
+            class="w-full flex items-center justify-between px-5 py-4 hover:bg-(--ui-bg-muted)/50 transition-colors group cursor-pointer"
             @click="toggleGroup(group.id)"
           >
-            <div class="text-left">
+            <div class="text-left flex flex-col items-start gap-1">
               <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-wide group-hover:text-primary-500 transition-colors">
                 {{ group.name }}
               </p>
-              <p class="text-[11px] text-(--ui-text-muted) font-mono uppercase tracking-widest mt-0.5">
+              <button
+                class="flex items-center gap-1.5 text-[11px] bg-(--ui-bg-muted) px-2 py-0.5 rounded-md font-mono font-bold text-(--ui-text-muted) hover:bg-primary-500/10 hover:text-primary-500 transition-colors"
+                @click.stop="copyCode(group.code)"
+                title="Copiar código"
+              >
                 Código: {{ group.code }}
-              </p>
+                <UIcon name="i-lucide-copy" class="size-3 opacity-60" />
+              </button>
             </div>
             <div class="flex items-center gap-3">
               <UBadge
@@ -123,7 +142,7 @@ async function handleActivate(boardId: string, groupId: string) {
                 class="size-5 text-(--ui-text-muted) group-hover:text-(--ui-text-highlighted) transition-colors"
               />
             </div>
-          </button>
+          </div>
 
           <!-- Tablas pendientes -->
           <Transition

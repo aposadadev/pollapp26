@@ -171,7 +171,7 @@ const formattedDate = computed(() =>
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <h2 class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
-              Predicciones de la Liga
+              Predicciones del Grupo
             </h2>
             <UBadge
               color="primary"

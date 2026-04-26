@@ -45,7 +45,7 @@ const { entries, loading: loadingPositions, lastUpdated } = usePositions(selecte
           class="bg-(--ui-bg-elevated) shadow-[0_20px_40px_rgba(27,43,102,0.15)] dark:shadow-[0_20px_40px_rgba(0,0,0,0.4)] border border-(--ui-border) rounded-[28px] p-6 lg:p-8 w-full flex flex-col gap-4"
         >
           <span class="text-[11px] font-black tracking-[0.2em] font-heading text-neutral-400 uppercase">
-            Selecciona tu Liga
+            Selecciona tu Grupo
           </span>
 
           <div

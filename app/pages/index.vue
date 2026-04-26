@@ -11,7 +11,6 @@ const matchesComposable = useMatches(appStore.activeTournamentId)
 const groups = groupsComposable.groups
 const loadingGroups = groupsComposable.loading
 
-const requestingBoardId = ref<string | null>(null)
 
 onMounted(async () => {
   appStore.setPageTitle('Dashboard')
@@ -61,15 +60,11 @@ function formatMatchDate(date: Date): string {
   return `${dayName} • ${time}`
 }
 
-async function handleRequestBoard(groupId: string) {
-  requestingBoardId.value = groupId
-  try {
-    await groupsComposable.requestBoard(groupId, appStore.activeTournamentId)
-    await groupsComposable.loadGroups()
-  } finally {
-    requestingBoardId.value = null
-  }
+function copyCode(code: string) {
+  navigator.clipboard.writeText(code)
+  toast.add({ title: 'Código copiado', color: 'secondary' })
 }
+
 </script>
 
 <template>
@@ -124,7 +119,7 @@ async function handleRequestBoard(groupId: string) {
           <span
             class="text-white/60 text-[12px] font-bold tracking-widest mt-2 opacity-90 text-center"
           >
-            ÚNETE A UNA LIGA PARA COMPETIR
+            ÚNETE A UN GRUPO PARA COMPETIR
           </span>
         </template>
       </div>
@@ -234,13 +229,13 @@ async function handleRequestBoard(groupId: string) {
         </div>
       </div>
 
-      <!-- Tus Ligas -->
+      <!-- Tus Grupos -->
       <div class="flex flex-col gap-4 stagger-up stagger-d4">
         <div class="flex items-center justify-between px-2">
           <h3
             class="text-[14px] font-black text-neutral-500 dark:text-neutral-400 tracking-widest font-heading"
           >
-            TUS LIGAS
+            TUS GRUPOS
           </h3>
           <NuxtLink
             to="/groups"
@@ -271,7 +266,7 @@ async function handleRequestBoard(groupId: string) {
               :key="group.id"
               class="shrink-0 w-[160px] bg-(--ui-bg-elevated) border border-(--ui-border) p-5 rounded-[20px] snap-center flex flex-col shadow-[0_8px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:shadow-md transition-shadow"
             >
-              <div class="flex items-center gap-2 mb-4">
+              <div class="flex items-center gap-2 mb-1">
                 <UIcon
                   name="i-lucide-users"
                   class="size-5 text-neutral-500 shrink-0"
@@ -280,6 +275,16 @@ async function handleRequestBoard(groupId: string) {
                   class="text-[13px] font-bold text-neutral-800 dark:text-white truncate"
                 >{{ group.name }}</span>
               </div>
+
+              <button
+                class="flex items-center gap-1.5 text-[11px] bg-(--ui-bg-muted) px-2 py-1 rounded-md font-mono font-bold text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 transition-colors w-fit mb-3"
+                @click.prevent="copyCode(group.code)"
+                title="Copiar código"
+              >
+                <UIcon name="i-lucide-hash" class="size-3" />
+                {{ group.code }}
+                <UIcon name="i-lucide-copy" class="size-3 opacity-60" />
+              </button>
 
               <div class="flex-1" />
 
@@ -315,14 +320,13 @@ async function handleRequestBoard(groupId: string) {
               <UButton
                 v-else
                 variant="soft"
-                color="primary"
+                color="neutral"
                 block
+                disabled
                 size="xs"
-                class="rounded-lg font-bold"
-                :loading="requestingBoardId === group.id"
-                @click="handleRequestBoard(group.id)"
+                class="rounded-lg font-bold opacity-50"
               >
-                Activar
+                En espera
               </UButton>
             </div>
           </template>
@@ -332,7 +336,7 @@ async function handleRequestBoard(groupId: string) {
             v-else
             class="w-full flex flex-col items-center justify-center gap-3 p-8 bg-(--ui-bg-elevated) rounded-[20px] border border-(--ui-border) border-dashed"
           >
-            <span class="text-sm font-bold text-neutral-400">Sin ligas activas</span>
+            <span class="text-sm font-bold text-neutral-400">Sin grupos activos</span>
             <UButton
               to="/groups"
               variant="soft"
@@ -340,7 +344,7 @@ async function handleRequestBoard(groupId: string) {
               size="sm"
               class="font-heading font-black tracking-wide text-[12px]"
             >
-              UNIRSE A LIGA
+              UNIRSE A GRUPO
             </UButton>
           </div>
         </div>
