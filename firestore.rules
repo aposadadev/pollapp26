@@ -66,15 +66,32 @@ service cloud.firestore {
     // El dueño del board puede leer y editar sus predicciones.
     // Todos los autenticados pueden leer predicciones de su grupo (para vista de partido).
     // Solo Firebase Functions (admin SDK) actualiza los puntos.
+    // Las predicciones se bloquean 30 minutos antes del inicio del partido.
 
     match /predictions/{predId} {
+      // Helper: obtiene la fecha del partido asociado a esta predicción
+      function matchDate() {
+        return get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data.date;
+      }
+
+      // Helper: verifica que el partido aún no se haya cerrado
+      function matchNotClosed() {
+        return get(/databases/$(database)/documents/matches/$(resource.data.matchId)).data.isClosed != true;
+      }
+
+      // Helper: faltan más de 30 min (1800000 ms) para el inicio
+      function beforeCutoff() {
+        return request.time < matchDate() - duration.value(30, 'm');
+      }
+
+      // Helper: el usuario es dueño del board de esta predicción
+      function isBoardOwner() {
+        return isOwner(get(/databases/$(database)/documents/boards/$(resource.data.boardId)).data.userId);
+      }
+
       allow read: if isAuth();
       allow create: if isAdmin(); // Las crea activateBoard (admin SDK)
-      allow update: if isAuth() && (
-        // El usuario dueño puede editar localGoalPrediction y visitorGoalPrediction
-        // siempre que el partido no esté cerrado (validado en servicio cliente)
-        isOwner(get(/databases/$(database)/documents/boards/$(resource.data.boardId)).data.userId)
-      ) || isAdmin();
+      allow update: if (isAuth() && isBoardOwner() && matchNotClosed() && beforeCutoff()) || isAdmin();
       allow delete: if isAdmin();
     }
 

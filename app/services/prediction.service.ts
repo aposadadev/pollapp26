@@ -33,12 +33,12 @@ export class PredictionService {
       throw new PredictionError('Este partido ya terminó. No puedes modificar tu predicción.', 'prediction/match-closed')
     }
 
-    // Bloquear cuando el partido ya empezó (con 5 min de margen)
+    // Bloquear cuando faltan menos de 30 min para el inicio del partido
     const matchStart = dayjs(match.date)
     const now = dayjs()
-    if (now.isAfter(matchStart.subtract(5, 'minute'))) {
+    if (now.isAfter(matchStart.subtract(30, 'minute'))) {
       throw new PredictionError(
-        'El partido ya comenzó. No puedes modificar tu predicción.',
+        'Las predicciones se cierran 30 minutos antes del partido.',
         'prediction/match-started'
       )
     }

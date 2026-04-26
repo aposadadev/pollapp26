@@ -22,7 +22,7 @@ const pointsRules = [
 const faqs = [
   {
     q: '¿Puedo cambiar mi pronóstico?',
-    a: 'Sí, puedes modificar tu pronóstico en cualquier momento antes de que comience el partido. Una vez iniciado, se bloquea automáticamente.'
+    a: 'Sí, puedes modificar tu pronóstico hasta 30 minutos antes del inicio del partido. Después de eso, se bloquea automáticamente.'
   },
   {
     q: '¿Puedo estar en varios grupos?',
@@ -30,7 +30,7 @@ const faqs = [
   },
   {
     q: '¿Qué pasa si no pongo pronóstico?',
-    a: 'Si no ingresas un pronóstico antes del inicio del partido, recibirás 0 puntos por ese partido.'
+    a: 'Si no ingresas un pronóstico antes de los 30 minutos previos al inicio del partido, recibirás 0 puntos por ese partido.'
   },
   {
     q: '¿Cómo se desempata?',
@@ -94,7 +94,7 @@ const faqs = [
                   name="i-lucide-circle-check"
                   class="size-5 shrink-0 text-secondary-300"
                 />
-                <span>Las predicciones se bloquean exactamente al pitazo inicial de cada partido.</span>
+                <span>Las predicciones se bloquean 30 minutos antes del inicio de cada partido.</span>
               </li>
               <li class="flex gap-3 items-start">
                 <UIcon

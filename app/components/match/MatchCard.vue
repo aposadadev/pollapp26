@@ -50,7 +50,7 @@ const hasChanged = computed(
 
 const matchStarted = computed(() => {
   const matchDate = dayjs(props.prediction.match.date)
-  return dayjs().isAfter(matchDate.subtract(5, 'minute'))
+  return dayjs().isAfter(matchDate.subtract(30, 'minute'))
 })
 
 const isLocked = computed(
