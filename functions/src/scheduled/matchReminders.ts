@@ -41,6 +41,7 @@ export const sendMatchReminders = onSchedule(
     memory: '256MiB'
   },
   async () => {
+    /*
     const now = new Date()
     console.log(`[matchReminders] Ejecutando a: ${now.toISOString()}`)
 
@@ -48,6 +49,8 @@ export const sendMatchReminders = onSchedule(
     await Promise.all(
       SUPPORTED_REMINDER_HOURS.map(hours => _processWindow(now, hours))
     )
+    */
+    console.log('[matchReminders] Cron job is commented out')
   }
 )
 

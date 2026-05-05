@@ -19,6 +19,7 @@ const CRON_INTERVAL_MINUTES = 30
 const SUPPORTED_REMINDER_HOURS = [1, 2, 4] as const
 
 export default defineEventHandler(async (event) => {
+  /*
   // Verify cron secret — Vercel sends this automatically for cron jobs
   const config = useRuntimeConfig()
   const authHeader = getHeader(event, 'authorization')
@@ -45,6 +46,12 @@ export default defineEventHandler(async (event) => {
     timestamp: now.toISOString(),
     sent: totalSent,
     failed: totalFailed
+  }
+  */
+  return {
+    success: true,
+    message: 'Cron job is commented out',
+    timestamp: new Date().toISOString()
   }
 })
 
