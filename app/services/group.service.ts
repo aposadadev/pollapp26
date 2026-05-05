@@ -61,7 +61,7 @@ export class GroupService {
     // 1. Obtener las tablas del usuario para este torneo
     const userBoards = await boardRepository.findByUser(userId)
     const tournamentBoards = userBoards.filter(b => b.tournamentId === tournamentId)
-    
+
     if (tournamentBoards.length === 0) return []
 
     // 2. Obtener los detalles de los grupos correspondientes
@@ -72,18 +72,18 @@ export class GroupService {
     // 3. Mapear y enriquecer los datos
     const result: GroupWithBoardStatus[] = []
     for (let i = 0; i < tournamentBoards.length; i++) {
-        const board = tournamentBoards[i]
-        const group = groups[i]
-        if (group && board) {
-           result.push({
-             ...group,
-             userBoardId: board.id,
-             userBoardIsActive: board.isActive,
-             userBoardIsPending: !board.isActive
-           })
-        }
+      const board = tournamentBoards[i]
+      const group = groups[i]
+      if (group && board) {
+        result.push({
+          ...group,
+          userBoardId: board.id,
+          userBoardIsActive: board.isActive,
+          userBoardIsPending: !board.isActive
+        })
+      }
     }
-    
+
     // Devolvemos ordenado por fecha de creación del grupo (o del board)
     return result
   }

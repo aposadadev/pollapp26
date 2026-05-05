@@ -29,7 +29,7 @@ const db = () => admin.firestore()
 const CRON_INTERVAL_MINUTES = 30
 
 /** Horas de anticipación soportadas (deben coincidir con NotificationPrefs en el cliente) */
-const SUPPORTED_REMINDER_HOURS = [1, 2, 4] as const
+const _SUPPORTED_REMINDER_HOURS = [1, 2, 4] as const
 
 // ── Handler ────────────────────────────────────────────────────────────────────
 

@@ -60,6 +60,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   // Inicializar el auth store.
   // Await the FIRST onAuthStateChanged resolution so that by the time this plugin
   // returns — and route middleware runs — authStore.initialized is already true.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const authStore = useAuthStore(nuxtApp.$pinia as any)
   const { onAuthStateChanged } = await import('firebase/auth')
 

@@ -11,7 +11,6 @@ const matchesComposable = useMatches(appStore.activeTournamentId)
 const groups = groupsComposable.groups
 const loadingGroups = groupsComposable.loading
 
-
 onMounted(async () => {
   appStore.setPageTitle('Dashboard')
   await Promise.all([groupsComposable.loadGroups(), matchesComposable.loadAll()])
@@ -64,7 +63,6 @@ function copyCode(code: string) {
   navigator.clipboard.writeText(code)
   toast.add({ title: 'Código copiado', color: 'secondary' })
 }
-
 </script>
 
 <template>
@@ -278,12 +276,18 @@ function copyCode(code: string) {
 
               <button
                 class="flex items-center gap-1.5 text-[11px] bg-(--ui-bg-muted) px-2 py-1 rounded-md font-mono font-bold text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 transition-colors w-fit mb-3"
-                @click.prevent="copyCode(group.code)"
                 title="Copiar código"
+                @click.prevent="copyCode(group.code)"
               >
-                <UIcon name="i-lucide-hash" class="size-3" />
+                <UIcon
+                  name="i-lucide-hash"
+                  class="size-3"
+                />
                 {{ group.code }}
-                <UIcon name="i-lucide-copy" class="size-3 opacity-60" />
+                <UIcon
+                  name="i-lucide-copy"
+                  class="size-3 opacity-60"
+                />
               </button>
 
               <div class="flex-1" />

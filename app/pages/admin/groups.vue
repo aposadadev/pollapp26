@@ -120,11 +120,14 @@ async function handleActivate(boardId: string, groupId: string) {
               </p>
               <button
                 class="flex items-center gap-1.5 text-[11px] bg-(--ui-bg-muted) px-2 py-0.5 rounded-md font-mono font-bold text-(--ui-text-muted) hover:bg-primary-500/10 hover:text-primary-500 transition-colors"
-                @click.stop="copyCode(group.code)"
                 title="Copiar código"
+                @click.stop="copyCode(group.code)"
               >
                 Código: {{ group.code }}
-                <UIcon name="i-lucide-copy" class="size-3 opacity-60" />
+                <UIcon
+                  name="i-lucide-copy"
+                  class="size-3 opacity-60"
+                />
               </button>
             </div>
             <div class="flex items-center gap-3">
@@ -162,8 +165,8 @@ async function handleActivate(boardId: string, groupId: string) {
                 class="space-y-2"
               >
                 <USkeleton
-                  v-for="i in 2"
-                  :key="i"
+                  v-for="j in 2"
+                  :key="j"
                   class="h-14 rounded-xl"
                 />
               </div>

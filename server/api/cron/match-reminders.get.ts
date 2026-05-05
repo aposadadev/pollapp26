@@ -16,13 +16,13 @@
 import { Timestamp } from 'firebase-admin/firestore'
 
 const CRON_INTERVAL_MINUTES = 30
-const SUPPORTED_REMINDER_HOURS = [1, 2, 4] as const
+const _SUPPORTED_REMINDER_HOURS = [1, 2, 4] as const
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async (_event) => {
   /*
   // Verify cron secret — Vercel sends this automatically for cron jobs
   const config = useRuntimeConfig()
-  const authHeader = getHeader(event, 'authorization')
+  const authHeader = getHeader(_event, 'authorization')
 
   if (authHeader !== `Bearer ${config.cronSecret}`) {
     throw createError({
@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
   console.log(`[matchReminders] Running at: ${now.toISOString()}`)
 
   const results = await Promise.all(
-    SUPPORTED_REMINDER_HOURS.map(hours => processWindow(now, hours))
+    _SUPPORTED_REMINDER_HOURS.map(hours => _processWindow(now, hours))
   )
 
   const totalSent = results.reduce((sum, r) => sum + r.sent, 0)
@@ -55,7 +55,7 @@ export default defineEventHandler(async (event) => {
   }
 })
 
-async function processWindow(
+async function _processWindow(
   now: Date,
   hoursAhead: number
 ): Promise<{ sent: number, failed: number }> {
