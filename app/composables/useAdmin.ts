@@ -6,6 +6,7 @@ import { boardService } from '~/services/board.service'
 import { groupService } from '~/services/group.service'
 import { parseFirebaseError } from '~/utils/firebase-error'
 import type { Board, Team, Group } from '~/types'
+import { teamRepository } from '~/repositories/team.repository'
 
 export function useAdmin() {
   const toast = useToast()

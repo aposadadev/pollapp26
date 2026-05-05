@@ -74,7 +74,7 @@ export class GroupService {
     for (let i = 0; i < tournamentBoards.length; i++) {
         const board = tournamentBoards[i]
         const group = groups[i]
-        if (group) {
+        if (group && board) {
            result.push({
              ...group,
              userBoardId: board.id,
