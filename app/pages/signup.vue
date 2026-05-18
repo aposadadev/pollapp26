@@ -13,18 +13,57 @@ const form = reactive({
 
 const showPassword = ref(false)
 const passwordError = ref('')
+const confirmPasswordError = ref('')
+
+// Reactive real-time validation to clear errors as the user types
+watch(() => form.password, (val) => {
+  if (val.length >= 6) {
+    passwordError.value = ''
+  }
+  if (form.confirmPassword && val === form.confirmPassword) {
+    confirmPasswordError.value = ''
+  }
+})
+
+watch(() => form.confirmPassword, (val) => {
+  // If the first password hasn't been entered, do not show error on confirm password
+  if (!form.password) {
+    confirmPasswordError.value = ''
+    return
+  }
+  if (val === form.password) {
+    confirmPasswordError.value = ''
+  } else {
+    confirmPasswordError.value = 'Las contraseñas no coinciden.'
+  }
+})
 
 function validatePasswords() {
-  if (form.password !== form.confirmPassword) {
-    passwordError.value = 'Las contraseñas no coinciden.'
-    return false
-  }
-  if (form.password.length < 6) {
+  let isValid = true
+
+  // Validate first password
+  if (!form.password) {
+    passwordError.value = 'La contraseña es requerida.'
+    isValid = false
+  } else if (form.password.length < 6) {
     passwordError.value = 'La contraseña debe tener al menos 6 caracteres.'
-    return false
+    isValid = false
+  } else {
+    passwordError.value = ''
   }
-  passwordError.value = ''
-  return true
+
+  // Validate confirm password
+  if (!form.confirmPassword) {
+    confirmPasswordError.value = 'Debes confirmar la contraseña.'
+    isValid = false
+  } else if (form.password !== form.confirmPassword) {
+    confirmPasswordError.value = 'Las contraseñas no coinciden.'
+    isValid = false
+  } else {
+    confirmPasswordError.value = ''
+  }
+
+  return isValid
 }
 
 async function handleSubmit() {
@@ -116,6 +155,7 @@ async function handleSubmit() {
           <UFormField
             label="Contraseña"
             name="password"
+            :error="passwordError || undefined"
           >
             <UInput
               v-model="form.password"
@@ -124,6 +164,7 @@ async function handleSubmit() {
               icon="i-lucide-lock"
               autocomplete="new-password"
               class="w-full"
+              :color="passwordError ? 'error' : undefined"
             >
               <template #trailing>
                 <UButton
@@ -139,7 +180,7 @@ async function handleSubmit() {
           <UFormField
             label="Confirmar"
             name="confirmPassword"
-            :error="passwordError"
+            :error="confirmPasswordError || undefined"
           >
             <UInput
               v-model="form.confirmPassword"
@@ -148,7 +189,7 @@ async function handleSubmit() {
               icon="i-lucide-lock-keyhole"
               autocomplete="new-password"
               class="w-full"
-              :color="passwordError ? 'error' : undefined"
+              :color="confirmPasswordError ? 'error' : undefined"
             />
           </UFormField>
 
