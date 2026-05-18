@@ -1,15 +1,17 @@
 import { readFileSync } from 'fs'
+import { initializeApp, cert, getApps } from 'firebase-admin/app'
+import { getAuth } from 'firebase-admin/auth'
+import { getFirestore } from 'firebase-admin/firestore'
 
-import { initializeApp } from 'firebase/app'
-import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-
+// Cargar variables de entorno desde .env
 function loadEnv() {
   try {
     const env = readFileSync('.env', 'utf-8')
     env.split('\n').forEach((line) => {
       const [key, ...valueParts] = line.split('=')
-      if (key && valueParts.length && !key.startsWith('#')) process.env[key.trim()] = valueParts.join('=').trim()
+      if (key && valueParts.length && !key.startsWith('#')) {
+        process.env[key.trim()] = valueParts.join('=').trim()
+      }
     })
   } catch {
     // env file not found — ignore
@@ -17,45 +19,66 @@ function loadEnv() {
 }
 loadEnv()
 
-const app = initializeApp({
-  apiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID
-})
+const projectId = process.env.FIREBASE_ADMIN_PROJECT_ID
+const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
+const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n')
 
-const db = getFirestore(app)
-const auth = getAuth(app)
-
-const EMAIL = 'andres.posada0919@gmail.com'
-const PASSWORD = process.argv[2]
-
-async function main() {
-  if (!PASSWORD) {
-    console.error('❌ Usa: npx tsx scripts/fix-admin.ts <password>')
-    process.exit(1)
-  }
-
-  console.log(`🔑 Iniciando sesión como ${EMAIL}...`)
-  const cred = await signInWithEmailAndPassword(auth, EMAIL, PASSWORD)
-  const uid = cred.user.uid
-  console.log(`✅ UID: ${uid}`)
-
-  console.log('📝 Recreando documento en Firestore...')
-  await setDoc(doc(db, 'users', uid), {
-    id: uid,
-    email: EMAIL,
-    displayName: 'Andrés Posada',
-    createdAt: serverTimestamp()
-  })
-  console.log('✅ Documento users/' + uid + ' creado correctamente.')
-  console.log('🎉 Ya puedes hacer login en la app.')
-  process.exit(0)
+if (!projectId || !clientEmail || !privateKey) {
+  console.error('❌ ERROR: Faltan credenciales de Firebase Admin en .env (FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY)')
+  process.exit(1)
 }
 
-main().catch((err) => {
-  console.error('❌', err.message)
-  process.exit(1)
-})
+// Inicializar Admin SDK
+const app = getApps().length
+  ? getApps()[0]!
+  : initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey
+      })
+    })
+
+const adminAuth = getAuth(app)
+const adminDb = getFirestore(app)
+
+const EMAIL = process.argv[2]
+
+async function main() {
+  if (!EMAIL) {
+    console.error('❌ ERROR: Debes especificar el correo del usuario.')
+    console.log('👉 Uso: npx tsx scripts/fix-admin.ts <correo@ejemplo.com>')
+    process.exit(1)
+  }
+  console.log(`🔍 Buscando usuario con email: ${EMAIL}...`)
+  
+  try {
+    const userRecord = await adminAuth.getUserByEmail(EMAIL)
+    const uid = userRecord.uid
+    console.log(`✅ Usuario encontrado en Auth. UID: ${uid}`)
+
+    console.log('🔑 Asignando Custom Claim de Admin ({ admin: true })...')
+    await adminAuth.setCustomUserClaims(uid, { admin: true })
+    console.log('✅ Custom Claims actualizadas.')
+
+    console.log('📝 Actualizando documento en Firestore users/' + uid + '...')
+    const userRef = adminDb.collection('users').doc(uid)
+    await userRef.set({
+      id: uid,
+      email: EMAIL,
+      displayName: userRecord.displayName || 'Andrés Posada',
+      isAdmin: true,
+      updatedAt: new Date()
+    }, { merge: true })
+    console.log('✅ Documento Firestore actualizado con isAdmin: true.')
+    
+    console.log('\n🎉 ¡Proceso completado con éxito!')
+    console.log('👉 NOTA IMPORTANTE: Para aplicar los cambios, debes CERRAR SESIÓN en la app y volver a INICIAR SESIÓN para forzar la generación de un nuevo token con tus privilegios de Administrador.')
+    process.exit(0)
+  } catch (err: any) {
+    console.error('❌ Error al procesar:', err.message)
+    process.exit(1)
+  }
+}
+
+main()

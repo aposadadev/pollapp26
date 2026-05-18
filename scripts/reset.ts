@@ -67,8 +67,8 @@ const auth = getAuth(app)
 const rtdb = firebaseConfig.databaseURL ? getDatabase(app) : null
 
 // ── Config ─────────────────────────────────────────────────────────────────────
-const ADMIN_EMAIL = 'andres.posada0919@gmail.com'
-const ADMIN_PASSWORD = process.argv[2] // pasar como argumento: npm run reset -- <password>
+const ADMIN_PASSWORD = process.argv[2] // pasar como argumento: pnpm reset <password> <admin_email>
+const ADMIN_EMAIL = process.argv[3]
 
 // Colecciones a vaciar completamente
 const COLLECTIONS_TO_CLEAR = ['groups', 'boards', 'predictions', '_counters']
@@ -146,8 +146,9 @@ async function clearRankings(): Promise<void> {
 // ── Main ───────────────────────────────────────────────────────────────────────
 
 async function main() {
-  if (!ADMIN_PASSWORD) {
-    console.error('❌ Debes pasar la contraseña del admin: npm run reset -- <password>')
+  if (!ADMIN_PASSWORD || !ADMIN_EMAIL) {
+    console.error('❌ ERROR: Faltan argumentos.')
+    console.log('👉 Uso: pnpm reset <password> <admin_email>')
     process.exit(1)
   }
 
