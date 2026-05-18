@@ -1,10 +1,9 @@
 /**
  * useGroups — Composable para gestión de grupos
  */
-import { groupService } from '~/services/group.service'
 import { boardService } from '~/services/board.service'
 import { parseFirebaseError } from '~/utils/firebase-error'
-import type { Board, Group } from '~/types'
+import type { Board } from '~/types'
 
 export function useGroups(tournamentId: string) {
   const authStore = useAuthStore()
@@ -23,7 +22,7 @@ export function useGroups(tournamentId: string) {
       // Sort ascending by board number to guarantee "Tabla 1", "Tabla 2", "Tabla 3" matches creation order
       groups.value = allBoards
         .filter(b => b.tournamentId === tournamentId)
-        .sort((a, b) => a.number - b.number) as any[]
+        .sort((a, b) => a.number - b.number)
     } catch (err: unknown) {
       error.value = parseFirebaseError(err, 'No se pudieron cargar tus tablas.')
     } finally {
@@ -33,7 +32,7 @@ export function useGroups(tournamentId: string) {
 
   const searchError = ref<string | null>(null)
 
-  async function searchByCode(code: string): Promise<Group | null> {
+  async function searchByCode(_code: string): Promise<null> {
     searchError.value = null
     return null
   }
@@ -54,7 +53,7 @@ export function useGroups(tournamentId: string) {
 
   const creating = ref(false)
 
-  async function createGroup(name: string): Promise<Group | null> {
+  async function createGroup(_name: string): Promise<null> {
     creating.value = false
     return null
   }

@@ -45,7 +45,6 @@ function confirm() {
   }
 
   const activeBoards = groups.value.filter(b => b.isActive)
-  const idx = activeBoards.findIndex(b => b.id === selectedBoard.id)
 
   groupContextStore.setContext({
     groupId: 'global-group',

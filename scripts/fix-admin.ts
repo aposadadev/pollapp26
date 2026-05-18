@@ -51,7 +51,6 @@ async function main() {
     process.exit(1)
   }
   console.log(`🔍 Buscando usuario con email: ${EMAIL}...`)
-  
   try {
     const userRecord = await adminAuth.getUserByEmail(EMAIL)
     const uid = userRecord.uid
@@ -71,12 +70,12 @@ async function main() {
       updatedAt: new Date()
     }, { merge: true })
     console.log('✅ Documento Firestore actualizado con isAdmin: true.')
-    
+
     console.log('\n🎉 ¡Proceso completado con éxito!')
     console.log('👉 NOTA IMPORTANTE: Para aplicar los cambios, debes CERRAR SESIÓN en la app y volver a INICIAR SESIÓN para forzar la generación de un nuevo token con tus privilegios de Administrador.')
     process.exit(0)
-  } catch (err: any) {
-    console.error('❌ Error al procesar:', err.message)
+  } catch (err: unknown) {
+    console.error('❌ Error al procesar:', (err as Error).message)
     process.exit(1)
   }
 }

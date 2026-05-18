@@ -5,11 +5,6 @@ const appStore = useAppStore()
 const { getPendingBoards, activateBoard, getAllGroups } = useAdmin()
 const toast = useToast()
 
-const copyCode = (code: string) => {
-  navigator.clipboard.writeText(code)
-  toast.add({ title: 'Código copiado', color: 'secondary' })
-}
-
 const groups = ref<import('~/types').Group[]>([])
 const loadingGroups = ref(false)
 

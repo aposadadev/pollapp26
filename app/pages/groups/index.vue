@@ -80,7 +80,10 @@ async function handleRequestBoard() {
             v-else
             class="flex items-center justify-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-(--ui-border) text-neutral-400 dark:text-neutral-500 text-xs font-bold uppercase tracking-wider text-center"
           >
-            <UIcon name="i-lucide-check-circle-2" class="size-4 text-emerald-500" />
+            <UIcon
+              name="i-lucide-check-circle-2"
+              class="size-4 text-emerald-500"
+            />
             Límite de tablas alcanzado
           </div>
         </div>
@@ -151,7 +154,10 @@ async function handleRequestBoard() {
                     v-if="board.isActive"
                     class="font-semibold text-secondary-600 dark:text-secondary-400 flex items-center gap-1"
                   >
-                    <UIcon name="i-lucide-award" class="size-3.5" />
+                    <UIcon
+                      name="i-lucide-award"
+                      class="size-3.5"
+                    />
                     Puntaje: {{ board.totalPoints || 0 }} pts
                   </span>
                 </div>
@@ -190,7 +196,10 @@ async function handleRequestBoard() {
                 v-else
                 class="w-full flex items-center justify-center gap-2 py-2 px-3 bg-neutral-100/50 dark:bg-neutral-800/40 rounded-xl text-neutral-500 text-xs font-semibold text-center border border-dashed border-(--ui-border)"
               >
-                <UIcon name="i-lucide-lock" class="size-3.5 animate-pulse" />
+                <UIcon
+                  name="i-lucide-lock"
+                  class="size-3.5 animate-pulse"
+                />
                 Esperando activación por el administrador
               </div>
             </div>

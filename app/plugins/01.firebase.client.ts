@@ -94,7 +94,7 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     })
   })
 
-    // Ongoing listener for session changes (login / logout after initial load)
+  // Ongoing listener for session changes (login / logout after initial load)
   const unsubOngoing = onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       try {
