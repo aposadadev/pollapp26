@@ -7,9 +7,10 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt'
   ],
 
-  // SSR enabled — required for Nuxt server API routes (/api/*)
-  // The frontend remains an SPA via routeRules below
-  ssr: true,
+  // Pure Single Page Application (SPA) mode
+  // The frontend renders entirely in the browser, matching Firebase Client SDK naturally.
+  // Nuxt's Nitro server still handles server API routes (/api/*) perfectly.
+  ssr: false,
 
   devtools: {
     enabled: true
@@ -59,11 +60,7 @@ export default defineNuxtConfig({
     }
   },
 
-  // All pages render as SPA (Firebase client SDK is browser-only).
-  // Server API routes (/api/**) work normally as SSR endpoints.
-  routeRules: {
-    '/**': { ssr: false }
-  },
+  // Compatibility date for features and plugins
 
   compatibilityDate: '2025-01-15',
 
