@@ -9,11 +9,25 @@ interface AuthState {
 }
 
 export const useAuthStore = defineStore('auth', {
-  state: (): AuthState => ({
-    user: null,
-    loading: false,
-    initialized: false
-  }),
+  state: (): AuthState => {
+    let cachedUser: UserProfile | null = null
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('auth_user')
+        if (stored) {
+          cachedUser = JSON.parse(stored)
+        }
+      } catch (e) {
+        console.error('Error reading auth_user from localStorage:', e)
+      }
+    }
+
+    return {
+      user: cachedUser,
+      loading: false,
+      initialized: !!cachedUser
+    }
+  },
 
   getters: {
     isAuthenticated: (state): boolean => !!state.user,

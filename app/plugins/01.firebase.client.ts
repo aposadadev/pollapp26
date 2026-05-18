@@ -62,7 +62,12 @@ export default defineNuxtPlugin(async (nuxtApp) => {
   // returns — and route middleware runs — authStore.initialized is already true.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const authStore = useAuthStore(nuxtApp.$pinia as any)
-  const { onAuthStateChanged } = await import('firebase/auth')
+  const { onAuthStateChanged, setPersistence, browserLocalPersistence } = await import('firebase/auth')
+
+  // Explicitly enforce IndexedDB browser-local persistence so sessions survive tab closes
+  await setPersistence(auth, browserLocalPersistence).catch((err) => {
+    if (import.meta.dev) console.error('Error setting persistence:', err)
+  })
 
   await new Promise<void>((resolve) => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -71,29 +76,40 @@ export default defineNuxtPlugin(async (nuxtApp) => {
       if (firebaseUser) {
         try {
           authStore.user = await resolveUser(firebaseUser)
+          localStorage.setItem('auth_user', JSON.stringify(authStore.user))
         } catch (err) {
           if (import.meta.dev) console.error('Error loading profile:', err)
-          authStore.user = null
+          // Maintain cached user if already present as offline fallback
+          if (!authStore.user) {
+            authStore.user = null
+            localStorage.removeItem('auth_user')
+          }
         }
       } else {
         authStore.user = null
+        localStorage.removeItem('auth_user')
       }
       authStore.initialized = true
       resolve()
     })
   })
 
-  // Ongoing listener for session changes (login / logout after initial load)
+    // Ongoing listener for session changes (login / logout after initial load)
   const unsubOngoing = onAuthStateChanged(auth, async (firebaseUser) => {
     if (firebaseUser) {
       try {
         authStore.user = await resolveUser(firebaseUser)
+        localStorage.setItem('auth_user', JSON.stringify(authStore.user))
       } catch (err) {
         if (import.meta.dev) console.error('Error loading profile:', err)
-        authStore.user = null
+        if (!authStore.user) {
+          authStore.user = null
+          localStorage.removeItem('auth_user')
+        }
       }
     } else {
       authStore.user = null
+      localStorage.removeItem('auth_user')
     }
     authStore.initialized = true
   })
