@@ -22,7 +22,7 @@ export class BoardService {
    * Admin SDK, evitando la race condition y garantizando que _counters no sea
    * writeable por clientes.
    */
-  async requestBoard(userId: string, groupId: string, tournamentId: string): Promise<Board> {
+  async requestBoard(userId: string, tournamentId: string): Promise<Board> {
     // Obtener el ID Token del usuario actual para autenticar la petición
     const { $firebaseAuth } = useNuxtApp() as unknown as {
       $firebaseAuth: import('firebase/auth').Auth
@@ -38,7 +38,7 @@ export class BoardService {
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${idToken}` },
-        body: { groupId, tournamentId }
+        body: { tournamentId }
       }
     )
 

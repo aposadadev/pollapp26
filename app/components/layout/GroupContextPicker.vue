@@ -23,39 +23,42 @@ onMounted(async () => {
   await groupsComposable.loadGroups()
 })
 
-// Grupo que el usuario está eligiendo antes de confirmar
-const pendingGroupId = ref<string | null>(null)
+// Tabla que el usuario está eligiendo antes de confirmar
 const pendingBoardId = ref<string | null>(null)
 
-// Sync with store whenever the sheet opens (or store context changes externally)
+// Sync with store whenever the sheet opens
 watchEffect(() => {
   if (isOpen.value) {
-    pendingGroupId.value = groupContextStore.groupId
     pendingBoardId.value = groupContextStore.boardId
   }
 })
 
-const pendingGroup = computed(() =>
-  groups.value.find(g => g.id === pendingGroupId.value) ?? null
-)
-
-function selectGroup(groupId: string, boardId: string | undefined) {
-  pendingGroupId.value = groupId
-  pendingBoardId.value = boardId ?? null
+function selectBoard(boardId: string) {
+  pendingBoardId.value = boardId
 }
 
 function confirm() {
-  const group = pendingGroup.value
-  if (!group || !pendingBoardId.value) {
-    toast.add({ title: 'Selecciona un grupo y tabla', color: 'error' })
+  const selectedBoard = groups.value.find(b => b.id === pendingBoardId.value)
+  if (!selectedBoard) {
+    toast.add({ title: 'Selecciona una tabla', color: 'error' })
     return
   }
 
+  const activeBoards = groups.value.filter(b => b.isActive)
+  const idx = activeBoards.findIndex(b => b.id === selectedBoard.id)
+
   groupContextStore.setContext({
-    groupId: group.id,
-    groupName: group.name,
-    groupCode: group.code,
-    boardId: pendingBoardId.value
+    groupId: 'global-group',
+    groupName: 'Polla Mundial 2026',
+    groupCode: 'GLOBAL',
+    boardId: selectedBoard.id,
+    boards: activeBoards.map((b, i) => ({
+      id: b.id,
+      number: b.number,
+      totalPoints: b.totalPoints,
+      currentPos: b.currentPos,
+      name: `Tabla ${i + 1}`
+    }))
   })
 
   isOpen.value = false
@@ -67,7 +70,7 @@ function goToGroups() {
 }
 
 const hasActiveGroups = computed(() =>
-  groups.value.some(g => g.userBoardIsActive)
+  groups.value.some(b => b.isActive)
 )
 </script>
 
@@ -100,14 +103,14 @@ const hasActiveGroups = computed(() =>
           <!-- Header del sheet -->
           <div class="px-6 pt-2 pb-4 border-b border-(--ui-border)">
             <h2 class="font-heading text-lg font-black uppercase tracking-tight text-(--ui-text-highlighted)">
-              Elige tu grupo
+              Elige tu tabla
             </h2>
             <p class="text-xs text-(--ui-text-muted) mt-0.5">
-              El ranking y tus predicciones se mostrarán según el grupo activo.
+              El ranking y tus predicciones se mostrarán según la tabla activa.
             </p>
           </div>
 
-          <!-- Lista de grupos -->
+          <!-- Lista de tablas -->
           <div class="px-4 py-4 space-y-3 max-h-[60vh] overflow-y-auto">
             <!-- Loading -->
             <div
@@ -121,29 +124,29 @@ const hasActiveGroups = computed(() =>
               />
             </div>
 
-            <!-- Sin grupos -->
+            <!-- Sin tablas -->
             <div
               v-else-if="!groups.length"
               class="flex flex-col items-center py-10 gap-3"
             >
               <UIcon
-                name="i-lucide-users"
+                name="i-lucide-clipboard-list"
                 class="size-12 text-(--ui-text-muted)"
               />
               <p class="text-sm font-bold text-(--ui-text-muted) text-center">
-                No perteneces a ningún grupo aún.
+                No tienes ninguna tabla creada aún.
               </p>
               <UButton
                 color="primary"
                 variant="solid"
-                icon="i-lucide-search"
+                icon="i-lucide-plus-circle"
                 @click="goToGroups"
               >
-                Buscar un grupo
+                Pedir una tabla
               </UButton>
             </div>
 
-            <!-- Grupos sin tabla activa solamente -->
+            <!-- Tablas sin activar -->
             <div
               v-else-if="!hasActiveGroups"
               class="flex flex-col items-center py-8 gap-3"
@@ -160,31 +163,31 @@ const hasActiveGroups = computed(() =>
                 variant="outline"
                 @click="goToGroups"
               >
-                Ver mis grupos
+                Ver mis tablas
               </UButton>
             </div>
 
-            <!-- Cards por grupo -->
+            <!-- Cards por tabla -->
             <template v-else>
               <button
-                v-for="group in groups.filter(g => g.userBoardIsActive)"
-                :key="group.id"
+                v-for="(board, idx) in groups.filter(b => b.isActive)"
+                :key="board.id"
                 class="w-full text-left rounded-2xl border-2 p-4 transition-all duration-200 active:scale-[0.98]"
                 :class="[
-                  pendingGroupId === group.id
+                  pendingBoardId === board.id
                     ? 'border-secondary-500 bg-secondary-500/5 dark:bg-secondary-400/10 shadow-md shadow-secondary-500/10'
                     : 'border-(--ui-border) bg-(--ui-bg-elevated) hover:border-(--ui-border-muted)'
                 ]"
-                @click="selectGroup(group.id, group.userBoardId)"
+                @click="selectBoard(board.id)"
               >
                 <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0">
-                    <!-- Nombre del grupo -->
+                    <!-- Nombre de la tabla -->
                     <div class="flex items-center gap-2 mb-1">
                       <div
                         class="size-7 rounded-xl flex items-center justify-center shrink-0"
                         :class="[
-                          pendingGroupId === group.id
+                          pendingBoardId === board.id
                             ? 'bg-secondary-500 text-white'
                             : 'bg-(--ui-bg-muted) text-(--ui-text-muted)'
                         ]"
@@ -197,25 +200,25 @@ const hasActiveGroups = computed(() =>
                       <span
                         class="font-heading font-black text-sm uppercase tracking-wide truncate"
                         :class="[
-                          pendingGroupId === group.id
+                          pendingBoardId === board.id
                             ? 'text-secondary-600 dark:text-secondary-400'
                             : 'text-(--ui-text-highlighted)'
                         ]"
                       >
-                        {{ group.name }}
+                        Tabla {{ idx + 1 }}
                       </span>
                     </div>
 
-                    <!-- Código -->
+                    <!-- Número -->
                     <span class="text-[11px] font-mono text-(--ui-text-muted) ml-9">
-                      #{{ group.code }}
+                      #{{ board.number }}
                     </span>
                   </div>
 
                   <!-- Check indicator -->
                   <Transition name="pop">
                     <div
-                      v-if="pendingGroupId === group.id"
+                      v-if="pendingBoardId === board.id"
                       class="shrink-0 size-6 rounded-full bg-secondary-500 flex items-center justify-center shadow-sm"
                     >
                       <UIcon
@@ -243,7 +246,7 @@ const hasActiveGroups = computed(() =>
               color="secondary"
               variant="solid"
               class="flex-1 font-heading font-bold uppercase tracking-wide"
-              :disabled="!pendingGroupId || !pendingBoardId"
+              :disabled="!pendingBoardId"
               @click="confirm"
             >
               Confirmar

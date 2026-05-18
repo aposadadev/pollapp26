@@ -15,15 +15,15 @@ onMounted(async () => {
   appStore.setPageTitle('Dashboard')
   await Promise.all([groupsComposable.loadGroups(), matchesComposable.loadAll()])
 
-  // Auto-set context if not set but user has an active group
+  // Auto-set context if not set but user has an active board
   if (!groupContextStore.hasContext && groups.value.length) {
-    const activeGroup = groups.value.find(g => g.userBoardIsActive)
-    if (activeGroup?.userBoardId) {
+    const activeBoard = groups.value.find(b => b.isActive)
+    if (activeBoard) {
       groupContextStore.setContext({
-        groupId: activeGroup.id,
-        groupName: activeGroup.name,
-        groupCode: activeGroup.code,
-        boardId: activeGroup.userBoardId
+        groupId: 'global-group',
+        groupName: 'Polla Mundial 2026',
+        groupCode: 'GLOBAL',
+        boardId: activeBoard.id
       })
     }
   }
@@ -34,7 +34,7 @@ const activeGroupId = computed(() => groupContextStore.activeGroupId ?? '')
 const firstActiveBoardId = computed(
   () =>
     groupContextStore.activeBoardId
-    ?? groups.value.find(g => g.userBoardIsActive)?.userBoardId
+    ?? groups.value.find(b => b.isActive)?.id
     ?? null
 )
 
@@ -57,11 +57,6 @@ function formatMatchDate(date: Date): string {
   if (isToday) return `HOY • ${time}`
   const dayName = d.toLocaleDateString('es-MX', { weekday: 'short' }).toUpperCase()
   return `${dayName} • ${time}`
-}
-
-function copyCode(code: string) {
-  navigator.clipboard.writeText(code)
-  toast.add({ title: 'Código copiado', color: 'secondary' })
 }
 </script>
 
@@ -115,9 +110,9 @@ function copyCode(code: string) {
             {{ authStore.displayName ? `Hola, ${authStore.displayName.split(' ')[0]}!` : 'Bienvenido' }}
           </span>
           <span
-            class="text-white/60 text-[12px] font-bold tracking-widest mt-2 opacity-90 text-center"
+            class="text-white/60 text-[12px] font-bold tracking-widest mt-2 opacity-90 text-center uppercase"
           >
-            ÚNETE A UN GRUPO PARA COMPETIR
+            Solicita una tabla para empezar
           </span>
         </template>
       </div>
@@ -191,7 +186,7 @@ function copyCode(code: string) {
               </UButton>
               <div
                 v-else
-                class="w-full bg-neutral-100 dark:bg-neutral-800 h-14 rounded-[20px] text-neutral-400 text-[14px] font-black tracking-wide font-heading flex items-center justify-center"
+                class="w-full bg-neutral-100 dark:bg-neutral-800 h-14 rounded-[20px] text-neutral-400 text-[14px] font-black tracking-wide font-heading flex items-center justify-center uppercase"
               >
                 SIN TABLA ACTIVA
               </div>
@@ -227,17 +222,17 @@ function copyCode(code: string) {
         </div>
       </div>
 
-      <!-- Tus Grupos -->
+      <!-- Tus Tablas -->
       <div class="flex flex-col gap-4 stagger-up stagger-d4">
         <div class="flex items-center justify-between px-2">
           <h3
-            class="text-[14px] font-black text-neutral-500 dark:text-neutral-400 tracking-widest font-heading"
+            class="text-[14px] font-black text-neutral-500 dark:text-neutral-400 tracking-widest font-heading uppercase"
           >
-            TUS GRUPOS
+            TUS TABLAS
           </h3>
           <NuxtLink
             to="/groups"
-            class="text-[13px] font-bold text-primary-500 hover:text-primary-600 transition-colors"
+            class="text-[13px] font-bold text-primary-500 hover:text-primary-600 transition-colors uppercase"
           >
             Ver todas
           </NuxtLink>
@@ -260,42 +255,30 @@ function copyCode(code: string) {
 
           <template v-else-if="groups.length">
             <div
-              v-for="group in groups"
-              :key="group.id"
+              v-for="(board, idx) in groups"
+              :key="board.id"
               class="shrink-0 w-[160px] bg-(--ui-bg-elevated) border border-(--ui-border) p-5 rounded-[20px] snap-center flex flex-col shadow-[0_8px_24px_rgba(0,0,0,0.03)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] hover:shadow-md transition-shadow"
             >
               <div class="flex items-center gap-2 mb-1">
                 <UIcon
-                  name="i-lucide-users"
+                  name="i-lucide-clipboard-list"
                   class="size-5 text-neutral-500 shrink-0"
                 />
                 <span
                   class="text-[13px] font-bold text-neutral-800 dark:text-white truncate"
-                >{{ group.name }}</span>
+                >Tabla {{ idx + 1 }}</span>
               </div>
 
-              <button
-                class="flex items-center gap-1.5 text-[11px] bg-(--ui-bg-muted) px-2 py-1 rounded-md font-mono font-bold text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 transition-colors w-fit mb-3"
-                title="Copiar código"
-                @click.prevent="copyCode(group.code)"
-              >
-                <UIcon
-                  name="i-lucide-hash"
-                  class="size-3"
-                />
-                {{ group.code }}
-                <UIcon
-                  name="i-lucide-copy"
-                  class="size-3 opacity-60"
-                />
-              </button>
+              <div class="text-[10px] text-(--ui-text-muted) font-mono uppercase mb-3">
+                #{{ board.number }}
+              </div>
 
               <div class="flex-1" />
 
               <!-- Status badge -->
               <div class="mb-4">
                 <span
-                  v-if="group.userBoardIsActive"
+                  v-if="board.isActive"
                   class="inline-flex items-center gap-1.5 text-[11px] font-black text-secondary-600 dark:text-secondary-400"
                 >
                   <span class="size-1.5 rounded-full bg-secondary-500 inline-block" />
@@ -311,8 +294,8 @@ function copyCode(code: string) {
               </div>
 
               <UButton
-                v-if="group.userBoardIsActive"
-                :to="`/board/${group.userBoardId}`"
+                v-if="board.isActive"
+                :to="`/board/${board.id}`"
                 variant="soft"
                 color="neutral"
                 block
@@ -340,15 +323,15 @@ function copyCode(code: string) {
             v-else
             class="w-full flex flex-col items-center justify-center gap-3 p-8 bg-(--ui-bg-elevated) rounded-[20px] border border-(--ui-border) border-dashed"
           >
-            <span class="text-sm font-bold text-neutral-400">Sin grupos activos</span>
+            <span class="text-sm font-bold text-neutral-400 uppercase">Sin tablas solicitadas</span>
             <UButton
               to="/groups"
               variant="soft"
               color="primary"
               size="sm"
-              class="font-heading font-black tracking-wide text-[12px]"
+              class="font-heading font-black tracking-wide text-[12px] uppercase"
             >
-              UNIRSE A GRUPO
+              Pedir Tabla
             </UButton>
           </div>
         </div>

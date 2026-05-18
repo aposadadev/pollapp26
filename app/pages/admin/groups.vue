@@ -27,8 +27,11 @@ const loadingGroup = ref<string | null>(null)
 const activatingBoardId = ref<string | null>(null)
 
 onMounted(async () => {
-  appStore.setPageTitle('Grupos — Admin')
+  appStore.setPageTitle('Tablas — Admin')
   await loadGroups()
+  if (groups.value.length && groups.value[0]) {
+    await toggleGroup(groups.value[0].id)
+  }
 })
 
 async function toggleGroup(groupId: string) {
@@ -65,8 +68,8 @@ async function handleActivate(boardId: string, groupId: string) {
 <template>
   <div class="space-y-6 pb-20">
     <LayoutPageHeader
-      title="Gestión de Grupos"
-      subtitle="Activa las tablas pendientes de aprobación para cada grupo."
+      title="Gestión de Tablas"
+      subtitle="Activa las tablas pendientes de aprobación para la polla global."
     />
 
     <div class="px-4 space-y-4">
@@ -92,7 +95,7 @@ async function handleActivate(boardId: string, groupId: string) {
           />
         </div>
         <p class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
-          No hay grupos
+          No hay tablas
         </p>
         <p class="text-sm text-(--ui-text-muted)">
           No hay grupos registrados en el sistema.
@@ -118,17 +121,6 @@ async function handleActivate(boardId: string, groupId: string) {
               <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-wide group-hover:text-primary-500 transition-colors">
                 {{ group.name }}
               </p>
-              <button
-                class="flex items-center gap-1.5 text-[11px] bg-(--ui-bg-muted) px-2 py-0.5 rounded-md font-mono font-bold text-(--ui-text-muted) hover:bg-primary-500/10 hover:text-primary-500 transition-colors"
-                title="Copiar código"
-                @click.stop="copyCode(group.code)"
-              >
-                Código: {{ group.code }}
-                <UIcon
-                  name="i-lucide-copy"
-                  class="size-3 opacity-60"
-                />
-              </button>
             </div>
             <div class="flex items-center gap-3">
               <UBadge

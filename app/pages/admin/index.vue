@@ -25,10 +25,10 @@ onMounted(async () => {
 const adminActions = [
   {
     to: '/admin/groups',
-    label: 'Gestionar Grupos',
-    icon: 'i-lucide-users',
+    label: 'Gestionar Tablas',
+    icon: 'i-lucide-clipboard-list',
     color: 'bg-secondary-500/10 text-secondary-600',
-    description: 'Tablas pendientes y nuevos grupos'
+    description: 'Aprobación y activación de tablas'
   },
   {
     to: '/admin/matches',

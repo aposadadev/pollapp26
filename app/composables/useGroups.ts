@@ -4,13 +4,13 @@
 import { groupService } from '~/services/group.service'
 import { boardService } from '~/services/board.service'
 import { parseFirebaseError } from '~/utils/firebase-error'
-import type { Group, GroupWithBoardStatus } from '~/types'
+import type { Board, Group } from '~/types'
 
 export function useGroups(tournamentId: string) {
   const authStore = useAuthStore()
   const toast = useToast()
 
-  const groups = ref<GroupWithBoardStatus[]>([])
+  const groups = ref<Board[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -19,9 +19,13 @@ export function useGroups(tournamentId: string) {
     loading.value = true
     error.value = null
     try {
-      groups.value = await groupService.findForUser(tournamentId, authStore.user.id)
+      const allBoards = await boardService.findByUser(authStore.user.id)
+      // Sort ascending by board number to guarantee "Tabla 1", "Tabla 2", "Tabla 3" matches creation order
+      groups.value = allBoards
+        .filter(b => b.tournamentId === tournamentId)
+        .sort((a, b) => a.number - b.number) as any[]
     } catch (err: unknown) {
-      error.value = parseFirebaseError(err, 'No se pudieron cargar tus ligas.')
+      error.value = parseFirebaseError(err, 'No se pudieron cargar tus tablas.')
     } finally {
       loading.value = false
     }
@@ -31,16 +35,7 @@ export function useGroups(tournamentId: string) {
 
   async function searchByCode(code: string): Promise<Group | null> {
     searchError.value = null
-    try {
-      const group = await groupService.findByCode(code)
-      if (!group) {
-        searchError.value = 'No se encontró ninguna liga con ese código.'
-      }
-      return group
-    } catch (err: unknown) {
-      searchError.value = parseFirebaseError(err, 'Error al buscar la liga. Intenta más tarde.')
-      return null
-    }
+    return null
   }
 
   async function requestBoard(groupId: string, tournamentId: string): Promise<void> {
@@ -49,7 +44,7 @@ export function useGroups(tournamentId: string) {
       return
     }
     try {
-      await boardService.requestBoard(authStore.user.id, groupId, tournamentId)
+      await boardService.requestBoard(authStore.user.id, tournamentId)
       toast.add({ title: 'Tabla solicitada', description: 'Espera a que un admin la active.', color: 'secondary' })
       await loadGroups()
     } catch (err: unknown) {
@@ -60,27 +55,8 @@ export function useGroups(tournamentId: string) {
   const creating = ref(false)
 
   async function createGroup(name: string): Promise<Group | null> {
-    if (!authStore.user) {
-      toast.add({ title: 'Error', description: 'No hay usuario autenticado', color: 'error' })
-      return null
-    }
-    creating.value = true
-    try {
-      const group = await groupService.createGroup(
-        name,
-        authStore.user.id,
-        authStore.user.displayName ?? authStore.user.email,
-        tournamentId
-      )
-      toast.add({ title: '¡Liga creada!', description: `Código: ${group.code}`, color: 'secondary' })
-      await loadGroups()
-      return group
-    } catch (err: unknown) {
-      toast.add({ title: 'Error al crear liga', description: parseFirebaseError(err), color: 'error' })
-      return null
-    } finally {
-      creating.value = false
-    }
+    creating.value = false
+    return null
   }
 
   return {

@@ -4,369 +4,217 @@ definePageMeta({ middleware: 'auth' })
 const appStore = useAppStore()
 const groupsComposable = useGroups(appStore.activeTournamentId)
 
-const groups = groupsComposable.groups
+const boards = groupsComposable.groups // boards are returned by groups reactive ref in useGroups
 const loading = groupsComposable.loading
 const loadGroups = groupsComposable.loadGroups
-const searchByCode = groupsComposable.searchByCode
-const composableSearchError = groupsComposable.searchError
-const creating = groupsComposable.creating
 
 const TOURNAMENT_ID = appStore.activeTournamentId
-const requestingBoardId = ref<string | null>(null)
+const requestingBoard = ref(false)
 
 onMounted(async () => {
-  appStore.setPageTitle('Grupos')
+  appStore.setPageTitle('Mis Tablas')
   await loadGroups()
 })
 
-const searchCode = ref('')
-const searchResult = ref<import('~/types').Group | null>(null)
-const searchLoading = ref(false)
-const searchError = ref('')
-
-async function handleSearch() {
-  if (!searchCode.value.trim()) return
-  searchLoading.value = true
-  searchError.value = ''
-  const result = await searchByCode(searchCode.value.trim())
-  if (result) {
-    searchResult.value = result
-  } else {
-    searchError.value = composableSearchError.value ?? 'No se encontró ningún grupo con ese código.'
-    searchResult.value = null
-  }
-  searchLoading.value = false
-}
-
-async function handleRequestBoard(groupId: string) {
-  requestingBoardId.value = groupId
-  await groupsComposable.requestBoard(groupId, TOURNAMENT_ID)
-  requestingBoardId.value = null
+async function handleRequestBoard() {
+  if (boards.value.length >= 3) return
+  requestingBoard.value = true
+  await groupsComposable.requestBoard('global-group', TOURNAMENT_ID)
+  requestingBoard.value = false
   await loadGroups()
-}
-
-function copyCode(code: string) {
-  navigator.clipboard.writeText(code)
-  useToast().add({ title: 'Código copiado', color: 'secondary' })
-}
-
-// Crear grupo
-const showCreateModal = ref(false)
-const newGroupName = ref('')
-const createdGroup = ref<import('~/types').Group | null>(null)
-
-async function handleCreateGroup() {
-  if (!newGroupName.value.trim()) return
-  const result = await groupsComposable.createGroup(newGroupName.value.trim())
-  if (result) {
-    createdGroup.value = result
-    newGroupName.value = ''
-  }
-}
-
-function closeCreateModal() {
-  showCreateModal.value = false
-  createdGroup.value = null
-  newGroupName.value = ''
 }
 </script>
 
 <template>
   <div class="font-sans">
-    <!-- Header con gradiente tri-color -->
+    <!-- Header con gradiente -->
     <LayoutPageHeader
-      title="Grupos"
-      subtitle="Administra tus pollas mundialistas"
+      title="Mis Tablas"
+      subtitle="Administra tus tablas para la polla del mundial"
     />
 
-    <div class="p-4 space-y-5 pb-24">
-      <!-- Búsqueda por código + crear grupo -->
-      <div class="stagger-up stagger-d1 space-y-3">
-        <div class="flex gap-2">
-          <UInput
-            v-model="searchCode"
-            placeholder="Código del grupo..."
-            class="flex-1 font-mono uppercase"
-            size="md"
-            icon="i-lucide-hash"
-            :maxlength="6"
-            @keyup.enter="handleSearch"
-          />
+    <div class="p-4 space-y-6 pb-24">
+      <!-- Card Informativa del Límite de Tablas -->
+      <div class="stagger-up stagger-d1">
+        <div class="bg-(--ui-bg-elevated) shadow-[0_12px_30px_rgba(27,43,102,0.08)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.3)] border border-(--ui-border) rounded-[24px] p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-black tracking-[0.2em] font-heading text-neutral-400 uppercase">
+              Límite de Tablas
+            </span>
+            <span class="text-xs font-bold text-secondary-600 dark:text-secondary-400 bg-secondary-500/10 dark:bg-secondary-400/15 px-2.5 py-1 rounded-full font-mono">
+              {{ boards.length }} / 3
+            </span>
+          </div>
+
+          <div class="space-y-1.5">
+            <p class="text-sm font-bold text-(--ui-text-highlighted)">
+              Juega con hasta 3 tablas independientes
+            </p>
+            <p class="text-xs text-(--ui-text-muted) leading-relaxed">
+              Cada tabla te permite realizar tus propias predicciones y competir en el ranking global.
+              Puedes solicitar una tabla a la vez o todas juntas. Las tablas requieren aprobación del administrador antes de poder predecir o puntuar.
+            </p>
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="w-full bg-(--ui-bg-muted) rounded-full h-2 overflow-hidden">
+            <div
+              class="bg-secondary-500 h-full transition-all duration-500 rounded-full"
+              :style="{ width: `${(boards.length / 3) * 100}%` }"
+            />
+          </div>
+
+          <!-- Botón de Solicitud -->
           <UButton
+            v-if="boards.length < 3"
             color="primary"
-            icon="i-lucide-search"
-            :loading="searchLoading"
-            @click="handleSearch"
+            variant="solid"
+            icon="i-lucide-plus-circle"
+            class="w-full font-heading font-black uppercase tracking-wider py-3.5 rounded-xl shadow-lg shadow-primary-600/15 text-xs active:scale-[0.99] transition-transform"
+            :loading="requestingBoard"
+            @click="handleRequestBoard"
           >
-            Buscar
+            Solicitar Nueva Tabla
           </UButton>
+          <div
+            v-else
+            class="flex items-center justify-center gap-2 p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl border border-(--ui-border) text-neutral-400 dark:text-neutral-500 text-xs font-bold uppercase tracking-wider text-center"
+          >
+            <UIcon name="i-lucide-check-circle-2" class="size-4 text-emerald-500" />
+            Límite de tablas alcanzado
+          </div>
         </div>
-        <p
-          v-if="searchError"
-          class="mt-2 text-xs text-[var(--ui-color-error-500)]"
-        >
-          {{ searchError }}
-        </p>
-        <div
-          v-if="searchResult"
-          class="mt-3"
-        >
-          <GroupCard
-            :group="{ ...searchResult, userBoardIsActive: false, userBoardIsPending: false }"
-            :loading="requestingBoardId === searchResult.id"
-            @request-board="handleRequestBoard"
-          />
-        </div>
-
-        <!-- Separador -->
-        <div class="flex items-center gap-3 my-1">
-          <div class="flex-1 h-px bg-(--ui-border)" />
-          <span class="text-[11px] font-bold text-(--ui-text-muted) uppercase tracking-wider">o</span>
-          <div class="flex-1 h-px bg-(--ui-border)" />
-        </div>
-
-        <UButton
-          color="secondary"
-          variant="soft"
-          icon="i-lucide-plus-circle"
-          class="w-full font-bold rounded-xl"
-          @click="showCreateModal = true"
-        >
-          Crear nuevo grupo
-        </UButton>
       </div>
 
-      <!-- Mis grupos -->
-      <div class="stagger-up stagger-d2">
-        <h2 class="font-heading text-lg font-semibold text-(--ui-text-highlighted) uppercase tracking-wide mb-3">
-          Mis grupos
-        </h2>
+      <!-- Listado de mis tablas -->
+      <div class="stagger-up stagger-d2 space-y-4">
+        <h3 class="font-heading text-[13px] font-black text-neutral-500 dark:text-neutral-400 tracking-wider uppercase px-1">
+          Tus Tablas Solicitadas
+        </h3>
 
         <div
           v-if="loading"
           class="space-y-3"
         >
           <USkeleton
-            v-for="i in 3"
+            v-for="i in 2"
             :key="i"
-            class="h-28 rounded-xl"
+            class="h-28 rounded-[24px]"
           />
         </div>
 
         <div
-          v-else-if="groups.length"
-          class="space-y-3"
+          v-else-if="boards.length"
+          class="grid gap-4"
         >
           <div
-            v-for="(group, i) in groups"
-            :key="group.id"
-            class="card-elevated overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 stagger-up"
-            :class="`stagger-d${Math.min(i + 3, 12)}`"
+            v-for="(board, idx) in boards"
+            :key="board.id"
+            class="card-elevated overflow-hidden transition-all duration-200 hover:shadow-md stagger-up"
+            :class="[
+              board.isActive
+                ? 'border-l-4 border-l-secondary-500 hover:-translate-y-0.5'
+                : 'opacity-85 border-l-4 border-l-neutral-300 dark:border-l-neutral-700'
+            ]"
           >
-            <div class="p-4 flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                <h3 class="font-heading font-black text-sm text-(--ui-text-highlighted) uppercase tracking-wide truncate">
-                  {{ group.name }}
-                </h3>
-                <div class="flex items-center gap-2 mt-2">
-                  <button
-                    class="flex items-center gap-1.5 text-[11px] bg-(--ui-bg-muted) px-2.5 py-1 rounded-lg font-mono font-bold
-                           text-primary-600 dark:text-primary-400
-                           hover:bg-primary-500/10 transition-colors"
-                    @click="copyCode(group.code)"
-                  >
-                    <UIcon
-                      name="i-lucide-hash"
-                      class="size-3"
-                    />
-                    {{ group.code }}
-                    <UIcon
-                      name="i-lucide-copy"
-                      class="size-3 opacity-60"
-                    />
-                  </button>
+            <div class="p-5 flex items-start justify-between gap-3">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2.5">
+                  <h4 class="font-heading font-black text-base text-(--ui-text-highlighted) uppercase tracking-wide">
+                    Tabla {{ idx + 1 }}
+                  </h4>
                   <UBadge
-                    v-if="group.userBoardIsActive"
+                    v-if="board.isActive"
                     color="secondary"
                     variant="soft"
                     size="xs"
-                    class="rounded-lg font-bold"
+                    class="rounded-md font-bold uppercase tracking-wider text-[9px]"
                   >
                     Activa
                   </UBadge>
                   <UBadge
-                    v-else-if="group.userBoardIsPending"
+                    v-else
                     color="neutral"
                     variant="soft"
                     size="xs"
-                    class="rounded-lg font-bold"
+                    class="rounded-md font-bold uppercase tracking-wider text-[9px]"
                   >
                     Pendiente
                   </UBadge>
                 </div>
+
+                <div class="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+                  <span class="font-mono text-(--ui-text-muted) uppercase">
+                    Número: #{{ board.number }}
+                  </span>
+                  <span
+                    v-if="board.isActive"
+                    class="font-semibold text-secondary-600 dark:text-secondary-400 flex items-center gap-1"
+                  >
+                    <UIcon name="i-lucide-award" class="size-3.5" />
+                    Puntaje: {{ board.totalPoints || 0 }} pts
+                  </span>
+                </div>
+              </div>
+
+              <!-- Icono decorativo -->
+              <div
+                class="size-10 rounded-xl flex items-center justify-center shrink-0"
+                :class="[
+                  board.isActive
+                    ? 'bg-secondary-500/10 text-secondary-600 dark:text-secondary-400'
+                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500'
+                ]"
+              >
+                <UIcon
+                  :name="board.isActive ? 'i-lucide-trophy' : 'i-lucide-clock'"
+                  class="size-5"
+                />
               </div>
             </div>
 
-            <div class="px-4 pb-4 flex gap-2 border-t border-(--ui-border)/50 pt-3">
+            <!-- Botones de Acción -->
+            <div class="px-5 pb-4 pt-3 flex gap-2 border-t border-(--ui-border)/40 bg-neutral-50/50 dark:bg-neutral-800/15">
               <UButton
-                v-if="group.userBoardIsActive && group.userBoardId"
-                :to="`/board/${group.userBoardId}`"
+                v-if="board.isActive"
+                :to="`/board/${board.id}`"
                 color="primary"
                 variant="solid"
                 size="sm"
-                class="flex-1 font-bold rounded-xl"
+                class="flex-1 font-heading font-black text-xs uppercase tracking-wider rounded-xl py-2.5 shadow-sm shadow-primary-600/10"
                 icon="i-lucide-clipboard-list"
               >
-                Mi tabla
+                Mis Predicciones
               </UButton>
-              <UButton
-                v-else-if="group.userBoardIsPending"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                class="flex-1 rounded-xl"
-                disabled
-                icon="i-lucide-clock"
-              >
-                Pendiente de activación
-              </UButton>
-              <UButton
+              <div
                 v-else
-                color="primary"
-                variant="outline"
-                size="sm"
-                class="flex-1 font-bold rounded-xl"
-                icon="i-lucide-plus"
-                :loading="requestingBoardId === group.id"
-                @click="handleRequestBoard(group.id)"
+                class="w-full flex items-center justify-center gap-2 py-2 px-3 bg-neutral-100/50 dark:bg-neutral-800/40 rounded-xl text-neutral-500 text-xs font-semibold text-center border border-dashed border-(--ui-border)"
               >
-                Pedir tabla
-              </UButton>
-              <UButton
-                :to="`/groups/${group.id}/positions`"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-                icon="i-lucide-trophy"
-                class="rounded-xl"
-              />
+                <UIcon name="i-lucide-lock" class="size-3.5 animate-pulse" />
+                Esperando activación por el administrador
+              </div>
             </div>
           </div>
         </div>
 
         <div
           v-else
-          class="card-elevated text-center py-10 stagger-up"
+          class="card-elevated text-center py-12 stagger-up"
         >
-          <div class="size-14 bg-(--ui-bg-muted) rounded-full flex items-center justify-center mx-auto mb-3 border border-(--ui-border)">
+          <div class="size-16 bg-(--ui-bg-muted) rounded-full flex items-center justify-center mx-auto mb-4 border border-(--ui-border)">
             <UIcon
-              name="i-lucide-users"
-              class="size-7 text-(--ui-text-muted)"
+              name="i-lucide-clipboard-list"
+              class="size-8 text-(--ui-text-muted)"
             />
           </div>
-          <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
-            Sin grupos
+          <p class="font-heading text-lg font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
+            Sin Tablas
           </p>
-          <p class="text-xs text-(--ui-text-muted) mt-1">
-            Busca un grupo por código o crea uno nuevo.
+          <p class="text-sm text-(--ui-text-muted) max-w-xs mx-auto mt-1">
+            Aún no has solicitado ninguna tabla para el torneo. Solicita tu primera tabla arriba para empezar a jugar.
           </p>
         </div>
       </div>
     </div>
-
-    <!-- Modal Crear grupo -->
-    <UModal
-      v-model:open="showCreateModal"
-      :ui="{ content: 'max-w-sm mx-4' }"
-    >
-      <template #content>
-        <div class="p-6 space-y-5">
-          <!-- Éxito: mostrar código -->
-          <div
-            v-if="createdGroup"
-            class="text-center space-y-4"
-          >
-            <div class="size-16 gradient-tricolor rounded-full flex items-center justify-center mx-auto">
-              <UIcon
-                name="i-lucide-party-popper"
-                class="size-8 text-white"
-              />
-            </div>
-            <div>
-              <p class="font-heading text-lg font-black text-(--ui-text-highlighted) uppercase tracking-wide">
-                ¡Grupo creado!
-              </p>
-              <p class="text-sm text-(--ui-text-muted) mt-1">
-                Comparte este código con tus amigos
-              </p>
-            </div>
-            <button
-              class="flex items-center justify-center gap-2 w-full bg-(--ui-bg-muted) px-4 py-3 rounded-xl font-mono text-2xl font-black tracking-widest text-primary-600 dark:text-primary-400 hover:bg-primary-500/10 transition-colors"
-              @click="copyCode(createdGroup.code)"
-            >
-              {{ createdGroup.code }}
-              <UIcon
-                name="i-lucide-copy"
-                class="size-5 opacity-60"
-              />
-            </button>
-            <p class="text-[11px] text-(--ui-text-muted)">
-              Toca el código para copiarlo
-            </p>
-            <UButton
-              color="primary"
-              class="w-full font-bold"
-              @click="closeCreateModal"
-            >
-              Listo
-            </UButton>
-          </div>
-
-          <!-- Formulario -->
-          <div
-            v-else
-            class="space-y-4"
-          >
-            <div>
-              <p class="font-heading text-base font-black text-(--ui-text-highlighted) uppercase tracking-wide">
-                Nuevo grupo
-              </p>
-              <p class="text-sm text-(--ui-text-muted) mt-1">
-                Se generará un código único para invitar a tus amigos.
-              </p>
-            </div>
-            <UInput
-              v-model="newGroupName"
-              placeholder="Nombre del grupo..."
-              size="lg"
-              icon="i-lucide-users"
-              :maxlength="40"
-              autofocus
-              @keyup.enter="handleCreateGroup"
-            />
-            <div class="flex gap-2">
-              <UButton
-                color="neutral"
-                variant="ghost"
-                class="flex-1"
-                @click="closeCreateModal"
-              >
-                Cancelar
-              </UButton>
-              <UButton
-                color="secondary"
-                class="flex-1 font-bold"
-                icon="i-lucide-plus-circle"
-                :loading="creating"
-                :disabled="!newGroupName.trim()"
-                @click="handleCreateGroup"
-              >
-                Crear
-              </UButton>
-            </div>
-          </div>
-        </div>
-      </template>
-    </UModal>
   </div>
 </template>

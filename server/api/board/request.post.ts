@@ -18,30 +18,45 @@ export default defineEventHandler(async (event) => {
   const user = await requireAuth(event)
   const userId = user.uid
 
-  const body = await readBody<{ groupId: string, tournamentId: string }>(event)
-  const { groupId, tournamentId } = body ?? {}
+  const body = await readBody<{ tournamentId: string }>(event)
+  const { tournamentId } = body ?? {}
 
-  if (!groupId || !tournamentId) {
+  if (!tournamentId) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'groupId y tournamentId son requeridos.'
+      statusMessage: 'tournamentId es requerido.'
     })
   }
 
+  const groupId = 'global-group'
   const db = getAdminDb()
 
-  // Verificar que no exista ya una tabla para este usuario en este grupo
+  // Asegurar que el grupo global exista
+  let groupSnap = await db.collection('groups').doc(groupId).get()
+  if (!groupSnap.exists) {
+    await db.collection('groups').doc(groupId).set({
+      name: 'Polla Mundial 2026',
+      code: 'GLOBAL',
+      ownerId: 'admin',
+      ownerName: 'Sistema',
+      tournamentId,
+      isActive: true,
+      createdAt: FieldValue.serverTimestamp()
+    })
+    groupSnap = await db.collection('groups').doc(groupId).get()
+  }
+
+  // Verificar que no tenga ya 3 tablas en este grupo global
   const existingSnap = await db
     .collection('boards')
     .where('userId', '==', userId)
     .where('groupId', '==', groupId)
-    .limit(1)
     .get()
 
-  if (!existingSnap.empty) {
+  if (existingSnap.size >= 3) {
     throw createError({
-      statusCode: 409,
-      statusMessage: 'Ya tienes una tabla en este grupo.'
+      statusCode: 400,
+      statusMessage: 'Ya has alcanzado el límite máximo de 3 tablas.'
     })
   }
 
@@ -58,17 +73,7 @@ export default defineEventHandler(async (event) => {
   })
 
   // Obtener datos del usuario y del grupo
-  const [userSnap, groupSnap] = await Promise.all([
-    db.collection('users').doc(userId).get(),
-    db.collection('groups').doc(groupId).get()
-  ])
-
-  if (!groupSnap.exists) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Grupo no encontrado.'
-    })
-  }
+  const userSnap = await db.collection('users').doc(userId).get()
 
   const userDisplayName = (userSnap.data()?.['displayName'] as string | undefined) ?? ''
   const groupName = (groupSnap.data()?.['name'] as string | undefined) ?? ''
