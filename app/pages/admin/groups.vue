@@ -3,7 +3,6 @@ definePageMeta({ layout: 'admin', middleware: 'admin' })
 
 const appStore = useAppStore()
 const { getPendingBoards, activateBoard, getAllGroups } = useAdmin()
-const toast = useToast()
 
 const groups = ref<import('~/types').Group[]>([])
 const loadingGroups = ref(false)
