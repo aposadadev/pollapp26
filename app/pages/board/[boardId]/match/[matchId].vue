@@ -183,16 +183,16 @@ const formattedDate = computed(() =>
           </div>
 
           <div class="card-elevated overflow-hidden stagger-up stagger-d1">
-            <table class="w-full">
+            <table class="w-full table-fixed">
               <thead>
                 <tr class="bg-(--ui-bg-muted)/50 border-b border-(--ui-border)">
-                  <th class="text-left px-4 py-3 font-heading text-[11px] font-black text-(--ui-text-muted) uppercase tracking-widest">
+                  <th class="text-left px-2.5 xs:px-4 py-3 font-heading text-[10px] xs:text-[11px] font-black text-(--ui-text-muted) uppercase tracking-widest">
                     Participante
                   </th>
-                  <th class="text-center px-4 py-3 font-heading text-[11px] font-black text-(--ui-text-muted) uppercase tracking-widest">
+                  <th class="text-center px-1 xs:px-3 py-3 font-heading text-[10px] xs:text-[11px] font-black text-(--ui-text-muted) uppercase tracking-widest w-24 xs:w-28">
                     Pronóstico
                   </th>
-                  <th class="text-right px-4 py-3 font-heading text-[11px] font-black text-(--ui-text-muted) uppercase tracking-widest">
+                  <th class="text-right px-2.5 xs:px-4 py-3 font-heading text-[10px] xs:text-[11px] font-black text-(--ui-text-muted) uppercase tracking-widest w-20 xs:w-24">
                     Pts
                   </th>
                 </tr>
@@ -204,13 +204,14 @@ const formattedDate = computed(() =>
                   class="stagger-up"
                   :class="[
                     `stagger-d${Math.min(i + 2, 12)}`,
-                    pred.userId === authStore.user?.id ? 'bg-primary-500/5 dark:bg-primary-400/5' : ''
+                    pred.userId === authStore.user?.id ? 'bg-primary-500/5 dark:bg-primary-400/5 font-semibold' : ''
                   ]"
                 >
-                  <td class="px-4 py-3.5">
-                    <div class="flex items-center gap-3 min-w-0">
+                  <!-- Participante -->
+                  <td class="px-2.5 xs:px-4 py-2.5 xs:py-3.5 min-w-0">
+                    <div class="flex items-center gap-2 xs:gap-3 min-w-0">
                       <div
-                        class="size-8 rounded-full flex items-center justify-center text-[10px] font-black shadow-sm shrink-0"
+                        class="size-7 xs:size-8 rounded-full flex items-center justify-center text-[9px] xs:text-[10px] font-black shadow-sm shrink-0"
                         :class="[
                           pred.userId === authStore.user?.id
                             ? 'bg-primary-500 text-white'
@@ -219,34 +220,38 @@ const formattedDate = computed(() =>
                       >
                         {{ pred.userDisplayName?.charAt(0).toUpperCase() || '?' }}
                       </div>
-                      <div class="min-w-0">
+                      <div class="min-w-0 flex-1">
                         <p
-                          class="text-sm font-bold truncate"
+                          class="text-xs xs:text-sm font-bold truncate leading-tight"
                           :class="pred.userId === authStore.user?.id ? 'text-primary-600 dark:text-primary-400' : 'text-(--ui-text-highlighted)'"
                         >
                           {{ pred.userDisplayName }}
                         </p>
-                        <p class="text-[10px] text-(--ui-text-muted) font-mono uppercase tracking-tighter">
+                        <p class="text-[9px] text-(--ui-text-muted) font-mono uppercase tracking-tighter mt-0.5 leading-none">
                           Tabla #{{ pred.boardNumber }}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td class="px-4 py-3.5 text-center">
+
+                  <!-- Pronóstico -->
+                  <td class="px-1 xs:px-3 py-2.5 xs:py-3.5 text-center w-24 xs:w-28 shrink-0">
                     <span
                       v-if="pred.localGoalPrediction !== null && pred.visitorGoalPrediction !== null"
-                      class="font-heading text-base font-black text-(--ui-text-highlighted) tabular-nums tracking-wider bg-(--ui-bg-muted) px-2.5 py-1 rounded-lg border border-(--ui-border)/50"
+                      class="font-heading text-xs xs:text-sm font-black text-(--ui-text-highlighted) tabular-nums tracking-wider bg-(--ui-bg-muted) px-2 py-0.5 xs:px-2.5 xs:py-1 rounded-lg border border-(--ui-border)/50"
                     >
                       {{ pred.localGoalPrediction }} - {{ pred.visitorGoalPrediction }}
                     </span>
                     <span
                       v-else
-                      class="text-[11px] font-bold text-(--ui-text-muted) uppercase tracking-wider italic"
+                      class="text-[9px] xs:text-[10px] font-bold text-(--ui-text-muted)/70 dark:text-neutral-500 uppercase tracking-wider italic bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded"
                     >
-                      Sin pronóstico
+                      Vacío
                     </span>
                   </td>
-                  <td class="px-4 py-3.5 text-right">
+
+                  <!-- Puntos -->
+                  <td class="px-2.5 xs:px-4 py-2.5 xs:py-3.5 text-right w-20 xs:w-24 shrink-0">
                     <MatchResultBadge
                       :points="pred.points"
                       size="sm"

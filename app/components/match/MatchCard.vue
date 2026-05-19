@@ -262,25 +262,45 @@ function handleRandomize() {
       <!-- Resultado + puntos para partidos cerrados -->
       <div
         v-else-if="isMatchClosed(prediction.match)"
-        class="flex items-center justify-between"
+        class="w-full flex flex-col gap-3 p-3.5 rounded-xl border border-dashed transition-all duration-300"
+        :class="{
+          'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/20 dark:border-emerald-500/30': prediction.points === 3,
+          'bg-amber-500/5 dark:bg-amber-500/10 border-amber-500/20 dark:border-amber-500/30': prediction.points === 1,
+          'bg-neutral-500/5 dark:bg-neutral-500/10 border-neutral-300 dark:border-neutral-800': prediction.points === 0
+        }"
       >
-        <div class="text-xs text-(--ui-text-muted)">
-          Tu predicción:
-          <span class="font-semibold text-(--ui-text)">
-            {{ prediction.localGoalPrediction }} -
-            {{ prediction.visitorGoalPrediction }}
-          </span>
+        <!-- Fila Superior: Tu pronóstico vs Resultado Oficial -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-neutral-200/50 dark:border-neutral-800/50">
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500">Tu pronóstico:</span>
+            <span class="text-xs font-black text-neutral-800 dark:text-white bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded font-mono">
+              {{ prediction.localGoalPrediction }} - {{ prediction.visitorGoalPrediction }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500">Resultado real:</span>
+            <span class="text-xs font-black text-neutral-800 dark:text-white bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded font-mono">
+              {{ prediction.match.localGoals }} - {{ prediction.match.visitorGoals }}
+            </span>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <MatchResultBadge :points="prediction.points" />
+
+        <!-- Fila Inferior: Puntos Ganados + Enlace Ver Todos -->
+        <div class="flex items-center justify-between gap-4">
+          <MatchResultBadge
+            :points="prediction.points"
+            size="md"
+          />
+
           <NuxtLink
             v-if="boardId"
             :to="`/board/${boardId}/match/${prediction.match.id}`"
-            class="text-[10px] font-bold uppercase tracking-wider text-primary-500 hover:text-primary-400 transition-colors flex items-center gap-1"
+            class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 bg-primary-500/5 hover:bg-primary-500/10 dark:bg-primary-400/5 dark:hover:bg-primary-400/10 transition-all active:scale-95 shrink-0"
           >
             <UIcon
-              name="i-lucide-users"
-              class="size-3"
+              name="i-lucide-users-round"
+              class="size-3.5"
             />
             Ver todos
           </NuxtLink>
