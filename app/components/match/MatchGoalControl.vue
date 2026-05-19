@@ -1,6 +1,6 @@
 <script setup lang="ts">
 interface Props {
-  value: number
+  value: number | null
 }
 defineProps<Props>()
 const emit = defineEmits<{
@@ -23,7 +23,7 @@ const emit = defineEmits<{
       <span
         class="text-3xl font-heading font-bold text-secondary-600 dark:text-secondary-400 tabular-nums"
       >
-        {{ value }}
+        {{ value === null ? '-' : value }}
       </span>
     </div>
 

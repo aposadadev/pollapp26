@@ -19,25 +19,25 @@ const emit = defineEmits<{
   randomize: [predictionId: string]
 }>()
 
-const localGoals = ref(props.prediction.localGoalPrediction ?? 0)
-const visitorGoals = ref(props.prediction.visitorGoalPrediction ?? 0)
+const localGoals = ref<number | null>(props.prediction.localGoalPrediction)
+const visitorGoals = ref<number | null>(props.prediction.visitorGoalPrediction)
 
 // "Saved" baseline: tracks the last value successfully written to Firestore.
 // We compare the live controls against this, NOT against props, so that after
 // randomize() the button stays enabled (randomized ≠ saved) and after save()
 // the button correctly disables again (live === saved).
-const savedLocal = ref(props.prediction.localGoalPrediction ?? 0)
-const savedVisitor = ref(props.prediction.visitorGoalPrediction ?? 0)
+const savedLocal = ref<number | null>(props.prediction.localGoalPrediction)
+const savedVisitor = ref<number | null>(props.prediction.visitorGoalPrediction)
 
 // Sync when the prediction prop is replaced from the outside (initial load,
 // optimistic update after save). Reset both controls AND the saved baseline.
 watch(
   () => props.prediction,
   (p) => {
-    localGoals.value = p.localGoalPrediction ?? 0
-    visitorGoals.value = p.visitorGoalPrediction ?? 0
-    savedLocal.value = p.localGoalPrediction ?? 0
-    savedVisitor.value = p.visitorGoalPrediction ?? 0
+    localGoals.value = p.localGoalPrediction
+    visitorGoals.value = p.visitorGoalPrediction
+    savedLocal.value = p.localGoalPrediction
+    savedVisitor.value = p.visitorGoalPrediction
   },
   { deep: true }
 )
@@ -63,18 +63,29 @@ const formattedDate = computed(() =>
 
 function increment(team: 'local' | 'visitor') {
   if (isLocked.value) return
-  if (team === 'local' && localGoals.value < 20) localGoals.value++
-  if (team === 'visitor' && visitorGoals.value < 20) visitorGoals.value++
+  if (team === 'local') {
+    if (localGoals.value === null) localGoals.value = 0
+    else if (localGoals.value < 20) localGoals.value++
+  }
+  if (team === 'visitor') {
+    if (visitorGoals.value === null) visitorGoals.value = 0
+    else if (visitorGoals.value < 20) visitorGoals.value++
+  }
 }
 
 function decrement(team: 'local' | 'visitor') {
   if (isLocked.value) return
-  if (team === 'local' && localGoals.value > 0) localGoals.value--
-  if (team === 'visitor' && visitorGoals.value > 0) visitorGoals.value--
+  if (team === 'local') {
+    if (localGoals.value !== null && localGoals.value > 0) localGoals.value--
+  }
+  if (team === 'visitor') {
+    if (visitorGoals.value !== null && visitorGoals.value > 0) visitorGoals.value--
+  }
 }
 
 function handleSave() {
   if (isLocked.value || !hasChanged.value) return
+  if (localGoals.value === null || visitorGoals.value === null) return
   emit('save', props.prediction.id, localGoals.value, visitorGoals.value)
 }
 
@@ -240,7 +251,7 @@ function handleRandomize() {
           size="sm"
           icon="i-lucide-save"
           class="flex-1"
-          :disabled="!hasChanged"
+          :disabled="!hasChanged || localGoals === null || visitorGoals === null"
           :loading="saving"
           @click="handleSave"
         >
