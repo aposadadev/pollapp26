@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { groupRepository } from '~/repositories/group.repository'
+import { boardService } from '~/services/board.service'
 
-definePageMeta({ middleware: 'auth' })
+definePageMeta({
+  middleware: 'auth',
+  key: 'board-detail'
+})
 
 const appStore = useAppStore()
+const authStore = useAuthStore()
 const groupContextStore = useGroupContextStore()
 
 const route = useRoute()
@@ -23,9 +28,15 @@ const {
 
 const activeTab = ref('upcoming')
 const loaded = ref(false)
+const userBoardsInGroup = ref<import('~/types').Board[]>([])
 
-onMounted(async () => {
-  appStore.setPageTitle('Mi Tabla')
+async function initPage(isRouteUpdate = false) {
+  if (!isRouteUpdate) {
+    loaded.value = false
+  }
+
+  const oldGroupId = board.value?.groupId
+
   const [valid] = await Promise.all([loadBoard(boardId.value), load()])
   if (!valid) {
     await router.push('/')
@@ -45,13 +56,44 @@ onMounted(async () => {
         groupCode = ''
       }
     }
+
+    // Cargar las demás tablas del usuario en este mismo grupo (solo si el grupo cambió o aún no se han cargado)
+    if (board.value.groupId !== oldGroupId || !userBoardsInGroup.value.length) {
+      if (authStore.user) {
+        try {
+          const allBoards = await boardService.findByUser(authStore.user.id)
+          userBoardsInGroup.value = allBoards
+            .filter(b => b.groupId === board.value!.groupId && b.tournamentId === appStore.activeTournamentId && b.isActive)
+            .sort((a, b) => a.number - b.number)
+        } catch (err) {
+          console.error('Error fetching boards in group:', err)
+        }
+      }
+    }
+
     groupContextStore.setContext({
       groupId: board.value.groupId,
       groupName: board.value.groupName ?? '',
       groupCode,
-      boardId: boardId.value
+      boardId: boardId.value,
+      boards: userBoardsInGroup.value.map(b => ({
+        id: b.id,
+        number: b.number,
+        totalPoints: b.totalPoints,
+        currentPos: b.currentPos
+      }))
     })
   }
+}
+
+onMounted(async () => {
+  appStore.setPageTitle('Mi Tabla')
+  await initPage()
+})
+
+// Watcher para transicionar suavemente entre tablas sin desmontar el componente de la página
+watch(boardId, async () => {
+  await initPage(true)
 })
 
 async function handleSave(
@@ -89,6 +131,7 @@ async function handleRandomize(predictionId: string) {
     <BoardHeader
       v-if="board"
       :board="board"
+      :user-boards-in-group="userBoardsInGroup"
     />
 
     <!-- Tabs Próximos / Anteriores -->

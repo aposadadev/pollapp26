@@ -3,8 +3,15 @@ import { isMatchVisible } from '~/types/match'
 import type { Match } from '~/types'
 
 export class MatchRepository extends BaseRepository<Match> {
+  private visibleMatchesCache = new Map<string, Match[]>()
+
   constructor() {
     super('matches')
+  }
+
+  override async update(id: string, data: Partial<Omit<Match, 'id'>>): Promise<void> {
+    this.visibleMatchesCache.clear()
+    await super.update(id, data)
   }
 
   /**
@@ -25,8 +32,13 @@ export class MatchRepository extends BaseRepository<Match> {
    * Un partido es visible si `visible !== false` (fallback seguro para legacy).
    */
   async findVisibleByTournament(tournamentId: string): Promise<Match[]> {
+    if (this.visibleMatchesCache.has(tournamentId)) {
+      return this.visibleMatchesCache.get(tournamentId)!
+    }
     const all = await this.findByTournament(tournamentId)
-    return all.filter(m => isMatchVisible(m))
+    const visible = all.filter(m => isMatchVisible(m))
+    this.visibleMatchesCache.set(tournamentId, visible)
+    return visible
   }
 
   /**

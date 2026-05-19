@@ -7,8 +7,26 @@ function getDb(): Firestore {
 }
 
 export class BoardRepository extends BaseRepository<Board> {
+  private cache = new Map<string, Board>()
+
   constructor() {
     super('boards')
+  }
+
+  override async findById(id: string): Promise<Board | null> {
+    if (this.cache.has(id)) {
+      return this.cache.get(id)!
+    }
+    const res = await super.findById(id)
+    if (res) {
+      this.cache.set(id, res)
+    }
+    return res
+  }
+
+  override async update(id: string, data: Partial<Omit<Board, 'id'>>): Promise<void> {
+    this.cache.delete(id)
+    await super.update(id, data)
   }
 
   async findByUser(userId: string): Promise<Board[]> {

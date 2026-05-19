@@ -3,6 +3,7 @@ import type { Board } from '~/types'
 
 interface Props {
   board: Board
+  userBoardsInGroup?: Board[]
 }
 
 defineProps<Props>()
@@ -27,6 +28,30 @@ const positionIcon = (board: Board) => {
     class="relative w-full pb-[100px] rounded-b-[48px] bg-gradient-to-b from-[#0a1028] to-[#1b2b66] dark:from-[#050815] dark:to-[#0f172a] px-6 pt-10"
   >
     <div class="relative z-10">
+      <!-- Selector de Tablas (Pestañas) -->
+      <div
+        v-if="userBoardsInGroup && userBoardsInGroup.length > 1"
+        class="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-2 mb-6 border-b border-white/10 stagger-up"
+      >
+        <NuxtLink
+          v-for="b in userBoardsInGroup"
+          :key="b.id"
+          :to="`/board/${b.id}`"
+          class="flex items-center gap-1.5 px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-200 active:scale-95 whitespace-nowrap"
+          :class="[
+            b.id === board.id
+              ? 'bg-secondary-500 text-white shadow-lg shadow-secondary-500/20 border-2 border-secondary-500'
+              : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white border-2 border-white/5'
+          ]"
+        >
+          <UIcon
+            name="i-lucide-clipboard-list"
+            class="size-3.5"
+          />
+          Tabla #{{ b.number }}
+        </NuxtLink>
+      </div>
+
       <div class="flex items-start justify-between gap-3">
         <!-- Info del grupo -->
         <div class="min-w-0 stagger-up">
