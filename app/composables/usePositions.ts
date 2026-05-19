@@ -3,6 +3,8 @@
  */
 import type { MaybeRef } from 'vue'
 import { rankingsRepository } from '~/repositories/rankings.repository'
+import { boardRepository } from '~/repositories/board.repository'
+import { rankingService } from '~/services/ranking.service'
 import type { GroupRanking } from '~/types'
 
 export function usePositions(groupId: MaybeRef<string>) {
@@ -21,15 +23,44 @@ export function usePositions(groupId: MaybeRef<string>) {
     try {
       unsubscribe = rankingsRepository.subscribe(
         id,
-        (data) => {
-          ranking.value = data
+        async (data) => {
+          if (data === null) {
+            // El ranking no está en RTDB aún (torneo no empezado).
+            // Hacemos fallback cargando los participantes desde Firestore.
+            try {
+              const boards = await boardRepository.findActiveByGroup(id)
+              const entriesFallback = rankingService.recalculate(boards)
+              ranking.value = {
+                groupId: id,
+                updatedAt: Date.now(),
+                entries: entriesFallback
+              }
+            } catch (err) {
+              if (import.meta.dev) {
+                console.error('[usePositions] Error cargando fallback de Firestore:', err)
+              }
+              ranking.value = null
+            }
+          } else {
+            ranking.value = data
+          }
           loading.value = false
         },
-        (error) => {
+        async (error) => {
           if (import.meta.dev) {
-            console.warn('[usePositions] RTDB error callback triggered:', error.message)
+            console.warn('[usePositions] RTDB error callback triggered, falling back to Firestore:', error.message)
           }
-          ranking.value = null
+          try {
+            const boards = await boardRepository.findActiveByGroup(id)
+            const entriesFallback = rankingService.recalculate(boards)
+            ranking.value = {
+              groupId: id,
+              updatedAt: Date.now(),
+              entries: entriesFallback
+            }
+          } catch {
+            ranking.value = null
+          }
           loading.value = false
         }
       )
