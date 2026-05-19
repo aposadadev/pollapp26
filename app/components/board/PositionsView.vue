@@ -25,6 +25,31 @@ const formattedUpdate = computed(() =>
     ? new Intl.DateTimeFormat('es', { hour: '2-digit', minute: '2-digit' }).format(props.lastUpdated)
     : null
 )
+
+const hasStartedWithPoints = computed(() =>
+  props.entries.some(entry => entry.totalPoints > 0)
+)
+
+const showPodium = computed(() =>
+  !props.loading && hasStartedWithPoints.value && props.entries.length >= 3
+)
+
+const tableEntries = computed(() => {
+  if (!hasStartedWithPoints.value) {
+    // Ordenar todos por número de tabla cuando no ha empezado el torneo con puntos
+    const sorted = [...props.entries].sort((a, b) => a.boardNumber - b.boardNumber)
+    // Re-indexar la posición (1, 2, 3...) para que concuerde con el orden físico
+    return sorted.map((entry, index) => ({
+      ...entry,
+      currentPos: index + 1
+    }))
+  }
+
+  if (props.entries.length >= 3) {
+    return props.entries.slice(3)
+  }
+  return props.entries
+})
 </script>
 
 <template>
@@ -52,14 +77,17 @@ const formattedUpdate = computed(() =>
 
       <!-- Podium -->
       <div
-        v-if="!loading && entries.length >= 3"
+        v-if="showPodium"
         class="-mx-2 stagger-up stagger-d3"
       >
         <BoardPodiumLayout :entries="entries" />
       </div>
 
       <!-- Tabla completa -->
-      <div class="flex flex-col gap-4 stagger-up stagger-d4">
+      <div
+        v-if="loading || tableEntries.length"
+        class="flex flex-col gap-4 stagger-up stagger-d4"
+      >
         <h3 class="text-[14px] font-black text-neutral-500 dark:text-neutral-400 tracking-widest font-heading px-2 mb-2">
           TABLA COMPLETA
         </h3>
@@ -75,25 +103,26 @@ const formattedUpdate = computed(() =>
           />
         </div>
 
-        <template v-else-if="entries.length">
+        <template v-else-if="tableEntries.length">
           <BoardPositionsTable
-            :entries="entries"
+            :entries="tableEntries"
             :current-user-id="currentUserId"
           />
         </template>
+      </div>
 
-        <div
-          v-else
-          class="w-full flex flex-col items-center justify-center p-12 bg-(--ui-bg-elevated) rounded-[24px] border border-(--ui-border) border-dashed"
-        >
-          <UIcon
-            name="i-lucide-trophy"
-            class="size-16 mx-auto mb-4 text-neutral-300"
-          />
-          <span class="text-sm font-bold text-neutral-400 uppercase tracking-widest">
-            No hay registros aún
-          </span>
-        </div>
+      <!-- Empty state: no registries at all -->
+      <div
+        v-else-if="!loading && !entries.length"
+        class="w-full flex flex-col items-center justify-center p-12 bg-(--ui-bg-elevated) rounded-[24px] border border-(--ui-border) border-dashed stagger-up stagger-d4"
+      >
+        <UIcon
+          name="i-lucide-trophy"
+          class="size-16 mx-auto mb-4 text-neutral-300"
+        />
+        <span class="text-sm font-bold text-neutral-400 uppercase tracking-widest">
+          No hay registros aún
+        </span>
       </div>
 
       <!-- Botón volver (solo en la página de grupo) -->
