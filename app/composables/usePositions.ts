@@ -19,10 +19,20 @@ export function usePositions(groupId: MaybeRef<string>) {
     }
     loading.value = true
     try {
-      unsubscribe = rankingsRepository.subscribe(id, (data) => {
-        ranking.value = data
-        loading.value = false
-      })
+      unsubscribe = rankingsRepository.subscribe(
+        id,
+        (data) => {
+          ranking.value = data
+          loading.value = false
+        },
+        (error) => {
+          if (import.meta.dev) {
+            console.warn('[usePositions] RTDB error callback triggered:', error.message)
+          }
+          ranking.value = null
+          loading.value = false
+        }
+      )
     } catch (err) {
       // RTDB no configurado o bloqueado por ad blocker — falla silenciosa
       if (import.meta.dev) {

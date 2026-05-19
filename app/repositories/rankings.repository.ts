@@ -37,7 +37,11 @@ export class RankingsRepository {
   }
 
   /** Suscripción en tiempo real a las posiciones de un grupo */
-  subscribe(groupId: string, callback: (ranking: GroupRanking | null) => void): Unsubscribe {
+  subscribe(
+    groupId: string,
+    callback: (ranking: GroupRanking | null) => void,
+    onError?: (error: Error) => void
+  ): Unsubscribe {
     const ref = this.groupRef(groupId)
     onValue(ref, (snap) => {
       if (!snap.exists()) {
@@ -50,6 +54,8 @@ export class RankingsRepository {
         updatedAt: data.updatedAt,
         entries: data.entries ?? []
       })
+    }, (error) => {
+      if (onError) onError(error)
     })
     return () => off(ref)
   }

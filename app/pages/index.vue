@@ -39,10 +39,35 @@ const firstActiveBoardId = computed(
 )
 
 // Positions for the active group
-const { currentUserEntry, loading: loadingPositions } = usePositions(activeGroupId)
+const { entries, currentUserEntry, loading: loadingPositions } = usePositions(activeGroupId)
 
-const heroPoints = computed(() => currentUserEntry.value?.totalPoints ?? null)
-const heroRank = computed(() => currentUserEntry.value?.currentPos ?? null)
+const heroPoints = computed(() => {
+  // 1. Intentar buscar la entrada de ranking correspondiente a la tabla activa seleccionada
+  if (firstActiveBoardId.value && entries.value.length) {
+    const specificEntry = entries.value.find(e => e.boardId === firstActiveBoardId.value)
+    if (specificEntry !== undefined) return specificEntry.totalPoints
+  }
+  // 2. Si no está en el ranking aún, usar los puntos locales de la tabla activa cargados de Firestore
+  const activeBoard = groups.value.find(b => b.id === firstActiveBoardId.value)
+  if (activeBoard) return activeBoard.totalPoints
+
+  // 3. Fallback: puntos de la mejor tabla en el ranking
+  return currentUserEntry.value?.totalPoints ?? null
+})
+
+const heroRank = computed(() => {
+  // 1. Intentar buscar el rango de la tabla activa en el ranking
+  if (firstActiveBoardId.value && entries.value.length) {
+    const specificEntry = entries.value.find(e => e.boardId === firstActiveBoardId.value)
+    if (specificEntry !== undefined && specificEntry.currentPos > 0) return specificEntry.currentPos
+  }
+  // 2. Si no está en el ranking aún, usar la posición local de Firestore
+  const activeBoard = groups.value.find(b => b.id === firstActiveBoardId.value)
+  if (activeBoard && activeBoard.currentPos > 0) return activeBoard.currentPos
+
+  // 3. Fallback: rango de la mejor tabla en el ranking
+  return currentUserEntry.value?.currentPos ?? null
+})
 
 // Next scheduled match
 const nextMatch = computed(() =>
