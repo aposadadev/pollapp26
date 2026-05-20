@@ -265,8 +265,10 @@ async function main() {
     const teamRefs = TEAMS.map(() => db.collection('teams').doc())
     
     TEAMS.forEach((team, i) => {
+      const finalLogoUrl = team.logoUrl || (team.country ? `https://flagcdn.com/w80/${team.country.toLowerCase()}.png` : '')
       teamsBatch.set(teamRefs[i], {
         ...team,
+        logoUrl: finalLogoUrl,
         tournamentId: TOURNAMENT_ID,
         createdAt: FieldValue.serverTimestamp()
       })
@@ -287,6 +289,8 @@ async function main() {
     for (const m of ALL_MATCHES) {
       const local = TEAMS[m.localIdx]
       const visitor = TEAMS[m.visitorIdx]
+      const localLogo = local.logoUrl || (local.country ? `https://flagcdn.com/w80/${local.country.toLowerCase()}.png` : '')
+      const visitorLogo = visitor.logoUrl || (visitor.country ? `https://flagcdn.com/w80/${visitor.country.toLowerCase()}.png` : '')
       const matchDocRef = db.collection('matches').doc()
       
       matchesBatch.set(matchDocRef, {
@@ -295,8 +299,8 @@ async function main() {
         visitorTeamId: teamIds[m.visitorIdx],
         localTeamName: local.name,
         visitorTeamName: visitor.name,
-        localTeamLogo: local.logoUrl,
-        visitorTeamLogo: visitor.logoUrl,
+        localTeamLogo: localLogo,
+        visitorTeamLogo: visitorLogo,
         localGoals: null,
         visitorGoals: null,
         date: m.date,

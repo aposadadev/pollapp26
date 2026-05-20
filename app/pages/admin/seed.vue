@@ -49,8 +49,11 @@ async function seed() {
 
     const teamRefs: string[] = []
     for (const team of teams) {
+      const flagCode = team.country === 'GB' ? 'gb-eng' : team.country.toLowerCase()
+      const logoUrl = `https://flagcdn.com/w80/${flagCode}.png`
       const docRef = await addDoc(collection(db, 'teams'), {
         ...team,
+        logoUrl,
         createdAt: serverTimestamp()
       })
       teamRefs.push(docRef.id)
@@ -102,12 +105,16 @@ async function seed() {
     for (const m of matchData) {
       const localTeam = teams[m.localIdx]!
       const visitorTeam = teams[m.visitorIdx]!
+      const localFlagCode = localTeam.country === 'GB' ? 'gb-eng' : localTeam.country.toLowerCase()
+      const visitorFlagCode = visitorTeam.country === 'GB' ? 'gb-eng' : visitorTeam.country.toLowerCase()
       await addDoc(collection(db, 'matches'), {
         tournamentId: TOURNAMENT_ID,
         localTeamId: teamRefs[m.localIdx],
         visitorTeamId: teamRefs[m.visitorIdx],
         localTeamName: localTeam.name,
         visitorTeamName: visitorTeam.name,
+        localTeamLogo: `https://flagcdn.com/w80/${localFlagCode}.png`,
+        visitorTeamLogo: `https://flagcdn.com/w80/${visitorFlagCode}.png`,
         localGoals: null,
         visitorGoals: null,
         date: new Date(m.date),

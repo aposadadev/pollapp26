@@ -15,18 +15,19 @@ const sizeClass = computed(() => ({
 
 const fallbackInitial = computed(() => props.name.charAt(0).toUpperCase())
 const hasLogo = computed(() => !!props.logoUrl)
+const isFlag = computed(() => props.logoUrl?.includes('flagcdn.com'))
 </script>
 
 <template>
   <div
     class="rounded-full bg-(--ui-bg-elevated) flex items-center justify-center overflow-hidden shrink-0 border border-(--ui-border)"
-    :class="sizeClass"
+    :class="[sizeClass, { 'p-1': !isFlag }]"
   >
     <img
       v-if="hasLogo"
       :src="logoUrl"
       :alt="name"
-      class="w-full h-full object-contain p-1"
+      :class="isFlag ? 'w-full h-full object-cover' : 'w-full h-full object-contain'"
       loading="lazy"
     >
     <span

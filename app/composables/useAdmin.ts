@@ -122,7 +122,8 @@ export function useAdmin() {
   ): Promise<boolean> {
     loading.value = true
     try {
-      await teamRepository.create({ name, shortName, logoUrl, country })
+      const finalLogoUrl = logoUrl || (country ? `https://flagcdn.com/w80/${country.toLowerCase()}.png` : '')
+      await teamRepository.create({ name, shortName, logoUrl: finalLogoUrl, country })
       toast.add({ title: 'Equipo creado', color: 'secondary' })
       return true
     } catch (err: unknown) {

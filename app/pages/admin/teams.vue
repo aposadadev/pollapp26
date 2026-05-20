@@ -215,18 +215,11 @@ function cancelCreate() {
           class="flex items-center gap-4 card-elevated p-3 stagger-left"
           :class="`stagger-d${Math.min(i + 1, 12)}`"
         >
-          <div class="size-11 shrink-0 flex items-center justify-center rounded-xl bg-(--ui-bg-muted) border border-(--ui-border) p-1.5 shadow-inner">
-            <img
-              v-if="team.logoUrl"
-              :src="team.logoUrl"
-              :alt="team.shortName"
-              class="size-8 object-contain"
-            >
-            <span
-              v-else
-              class="font-heading font-black text-sm text-(--ui-text-muted)"
-            >{{ team.shortName }}</span>
-          </div>
+          <MatchTeamLogo
+            :logo-url="team.logoUrl"
+            :name="team.name"
+            size="md"
+          />
           <div class="flex-1 min-w-0">
             <p class="font-heading text-base font-bold text-(--ui-text-highlighted) uppercase tracking-tight truncate leading-tight">
               {{ team.name }}
