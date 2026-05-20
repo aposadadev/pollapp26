@@ -1,5 +1,6 @@
 export type MatchPhase
   = | 'Fase de Grupos'
+    | 'Dieciseisavos de Final'
     | 'Octavos de Final'
     | 'Cuartos de Final'
     | 'Semifinales'

@@ -104,6 +104,7 @@ export const mundial2026: TournamentThemeConfig = {
     totalTeams: 48,
     phases: [
       'Fase de Grupos',
+      'Dieciseisavos de Final',
       'Octavos de Final',
       'Cuartos de Final',
       'Semifinales',
