@@ -1,36 +1,36 @@
 /**
- * reset.ts — Vacía la app dejando solo el admin y los datos del torneo.
+ * reset.ts — Vacía la app dejando los usuarios y el admin, pero reiniciando el juego.
+ *
+ * Usa Firebase Admin SDK para las eliminaciones y escrituras (evita errores de PERMISSION_DENIED)
+ * y el SDK de cliente para validar la contraseña y el correo del administrador.
  *
  * Elimina:
- *   - Todos los usuarios excepto el admin especificado
  *   - Todos los grupos (groups)
  *   - Todos los boards (boards)
  *   - Todas las predicciones (predictions)
  *   - Todos los contadores internos (_counters)
+ *   - Todos los partidos (matches)
+ *   - Todos los equipos (teams)
  *   - Rankings en Realtime DB (/rankings)
  *
  * Conserva:
- *   - Usuario admin (andres.posada0919@gmail.com)
- *   - Colección matches
- *   - Colección teams
+ *   - Todos los usuarios en Auth y Firestore (users)
+ *
+ * Ejecuta automáticamente al finalizar:
+ *   - pnpm seed:tournament (para volver a crear equipos y partidos limpios)
  *
  * Uso:
- *   pnpm reset
+ *   pnpm reset <password> <admin_email>
  *
- * Requiere: .env con las credenciales de Firebase
+ * Requiere: .env con las credenciales de Firebase y Firebase Admin SDK
  */
-import { initializeApp, getApps } from 'firebase/app'
-import {
-  getFirestore,
-  collection,
-  getDocs,
-  doc,
-  setDoc,
-  writeBatch
-} from 'firebase/firestore'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-import { getDatabase, ref as rtdbRef, remove } from 'firebase/database'
+import { initializeApp as initClientApp, getApps as getClientApps } from 'firebase/app'
+import { getAuth as getClientAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import { initializeApp as initAdminApp, cert, getApps as getAdminApps } from 'firebase-admin/app'
+import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore'
+import { getDatabase as getAdminDatabase } from 'firebase-admin/database'
 import { readFileSync } from 'fs'
+import { execSync } from 'child_process'
 
 // ── Env loader ─────────────────────────────────────────────────────────────────
 function loadEnv() {
@@ -46,43 +46,64 @@ function loadEnv() {
 }
 loadEnv()
 
-const firebaseConfig = {
+// ── Firebase Client SDK Config (para validación de contraseña del admin) ───────
+const clientConfig = {
   apiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
   projectId: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID!,
   storageBucket: process.env.NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
   messagingSenderId: process.env.NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID!,
-  databaseURL: process.env.NUXT_PUBLIC_FIREBASE_DATABASE_URL
+  appId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID!
 }
 
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error('❌ Faltan credenciales de Firebase en .env')
+if (!clientConfig.apiKey || !clientConfig.projectId) {
+  console.error('❌ Faltan credenciales públicas de Firebase en .env')
   process.exit(1)
 }
 
-const app = getApps().length ? getApps()[0]! : initializeApp(firebaseConfig)
-const db = getFirestore(app)
-const auth = getAuth(app)
-const rtdb = firebaseConfig.databaseURL ? getDatabase(app) : null
+const clientApp = getClientApps().length ? getClientApps()[0]! : initClientApp(clientConfig)
+const clientAuth = getClientAuth(clientApp)
+
+// ── Firebase Admin SDK Config (para operaciones privilegiadas de escritura/borrado) ──
+const adminProjectId = process.env.FIREBASE_ADMIN_PROJECT_ID
+const adminClientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL
+const adminPrivateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n')
+const databaseURL = process.env.FIREBASE_DATABASE_URL
+
+if (!adminProjectId || !adminClientEmail || !adminPrivateKey) {
+  console.error('❌ ERROR: Faltan credenciales de Firebase Admin en .env (FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY)')
+  process.exit(1)
+}
+
+const adminApp = getAdminApps().length
+  ? getAdminApps()[0]!
+  : initAdminApp({
+      credential: cert({
+        projectId: adminProjectId,
+        clientEmail: adminClientEmail,
+        privateKey: adminPrivateKey
+      }),
+      databaseURL
+    })
+
+const adminDb = getAdminFirestore(adminApp)
+const adminRtdb = getAdminDatabase(adminApp)
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 const ADMIN_PASSWORD = process.argv[2] // pasar como argumento: pnpm reset <password> <admin_email>
 const ADMIN_EMAIL = process.argv[3]
 
 // Colecciones a vaciar completamente
-const COLLECTIONS_TO_CLEAR = ['groups', 'boards', 'predictions', '_counters']
+const COLLECTIONS_TO_CLEAR = ['groups', 'boards', 'predictions', '_counters', 'matches', 'teams']
 
 // El primer board creado tras el reset tendrá este número
 const BOARD_COUNTER_START = 1023 // próximo board = 1024
 
-// Colecciones a mantener intactas
-// const COLLECTIONS_TO_KEEP = ['matches', 'teams']
-
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 async function deleteCollection(collectionName: string): Promise<number> {
-  const snap = await getDocs(collection(db, collectionName))
+  const collectionRef = adminDb.collection(collectionName)
+  const snap = await collectionRef.get()
   if (snap.empty) {
     console.log(`  ⚪ ${collectionName}: vacío`)
     return 0
@@ -93,7 +114,7 @@ async function deleteCollection(collectionName: string): Promise<number> {
   let deleted = 0
 
   for (let i = 0; i < snap.docs.length; i += BATCH_SIZE) {
-    const batch = writeBatch(db)
+    const batch = adminDb.batch()
     const chunk = snap.docs.slice(i, i + BATCH_SIZE)
     chunk.forEach(d => batch.delete(d.ref))
     await batch.commit()
@@ -104,42 +125,12 @@ async function deleteCollection(collectionName: string): Promise<number> {
   return deleted
 }
 
-async function deleteNonAdminUsers(adminUid: string): Promise<number> {
-  const snap = await getDocs(collection(db, 'users'))
-  if (snap.empty) {
-    console.log('  ⚪ users: vacío')
-    return 0
-  }
-
-  // Filtrar por UID del documento, no por campo email (más confiable)
-  const toDelete = snap.docs.filter(d => d.id !== adminUid)
-
-  if (!toDelete.length) {
-    console.log('  ⚪ users: solo existe el admin, nada que borrar')
-    return 0
-  }
-
-  const BATCH_SIZE = 500
-  let deleted = 0
-
-  for (let i = 0; i < toDelete.length; i += BATCH_SIZE) {
-    const batch = writeBatch(db)
-    const chunk = toDelete.slice(i, i + BATCH_SIZE)
-    chunk.forEach(d => batch.delete(d.ref))
-    await batch.commit()
-    deleted += chunk.length
-  }
-
-  console.log(`  🗑️  users: ${deleted} usuario(s) eliminados (admin conservado)`)
-  return deleted
-}
-
 async function clearRankings(): Promise<void> {
-  if (!rtdb) {
-    console.log('  ⚪ RTDB: no configurado, se omite')
+  if (!databaseURL) {
+    console.log('  ⚪ RTDB: no configurada la URL en .env, se omite')
     return
   }
-  await remove(rtdbRef(rtdb, 'rankings'))
+  await adminRtdb.ref('rankings').remove()
   console.log('  🗑️  rankings (RTDB): eliminados')
 }
 
@@ -152,13 +143,14 @@ async function main() {
     process.exit(1)
   }
 
-  console.log('\n🧹 Iniciando limpieza de la app...')
-  console.log(`   Admin a conservar: ${ADMIN_EMAIL}`)
-  console.log(`   Colecciones intactas: matches, teams\n`)
+  console.log('\n🧹 Iniciando limpieza y reinicio de la app (vía Firebase Admin SDK)...')
+  console.log(`   Admin a autenticar: ${ADMIN_EMAIL}`)
+  console.log(`   Colecciones a vaciar: ${COLLECTIONS_TO_CLEAR.join(', ')}`)
+  console.log(`   Colección a conservar intacta: users (usuarios y perfiles)\n`)
 
-  // 0. Obtener UID del admin autenticándose
+  // 0. Obtener UID del admin autenticándose en el SDK de cliente
   console.log('  🔑 Autenticando admin para obtener UID...')
-  const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD)
+  const cred = await signInWithEmailAndPassword(clientAuth, ADMIN_EMAIL, ADMIN_PASSWORD)
   const adminUid = cred.user.uid
   console.log(`  ✅ Admin UID: ${adminUid}\n`)
 
@@ -168,29 +160,37 @@ async function main() {
   }
 
   // 1b. Inicializar contador de boards en 1023 → próximo board = #1024
-  await setDoc(doc(db, '_counters', 'boards'), { value: BOARD_COUNTER_START })
+  await adminDb.collection('_counters').doc('boards').set({ value: BOARD_COUNTER_START })
   console.log(`  ✅ _counters/boards: inicializado en ${BOARD_COUNTER_START} (próximo board = #${BOARD_COUNTER_START + 1})`)
 
-  // 2. Borrar usuarios no-admin (filtrando por UID, no por campo email)
-  await deleteNonAdminUsers(adminUid)
-
-  // 2b. Asegurar que el documento del admin exista en Firestore
-  await setDoc(doc(db, 'users', adminUid), {
+  // 2. Asegurar que el documento del admin exista en Firestore y tenga isAdmin: true
+  await adminDb.collection('users').doc(adminUid).set({
     id: adminUid,
     email: ADMIN_EMAIL,
     displayName: 'Admin',
+    isAdmin: true,
     createdAt: new Date()
   }, { merge: true })
-  console.log('  ✅ users/' + adminUid + ': documento admin garantizado')
+  console.log('  ✅ users/' + adminUid + ': documento admin garantizado (isAdmin: true)')
 
   // 3. Limpiar rankings en RTDB
   await clearRankings()
 
-  console.log('\n✅ Limpieza completada.')
+  // 4. Volver a poblar la data inicial de equipos y partidos (seeding)
+  console.log('\n🌱 Ejecutando seed del torneo para restablecer calendario y equipos...')
+  try {
+    execSync('pnpm seed:tournament', { stdio: 'inherit' })
+    console.log('  ✅ Seed del torneo ejecutado con éxito.')
+  } catch (seedErr) {
+    console.error('  ❌ Error ejecutando pnpm seed:tournament:', seedErr)
+    process.exit(1)
+  }
+
+  console.log('\n✅ Reinicio y limpieza completados.')
   console.log('   La app está lista con:')
-  console.log(`   • 1 usuario admin (${ADMIN_EMAIL})`)
-  console.log('   • Partidos y equipos intactos')
-  console.log('   • Sin grupos, boards, predicciones ni rankings\n')
+  console.log(`   • Todos los usuarios y perfiles intactos (incluyendo ${ADMIN_EMAIL})`)
+  console.log('   • Calendario de partidos y equipos restablecido a su estado inicial')
+  console.log('   • Sin grupos, boards, predicciones ni rankings (desde cero)\n')
 
   process.exit(0)
 }
