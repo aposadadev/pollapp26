@@ -6,8 +6,7 @@
  * Uso: pnpm seed:tournament
  */
 import { initializeApp as initAdminApp, cert, getApps as getAdminApps } from 'firebase-admin/app'
-import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore'
-import { FieldValue } from 'firebase-admin/firestore'
+import { getFirestore as getAdminFirestore, FieldValue } from 'firebase-admin/firestore'
 import { readFileSync } from 'fs'
 
 // ── Env loader ────────────────────────────────────────────────────────────────
@@ -116,14 +115,14 @@ const TEAMS: Array<{ name: string, shortName: string, country: string, logoUrl: 
   { name: 'TBD', shortName: 'TBD', country: '', logoUrl: '' }
 ]
 
-type MatchPhase =
-  | 'Fase de Grupos'
-  | 'Dieciseisavos de Final'
-  | 'Octavos de Final'
-  | 'Cuartos de Final'
-  | 'Semifinales'
-  | 'Tercer Lugar'
-  | 'Final'
+type MatchPhase
+  = | 'Fase de Grupos'
+    | 'Dieciseisavos de Final'
+    | 'Octavos de Final'
+    | 'Cuartos de Final'
+    | 'Semifinales'
+    | 'Tercer Lugar'
+    | 'Final'
 
 interface MatchDef {
   localIdx: number
@@ -143,7 +142,7 @@ let matchCounter = 1
 for (let round = 1; round <= 3; round++) {
   for (let g = 0; g < 12; g++) {
     const startIdx = g * 4
-    
+
     // Función auxiliar para obtener la fecha del partido secuencialmente
     const getMatchDate = (index: number) => {
       const dayOffset = Math.floor((index - 1) / 4)
@@ -227,7 +226,7 @@ for (const def of knockoutMatchesDefs) {
       const dayOffset = Math.floor(i / def.dailyCount)
       const slot = i % def.dailyCount
       matchDate.setUTCDate(baseDate.getUTCDate() + dayOffset)
-      
+
       if (def.phase === 'Dieciseisavos de Final') {
         const hours = [13, 16, 19, 22]
         matchDate.setUTCHours(hours[slot])
@@ -259,11 +258,11 @@ async function main() {
     // Equipos
     console.log('📦 Creando equipos en Firestore...')
     const teamIds: string[] = []
-    
+
     // Usar lotes de Firestore para escribir los equipos de manera eficiente y segura
     const teamsBatch = db.batch()
     const teamRefs = TEAMS.map(() => db.collection('teams').doc())
-    
+
     TEAMS.forEach((team, i) => {
       const finalLogoUrl = team.logoUrl || (team.country ? `https://flagcdn.com/w80/${team.country.toLowerCase()}.png` : '')
       teamsBatch.set(teamRefs[i], {
@@ -282,17 +281,17 @@ async function main() {
 
     // Partidos
     console.log('📦 Creando partidos en Firestore...')
-    
+
     // Firestore batch admite hasta 500 operaciones por lote. Como son 104 partidos, cabe de sobra en un solo lote!
     const matchesBatch = db.batch()
-    
+
     for (const m of ALL_MATCHES) {
       const local = TEAMS[m.localIdx]
       const visitor = TEAMS[m.visitorIdx]
       const localLogo = local.logoUrl || (local.country ? `https://flagcdn.com/w80/${local.country.toLowerCase()}.png` : '')
       const visitorLogo = visitor.logoUrl || (visitor.country ? `https://flagcdn.com/w80/${visitor.country.toLowerCase()}.png` : '')
       const matchDocRef = db.collection('matches').doc()
-      
+
       matchesBatch.set(matchDocRef, {
         tournamentId: TOURNAMENT_ID,
         localTeamId: teamIds[m.localIdx],
@@ -311,11 +310,11 @@ async function main() {
         isClosed: false,
         createdAt: FieldValue.serverTimestamp()
       })
-      
+
       const label = local.shortName === 'TBD' ? `TBD vs TBD` : `${local.shortName} vs ${visitor.shortName}`
       console.log(`   ✓ #${String(m.matchNumber).padStart(3, '0')} ${m.phase.padEnd(25)} ${label}`)
     }
-    
+
     await matchesBatch.commit()
     console.log(`   → ${ALL_MATCHES.length} partidos creados\n`)
 
