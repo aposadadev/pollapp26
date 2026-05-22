@@ -46,88 +46,90 @@ const userMenuItems = computed(() => [
 <template>
   <div>
     <header
-      class="fixed top-0 inset-x-0 z-40 h-[var(--app-header-height)] bg-(--ui-bg)/80 backdrop-blur-md border-b border-(--ui-border)/50 shadow-sm flex items-center justify-between px-4 transition-all duration-300"
+      class="fixed top-0 inset-x-0 z-40 h-[var(--app-header-height)] bg-(--ui-bg)/80 backdrop-blur-md border-b border-(--ui-border)/50 shadow-sm flex items-center transition-all duration-300"
     >
-      <!-- Logo + Group Context Switcher -->
-      <div class="flex items-center gap-2 min-w-0">
-        <NuxtLink
-          to="/"
-          class="shrink-0 group"
-          aria-label="Inicio"
-        >
-          <div
-            class="size-8 rounded-xl gradient-tricolor flex items-center justify-center shadow-md transition-transform duration-200 group-hover:scale-105"
+      <div class="w-full sm:max-w-2xl sm:mx-auto flex items-center justify-between px-4 h-full">
+        <!-- Logo + Group Context Switcher -->
+        <div class="flex items-center gap-2 min-w-0">
+          <NuxtLink
+            to="/"
+            class="shrink-0 group"
+            aria-label="Inicio"
           >
-            <UIcon
-              name="i-lucide-trophy"
-              class="size-4 text-white"
-            />
-          </div>
-        </NuxtLink>
+            <div
+              class="size-8 rounded-xl gradient-tricolor flex items-center justify-center shadow-md transition-transform duration-200 group-hover:scale-105"
+            >
+              <UIcon
+                name="i-lucide-trophy"
+                class="size-4 text-white"
+              />
+            </div>
+          </NuxtLink>
 
-        <!-- Switcher solo cuando está autenticado -->
-        <LayoutGroupContextSwitcher
-          v-if="authStore.isAuthenticated"
-          @open-picker="pickerOpen = true"
-        />
-      </div>
-
-      <!-- Acciones derecha -->
-      <div class="flex items-center gap-1">
-        <!-- Admin -->
-        <NuxtLink
-          v-if="authStore.isAdmin"
-          to="/admin"
-          class="p-2 rounded-xl text-(--ui-text-muted) hover:text-(--ui-text) hover:bg-(--ui-bg-muted) transition-all duration-200"
-          aria-label="Panel Admin"
-        >
-          <UIcon
-            name="i-lucide-settings"
-            class="size-4"
+          <!-- Switcher solo cuando está autenticado -->
+          <LayoutGroupContextSwitcher
+            v-if="authStore.isAuthenticated"
+            @open-picker="pickerOpen = true"
           />
-        </NuxtLink>
+        </div>
 
-        <!-- Dark mode -->
-        <ClientOnly>
-          <button
+        <!-- Acciones derecha -->
+        <div class="flex items-center gap-1">
+          <!-- Admin -->
+          <NuxtLink
+            v-if="authStore.isAdmin"
+            to="/admin"
             class="p-2 rounded-xl text-(--ui-text-muted) hover:text-(--ui-text) hover:bg-(--ui-bg-muted) transition-all duration-200"
-            aria-label="Cambiar modo de color"
-            @click="isDark = !isDark"
+            aria-label="Panel Admin"
           >
             <UIcon
-              :name="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
-              class="size-4 transition-transform duration-300"
-              :class="isDark ? 'rotate-0' : 'rotate-180'"
-            />
-          </button>
-        </ClientOnly>
-
-        <!-- Avatar / Menú de usuario -->
-        <UDropdownMenu
-          v-if="authStore.isAuthenticated"
-          :items="userMenuItems"
-          :ui="{ content: 'w-48' }"
-        >
-          <UButton
-            color="neutral"
-            variant="ghost"
-            size="sm"
-            class="flex items-center gap-1.5 text-xs font-medium"
-            aria-label="Menú de usuario"
-          >
-            <UIcon
-              name="i-lucide-circle-user"
+              name="i-lucide-settings"
               class="size-4"
             />
-            <span class="hidden sm:block max-w-24 truncate">{{
-              authStore.displayName ?? "Usuario"
-            }}</span>
-            <UIcon
-              name="i-lucide-chevron-down"
-              class="size-3 text-(--ui-text-muted)"
-            />
-          </UButton>
-        </UDropdownMenu>
+          </NuxtLink>
+
+          <!-- Dark mode -->
+          <ClientOnly>
+            <button
+              class="p-2 rounded-xl text-(--ui-text-muted) hover:text-(--ui-text) hover:bg-(--ui-bg-muted) transition-all duration-200"
+              aria-label="Cambiar modo de color"
+              @click="isDark = !isDark"
+            >
+              <UIcon
+                :name="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
+                class="size-4 transition-transform duration-300"
+                :class="isDark ? 'rotate-0' : 'rotate-180'"
+              />
+            </button>
+          </ClientOnly>
+
+          <!-- Avatar / Menú de usuario -->
+          <UDropdownMenu
+            v-if="authStore.isAuthenticated"
+            :items="userMenuItems"
+            :ui="{ content: 'w-48' }"
+          >
+            <UButton
+              color="neutral"
+              variant="ghost"
+              size="sm"
+              class="flex items-center gap-1.5 text-xs font-medium"
+              aria-label="Menú de usuario"
+            >
+              <UIcon
+                name="i-lucide-circle-user"
+                class="size-4"
+              />
+              <span class="hidden sm:block max-w-24 truncate">{{
+                authStore.displayName ?? "Usuario"
+              }}</span>
+              <UIcon
+                name="i-lucide-chevron-down"
+                class="size-3 text-(--ui-text-muted)"
+              />
+            </UButton>
+          </UDropdownMenu>
+        </div>
       </div>
     </header>
 
