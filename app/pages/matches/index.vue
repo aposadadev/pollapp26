@@ -223,6 +223,18 @@ function getStatusLabel(match: Match) {
                 >
                   {{ match.localGoals ?? '-' }} - {{ match.visitorGoals ?? '-' }}
                 </div>
+                <div
+                  v-if="isMatchClosed(match) && match.localGoalsOT !== undefined && match.localGoalsOT !== null"
+                  class="text-[9px] text-primary-500 font-bold uppercase tracking-wider text-center"
+                >
+                  {{ match.localGoalsOT }} - {{ match.visitorGoalsOT }} T.E.
+                  <span
+                    v-if="match.localPenalties !== undefined && match.localPenalties !== null"
+                    class="block text-[8px] text-primary-400"
+                  >
+                    ({{ match.localPenalties }} - {{ match.visitorPenalties }} Pen)
+                  </span>
+                </div>
                 <span
                   v-else
                   class="font-heading text-sm font-black text-(--ui-text-muted) tracking-widest"

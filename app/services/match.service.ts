@@ -66,9 +66,25 @@ export class MatchService {
    * 4. Recalcula posiciones de todos los grupos afectados
    * 5. Escribe el nuevo ranking en Realtime DB
    */
-  async closeMatch(matchId: string, localGoals: number, visitorGoals: number): Promise<void> {
+  async closeMatch(
+    matchId: string,
+    localGoals: number,
+    visitorGoals: number,
+    localGoalsOT?: number | null,
+    visitorGoalsOT?: number | null,
+    localPenalties?: number | null,
+    visitorPenalties?: number | null
+  ): Promise<void> {
     // 1. Cerrar partido en Firestore
-    await matchRepository.closeMatch(matchId, localGoals, visitorGoals)
+    await matchRepository.closeMatch(
+      matchId,
+      localGoals,
+      visitorGoals,
+      localGoalsOT,
+      visitorGoalsOT,
+      localPenalties,
+      visitorPenalties
+    )
 
     // 2. Obtener todas las predicciones del partido
     const predictions = await predictionRepository.findByMatch(matchId)

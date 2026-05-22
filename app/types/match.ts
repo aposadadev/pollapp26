@@ -52,6 +52,10 @@ export interface Match {
    * - `false` → oculto para usuarios; solo admin puede verlo
    */
   visible?: boolean
+  localGoalsOT?: number | null
+  visitorGoalsOT?: number | null
+  localPenalties?: number | null
+  visitorPenalties?: number | null
 }
 
 export interface MatchWithTeams extends Match {

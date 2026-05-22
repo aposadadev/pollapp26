@@ -24,7 +24,32 @@ const showTeamsModal = computed({
 const tab = ref<'active' | 'scheduled' | 'closed'>('active')
 
 // Close match form
-const closeForm = reactive({ localGoals: 0, visitorGoals: 0 })
+const closeForm = reactive({
+  localGoals: 0,
+  visitorGoals: 0,
+  hasExtraTime: false,
+  localGoalsOT: 0,
+  visitorGoalsOT: 0,
+  hasPenalties: false,
+  localPenalties: 0,
+  visitorPenalties: 0
+})
+
+const currentClosingMatch = computed(() => {
+  return matches.value.find(m => m.id === closingMatchId.value)
+})
+
+watch(() => closeForm.hasExtraTime, (val) => {
+  if (!val) {
+    closeForm.hasPenalties = false
+  }
+})
+
+watch(() => [closeForm.localGoalsOT, closeForm.visitorGoalsOT], () => {
+  if (Number(closeForm.localGoalsOT) !== Number(closeForm.visitorGoalsOT)) {
+    closeForm.hasPenalties = false
+  }
+})
 
 // Edit teams form
 const teamsForm = reactive({ localTeamId: '', visitorTeamId: '' })
@@ -63,6 +88,12 @@ function openCloseModal(match: Match) {
   closingMatchId.value = match.id
   closeForm.localGoals = 0
   closeForm.visitorGoals = 0
+  closeForm.hasExtraTime = false
+  closeForm.localGoalsOT = 0
+  closeForm.visitorGoalsOT = 0
+  closeForm.hasPenalties = false
+  closeForm.localPenalties = 0
+  closeForm.visitorPenalties = 0
 }
 
 function openTeamsModal(match: Match) {
@@ -81,7 +112,11 @@ async function handleCloseMatch() {
   const ok = await closeMatch(
     closingMatchId.value,
     Number(closeForm.localGoals),
-    Number(closeForm.visitorGoals)
+    Number(closeForm.visitorGoals),
+    closeForm.hasExtraTime ? Number(closeForm.localGoalsOT) : null,
+    closeForm.hasExtraTime ? Number(closeForm.visitorGoalsOT) : null,
+    closeForm.hasPenalties ? Number(closeForm.localPenalties) : null,
+    closeForm.hasPenalties ? Number(closeForm.visitorPenalties) : null
   )
   if (ok) {
     closingMatchId.value = null
@@ -296,6 +331,83 @@ async function handleUpdateTeams() {
                 :ui="{ base: 'text-center' }"
               />
             </UFormField>
+          </div>
+
+          <div
+            v-if="currentClosingMatch && currentClosingMatch.phase !== 'Fase de Grupos'"
+            class="space-y-4 pt-4 border-t border-(--ui-border)"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-semibold text-(--ui-text)">¿Hubo Tiempo Extra (Prórroga)?</span>
+              <USwitch v-model="closeForm.hasExtraTime" />
+            </div>
+
+            <div
+              v-if="closeForm.hasExtraTime"
+              class="grid grid-cols-2 gap-6 pt-2"
+            >
+              <UFormField label="Goles Local T.E.">
+                <UInput
+                  v-model="closeForm.localGoalsOT"
+                  type="number"
+                  :min="0"
+                  :max="20"
+                  size="lg"
+                  class="w-full font-heading text-xl font-bold text-center"
+                  :ui="{ base: 'text-center' }"
+                />
+              </UFormField>
+              <UFormField label="Goles Visitante T.E.">
+                <UInput
+                  v-model="closeForm.visitorGoalsOT"
+                  type="number"
+                  :min="0"
+                  :max="20"
+                  size="lg"
+                  class="w-full font-heading text-xl font-bold text-center"
+                  :ui="{ base: 'text-center' }"
+                />
+              </UFormField>
+            </div>
+
+            <!-- Tanda de penaltis (sólo si hay empate en el marcador del tiempo extra o regular si no hay extra time) -->
+            <div
+              v-if="closeForm.hasExtraTime && Number(closeForm.localGoalsOT) === Number(closeForm.visitorGoalsOT)"
+              class="space-y-4 pt-4 border-t border-(--ui-border)/50"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-semibold text-(--ui-text)">¿Definición por Penales?</span>
+                <USwitch v-model="closeForm.hasPenalties" />
+              </div>
+
+              <div
+                v-if="closeForm.hasPenalties"
+                class="grid grid-cols-2 gap-6 pt-2"
+              >
+                <UFormField label="Penales Local">
+                  <UInput
+                    v-model="closeForm.localPenalties"
+                    type="number"
+                    :min="0"
+                    :max="20"
+                    size="lg"
+                    class="w-full font-heading text-xl font-bold text-center"
+                    :ui="{ base: 'text-center' }"
+                  />
+                </UFormField>
+                <UFormField label="Penales Visitante">
+                  <UInput
+                    v-model="closeForm.visitorPenalties"
+                    type="number"
+                    :min="0"
+                    :max="20"
+                    size="lg"
+                    class="w-full font-heading text-xl font-bold text-center"
+                    :ui="{ base: 'text-center' }"
+                  />
+                </UFormField>
+              </div>
+            </div>
           </div>
           <div class="flex gap-3">
             <UButton

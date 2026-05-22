@@ -68,10 +68,22 @@ export class MatchRepository extends BaseRepository<Match> {
     return all.sort((a, b) => b.date.getTime() - a.date.getTime())
   }
 
-  async closeMatch(matchId: string, localGoals: number, visitorGoals: number): Promise<void> {
+  async closeMatch(
+    matchId: string,
+    localGoals: number,
+    visitorGoals: number,
+    localGoalsOT?: number | null,
+    visitorGoalsOT?: number | null,
+    localPenalties?: number | null,
+    visitorPenalties?: number | null
+  ): Promise<void> {
     await this.update(matchId, {
       localGoals,
       visitorGoals,
+      localGoalsOT: localGoalsOT ?? null,
+      visitorGoalsOT: visitorGoalsOT ?? null,
+      localPenalties: localPenalties ?? null,
+      visitorPenalties: visitorPenalties ?? null,
       isClosed: true,
       isActive: false,
       status: 'closed'
@@ -116,6 +128,10 @@ export class MatchRepository extends BaseRepository<Match> {
       visitorTeamLogo: data['visitorTeamLogo'] as string | undefined,
       localGoals: data['localGoals'] as number | null ?? null,
       visitorGoals: data['visitorGoals'] as number | null ?? null,
+      localGoalsOT: data['localGoalsOT'] as number | null ?? null,
+      visitorGoalsOT: data['visitorGoalsOT'] as number | null ?? null,
+      localPenalties: data['localPenalties'] as number | null ?? null,
+      visitorPenalties: data['visitorPenalties'] as number | null ?? null,
       date: (data['date'] as { toDate?: () => Date })?.toDate?.() ?? new Date(),
       phase: data['phase'] as Match['phase'] ?? 'Fase de Grupos',
       matchNumber: data['matchNumber'] as number ?? 0,

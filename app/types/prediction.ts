@@ -28,6 +28,10 @@ export interface PredictionWithMatch extends Prediction {
     isClosed: boolean
     /** @deprecated Usar `status`. Mantenido para compatibilidad con componentes aún no migrados. */
     isActive: boolean
+    localGoalsOT?: number | null
+    visitorGoalsOT?: number | null
+    localPenalties?: number | null
+    visitorPenalties?: number | null
   }
 }
 

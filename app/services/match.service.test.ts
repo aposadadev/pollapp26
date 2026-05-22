@@ -98,3 +98,40 @@ describe('MatchService.updateTeams', () => {
     )
   })
 })
+
+describe('MatchService.closeMatch', () => {
+  let service: MatchService
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    service = new MatchService()
+  })
+
+  it('calls matchRepository.closeMatch with goals, overtime goals, and penalties', async () => {
+    mockMatchRepo.closeMatch.mockResolvedValue(undefined)
+    mockPredictionRepo.findByMatch.mockResolvedValue([])
+
+    await service.closeMatch('match1', 1, 1, 2, 2, 4, 3)
+
+    expect(mockMatchRepo.closeMatch).toHaveBeenCalledWith('match1', 1, 1, 2, 2, 4, 3)
+  })
+
+  it('calculates prediction points based on 90-minute goals', async () => {
+    mockMatchRepo.closeMatch.mockResolvedValue(undefined)
+    mockPredictionRepo.findByMatch.mockResolvedValue([
+      { id: 'pred1', boardId: 'board1', localGoalPrediction: 1, visitorGoalPrediction: 1 }
+    ])
+    mockPredictionRepo.findByBoard.mockResolvedValue([])
+    mockBoardRepo.findById.mockResolvedValue({ id: 'board1', groupId: 'group1' })
+    mockBoardRepo.findActiveByGroup.mockResolvedValue([])
+    mockScoringService.calculatePoints.mockReturnValue(3)
+
+    await service.closeMatch('match1', 1, 1, 2, 2, 4, 3)
+
+    // Ensure it was calculated with 90-min goals (1, 1) and not overtime goals (2, 2)
+    expect(mockScoringService.calculatePoints).toHaveBeenCalledWith(
+      { localGoals: 1, visitorGoals: 1 },
+      { localGoals: 1, visitorGoals: 1 }
+    )
+  })
+})

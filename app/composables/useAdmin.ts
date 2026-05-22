@@ -31,11 +31,23 @@ export function useAdmin() {
   async function closeMatch(
     matchId: string,
     localGoals: number,
-    visitorGoals: number
+    visitorGoals: number,
+    localGoalsOT?: number | null,
+    visitorGoalsOT?: number | null,
+    localPenalties?: number | null,
+    visitorPenalties?: number | null
   ): Promise<boolean> {
     loading.value = true
     try {
-      await matchService.closeMatch(matchId, localGoals, visitorGoals)
+      await matchService.closeMatch(
+        matchId,
+        localGoals,
+        visitorGoals,
+        localGoalsOT,
+        visitorGoalsOT,
+        localPenalties,
+        visitorPenalties
+      )
       toast.add({
         title: 'Partido cerrado',
         description: 'Los puntos y posiciones han sido actualizados.',

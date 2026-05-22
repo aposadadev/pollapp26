@@ -192,9 +192,13 @@ function handleRandomize() {
             size="xs"
             class="rounded-full px-2"
           >
-            {{ prediction.match.localGoals }}-{{
-              prediction.match.visitorGoals
-            }}
+            {{ prediction.match.localGoals }}-{{ prediction.match.visitorGoals }}
+            <span
+              v-if="prediction.match.localGoalsOT !== undefined && prediction.match.localGoalsOT !== null"
+              class="ml-1 text-[10px] text-primary-500 font-semibold"
+            >
+              ({{ prediction.match.localGoalsOT }}-{{ prediction.match.visitorGoalsOT }} T.E.<span v-if="prediction.match.localPenalties !== undefined && prediction.match.localPenalties !== null">, {{ prediction.match.localPenalties }}-{{ prediction.match.visitorPenalties }} Pen</span>)
+            </span>
           </UBadge>
         </div>
 
@@ -282,6 +286,9 @@ function handleRandomize() {
             <span class="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500">Resultado real:</span>
             <span class="text-xs font-black text-neutral-800 dark:text-white bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded font-mono">
               {{ prediction.match.localGoals }} - {{ prediction.match.visitorGoals }}
+              <template v-if="prediction.match.localGoalsOT !== undefined && prediction.match.localGoalsOT !== null">
+                ({{ prediction.match.localGoalsOT }} - {{ prediction.match.visitorGoalsOT }} T.E.<span v-if="prediction.match.localPenalties !== undefined && prediction.match.localPenalties !== null">, {{ prediction.match.localPenalties }} - {{ prediction.match.visitorPenalties }} Pen</span>)
+              </template>
             </span>
           </div>
         </div>

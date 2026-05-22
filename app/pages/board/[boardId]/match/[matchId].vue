@@ -143,6 +143,18 @@ const formattedDate = computed(() =>
                 Finalizado
               </UBadge>
               <div
+                v-if="isMatchClosed(match) && match.localGoalsOT !== undefined && match.localGoalsOT !== null"
+                class="text-[10px] text-primary-500 font-bold uppercase tracking-wider text-center mt-1"
+              >
+                {{ match.localGoalsOT }} - {{ match.visitorGoalsOT }} T.E.
+                <span
+                  v-if="match.localPenalties !== undefined && match.localPenalties !== null"
+                  class="block text-[9px] text-primary-400"
+                >
+                  ({{ match.localPenalties }} - {{ match.visitorPenalties }} Pen)
+                </span>
+              </div>
+              <div
                 v-else-if="isMatchActive(match)"
                 class="flex items-center gap-1.5"
               >
