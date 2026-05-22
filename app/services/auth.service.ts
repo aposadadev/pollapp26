@@ -43,7 +43,8 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/network-request-failed': 'Error de conexión. Verifica tu internet.',
   'auth/popup-closed-by-user': 'El inicio de sesión fue cancelado.',
   'auth/cancelled-popup-request': 'Inicio de sesión en progreso. Cierra la otra ventana o espera.',
-  'auth/popup-blocked': 'El navegador bloqueó la ventana emergente. Habilita las ventanas emergentes e intenta de nuevo.'
+  'auth/popup-blocked': 'El navegador bloqueó la ventana emergente. Habilita las ventanas emergentes e intenta de nuevo.',
+  'auth/different-credential-exists': 'Este correo ya está registrado con otro método de inicio de sesión (ej. correo y contraseña). Por favor, ingresa usando tus credenciales originales.'
 }
 
 function mapAuthError(code: string): string {
@@ -70,6 +71,11 @@ export class AuthService {
     displayName: string
   ): Promise<UserProfile> {
     try {
+      const existingProfile = await userRepository.findByEmail(email)
+      if (existingProfile) {
+        throw new AuthError('Ya existe una cuenta registrada con este correo electrónico.', 'auth/email-already-in-use')
+      }
+
       const credential = await createUserWithEmailAndPassword(getAuth(), email, password)
       const profileData: Omit<UserProfile, 'id' | 'createdAt'> = {
         displayName,
@@ -94,6 +100,16 @@ export class AuthService {
       const profile = await userRepository.findById(uid)
       if (profile) {
         return profile
+      }
+
+      if (email) {
+        const existingProfile = await userRepository.findByEmail(email)
+        if (existingProfile) {
+          throw new AuthError(
+            'Este correo ya está registrado con otro método de inicio de sesión (ej. correo y contraseña). Por favor, ingresa usando tus credenciales originales.',
+            'auth/different-credential-exists'
+          )
+        }
       }
 
       const profileData: Omit<UserProfile, 'id' | 'createdAt'> = {

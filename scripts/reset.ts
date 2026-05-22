@@ -24,11 +24,10 @@
  *
  * Requiere: .env con las credenciales de Firebase y Firebase Admin SDK
  */
-import { initializeApp as initClientApp, getApps as getClientApps } from 'firebase/app'
-import { getAuth as getClientAuth, signInWithEmailAndPassword } from 'firebase/auth'
 import { initializeApp as initAdminApp, cert, getApps as getAdminApps } from 'firebase-admin/app'
 import { getFirestore as getAdminFirestore } from 'firebase-admin/firestore'
 import { getDatabase as getAdminDatabase } from 'firebase-admin/database'
+import { getAuth as getAdminAuth } from 'firebase-admin/auth'
 import { readFileSync } from 'fs'
 import { execSync } from 'child_process'
 
@@ -45,24 +44,6 @@ function loadEnv() {
   } catch { /* ignore */ }
 }
 loadEnv()
-
-// ── Firebase Client SDK Config (para validación de contraseña del admin) ───────
-const clientConfig = {
-  apiKey: process.env.NUXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NUXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NUXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NUXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-  messagingSenderId: process.env.NUXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NUXT_PUBLIC_FIREBASE_APP_ID!
-}
-
-if (!clientConfig.apiKey || !clientConfig.projectId) {
-  console.error('❌ Faltan credenciales públicas de Firebase en .env')
-  process.exit(1)
-}
-
-const clientApp = getClientApps().length ? getClientApps()[0]! : initClientApp(clientConfig)
-const clientAuth = getClientAuth(clientApp)
 
 // ── Firebase Admin SDK Config (para operaciones privilegiadas de escritura/borrado) ──
 const adminProjectId = process.env.FIREBASE_ADMIN_PROJECT_ID
@@ -148,11 +129,29 @@ async function main() {
   console.log(`   Colecciones a vaciar: ${COLLECTIONS_TO_CLEAR.join(', ')}`)
   console.log(`   Colección a conservar intacta: users (usuarios y perfiles)\n`)
 
-  // 0. Obtener UID del admin autenticándose en el SDK de cliente
-  console.log('  🔑 Autenticando admin para obtener UID...')
-  const cred = await signInWithEmailAndPassword(clientAuth, ADMIN_EMAIL, ADMIN_PASSWORD)
-  const adminUid = cred.user.uid
-  console.log(`  ✅ Admin UID: ${adminUid}\n`)
+  // 0. Obtener UID del admin usando Firebase Admin SDK
+  console.log('  🔑 Obteniendo UID del admin vía Admin SDK...')
+  let adminUid: string
+  try {
+    const userRecord = await getAdminAuth(adminApp).getUserByEmail(ADMIN_EMAIL)
+    adminUid = userRecord.uid
+    console.log(`  ✅ Admin encontrado. UID: ${adminUid}\n`)
+  } catch (err) {
+    const firebaseError = err as { code?: string }
+    if (firebaseError.code === 'auth/user-not-found') {
+      console.log(`  ⚠️  El usuario admin ${ADMIN_EMAIL} no existe en Firebase Auth. Creándolo...`)
+      const userRecord = await getAdminAuth(adminApp).createUser({
+        email: ADMIN_EMAIL,
+        password: ADMIN_PASSWORD,
+        displayName: 'Admin',
+        emailVerified: true
+      })
+      adminUid = userRecord.uid
+      console.log(`  ✅ Admin creado. UID: ${adminUid}\n`)
+    } else {
+      throw err
+    }
+  }
 
   // 1. Vaciar colecciones
   for (const col of COLLECTIONS_TO_CLEAR) {

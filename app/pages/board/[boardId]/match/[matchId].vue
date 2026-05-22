@@ -25,6 +25,12 @@ const match = ref<import('~/types').Match | null>(null)
 const predictions = ref<MatchPredictionEntry[]>([])
 const loading = ref(true)
 
+const predictionsClosed = computed(() => {
+  if (!match.value) return false
+  const matchDate = dayjs(match.value.date)
+  return dayjs().isAfter(matchDate.subtract(30, 'minute')) || isMatchClosed(match.value) || isMatchActive(match.value)
+})
+
 onMounted(async () => {
   try {
     appStore.setPageTitle('Detalle del partido')
@@ -38,7 +44,15 @@ onMounted(async () => {
       const boards = await boardRepository.findActiveByGroup(board.value.groupId)
       const boardIds = boards.map(b => b.id)
       const preds = await predictionRepository.findByMatchAndGroup(matchId.value, boardIds)
-      predictions.value = preds.map((pred): MatchPredictionEntry => {
+
+      const filteredPreds = predictionsClosed.value
+        ? preds
+        : preds.filter((p) => {
+            const b = boards.find(bb => bb.id === p.boardId)
+            return b?.userId === authStore.user?.id
+          })
+
+      predictions.value = filteredPreds.map((pred): MatchPredictionEntry => {
         const b = boards.find(bb => bb.id === pred.boardId)
         return {
           boardId: pred.boardId,
@@ -190,8 +204,22 @@ const formattedDate = computed(() =>
               variant="soft"
               class="rounded-lg font-bold"
             >
-              {{ predictions.length }} Tablas
+              {{ predictions.length }} {{ predictions.length === 1 ? 'Tabla' : 'Tablas' }}
             </UBadge>
+          </div>
+
+          <!-- Alerta: predicciones bloqueadas/abiertas -->
+          <div
+            v-if="!predictionsClosed"
+            class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium flex items-start gap-2.5 shadow-sm stagger-up"
+          >
+            <UIcon
+              name="i-lucide-lock"
+              class="size-4 shrink-0 mt-0.5"
+            />
+            <span>
+              Las predicciones de los demás participantes están ocultas y se revelarán automáticamente 30 minutos antes del inicio del partido para mantener el juego justo.
+            </span>
           </div>
 
           <div class="card-elevated overflow-hidden stagger-up stagger-d1">

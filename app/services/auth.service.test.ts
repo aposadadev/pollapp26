@@ -29,6 +29,7 @@ vi.mock('~/repositories/user.repository', () => {
   return {
     userRepository: {
       findById: vi.fn(),
+      findByEmail: vi.fn(),
       createProfile: vi.fn()
     }
   }
@@ -56,10 +57,12 @@ describe('AuthService', () => {
         user: mockFirebaseUser
       } as UserCredential)
 
+      vi.mocked(userRepository.findByEmail).mockResolvedValue(null)
       vi.mocked(userRepository.createProfile).mockResolvedValue(undefined)
 
       const result = await authService.register(email, password, displayName)
 
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(email)
       expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(mockAuth, email, password)
       expect(userRepository.createProfile).toHaveBeenCalledWith('user-123', {
         displayName,
@@ -69,6 +72,28 @@ describe('AuthService', () => {
       expect(result.displayName).toBe(displayName)
       expect(result.email).toBe(email)
       expect(result.id).toBe('user-123')
+    })
+
+    it('throws AuthError if the email already exists in Firestore', async () => {
+      const email = 'existing@example.com'
+      const password = 'Password123'
+      const displayName = 'Juan Carlos Pérez'
+
+      const existingProfile: UserProfile = {
+        id: 'user-789',
+        displayName: 'Existing User',
+        email,
+        isAdmin: false,
+        createdAt: new Date()
+      }
+      vi.mocked(userRepository.findByEmail).mockResolvedValue(existingProfile)
+
+      await expect(authService.register(email, password, displayName)).rejects.toThrow(
+        new AuthError('Ya existe una cuenta registrada con este correo electrónico.', 'auth/email-already-in-use')
+      )
+
+      expect(userRepository.findByEmail).toHaveBeenCalledWith(email)
+      expect(createUserWithEmailAndPassword).not.toHaveBeenCalled()
     })
   })
 
@@ -116,12 +141,14 @@ describe('AuthService', () => {
       } as unknown as UserCredential)
 
       vi.mocked(userRepository.findById).mockResolvedValue(null)
+      vi.mocked(userRepository.findByEmail).mockResolvedValue(null)
       vi.mocked(userRepository.createProfile).mockResolvedValue(undefined)
 
       const result = await authService.loginWithGoogle()
 
       expect(signInWithPopup).toHaveBeenCalledWith(mockAuth, expect.any(GoogleAuthProvider))
       expect(userRepository.findById).toHaveBeenCalledWith('google-uid-456')
+      expect(userRepository.findByEmail).toHaveBeenCalledWith('newgoogle@example.com')
       expect(userRepository.createProfile).toHaveBeenCalledWith('google-uid-456', {
         displayName: 'Carlos Sanchez',
         email: 'newgoogle@example.com',
@@ -132,6 +159,41 @@ describe('AuthService', () => {
       expect(result.displayName).toBe('Carlos Sanchez')
       expect(result.email).toBe('newgoogle@example.com')
       expect(result.photoURL).toBe('https://photo.url/carlos')
+    })
+
+    it('throws AuthError if Google user has no profile but the email already exists under a different UID', async () => {
+      const mockFirebaseUser = {
+        uid: 'google-uid-new',
+        email: 'conflict@example.com',
+        displayName: 'Google User',
+        photoURL: 'https://photo.url/google'
+      }
+
+      vi.mocked(signInWithPopup).mockResolvedValue({
+        user: mockFirebaseUser
+      } as unknown as UserCredential)
+
+      vi.mocked(userRepository.findById).mockResolvedValue(null)
+
+      const existingProfile: UserProfile = {
+        id: 'email-pwd-uid-old',
+        displayName: 'Email Pwd User',
+        email: 'conflict@example.com',
+        isAdmin: false,
+        createdAt: new Date()
+      }
+      vi.mocked(userRepository.findByEmail).mockResolvedValue(existingProfile)
+
+      await expect(authService.loginWithGoogle()).rejects.toThrow(
+        new AuthError(
+          'Este correo ya está registrado con otro método de inicio de sesión (ej. correo y contraseña). Por favor, ingresa usando tus credenciales originales.',
+          'auth/different-credential-exists'
+        )
+      )
+
+      expect(userRepository.findById).toHaveBeenCalledWith('google-uid-new')
+      expect(userRepository.findByEmail).toHaveBeenCalledWith('conflict@example.com')
+      expect(userRepository.createProfile).not.toHaveBeenCalled()
     })
 
     it('propagates mapped AuthError if signInWithPopup fails', async () => {

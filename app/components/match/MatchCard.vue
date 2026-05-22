@@ -54,8 +54,13 @@ const matchStarted = computed(() => {
 })
 
 const isLocked = computed(
-  () => props.isReadonly || matchStarted.value || isMatchClosed(props.prediction.match)
+  () => props.isReadonly || matchStarted.value || isMatchClosed(props.prediction.match) || isMatchActive(props.prediction.match)
 )
+
+const predictionsClosed = computed(() => {
+  const matchDate = dayjs(props.prediction.match.date)
+  return dayjs().isAfter(matchDate.subtract(30, 'minute')) || isMatchClosed(props.prediction.match) || isMatchActive(props.prediction.match)
+})
 
 const formattedDate = computed(() =>
   dayjs(props.prediction.match.date).format('ddd D MMM · HH:mm')
@@ -301,7 +306,7 @@ function handleRandomize() {
           />
 
           <NuxtLink
-            v-if="boardId"
+            v-if="boardId && predictionsClosed"
             :to="`/board/${boardId}/match/${prediction.match.id}`"
             class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 bg-primary-500/5 hover:bg-primary-500/10 dark:bg-primary-400/5 dark:hover:bg-primary-400/10 transition-all active:scale-95 shrink-0"
           >

@@ -69,26 +69,28 @@ export interface MatchWithTeams extends Match {
 // a los campos legacy para datos sin `status` en Firestore.
 
 /**
- * Retorna true si el partido está en curso (status === 'active').
- * Fallback a `match.isActive` para documentos legacy sin campo `status`.
+ * Retorna true si el partido está en curso o ya llegó la hora de inicio.
+ * Un partido está activo si su status es 'active', o si no está cerrado y ya llegó su hora de inicio.
  */
-export function isMatchActive(match: Pick<Match, 'status' | 'isActive'>): boolean {
-  return match.status === 'active' || (!match.status && match.isActive)
+export function isMatchActive(match: { status?: string | null, isActive?: boolean, date: Date | string, isClosed?: boolean }): boolean {
+  if (isMatchClosed(match)) return false
+  const now = new Date()
+  const matchDate = match.date instanceof Date ? match.date : new Date(match.date)
+  return match.status === 'active' || (!match.status && !!match.isActive) || now >= matchDate
 }
 
 /**
  * Retorna true si el partido está cerrado (status === 'closed').
  * Fallback a `match.isClosed` para documentos legacy sin campo `status`.
  */
-export function isMatchClosed(match: Pick<Match, 'status' | 'isClosed'>): boolean {
-  return match.status === 'closed' || (!match.status && match.isClosed)
+export function isMatchClosed(match: { status?: string | null, isClosed?: boolean }): boolean {
+  return match.status === 'closed' || (!match.status && !!match.isClosed)
 }
 
 /**
- * Retorna true si el partido está programado (pendiente).
- * No tiene campo legacy equivalente; se basa en que no es active ni closed.
+ * Retorna true si el partido está programado (pendiente, no ha comenzado).
  */
-export function isMatchScheduled(match: Pick<Match, 'status' | 'isActive' | 'isClosed'>): boolean {
+export function isMatchScheduled(match: { status?: string | null, isActive?: boolean, date: Date | string, isClosed?: boolean }): boolean {
   return !isMatchActive(match) && !isMatchClosed(match)
 }
 
