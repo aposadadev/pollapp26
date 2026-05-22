@@ -1,11 +1,10 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'auth', middleware: 'guest' })
 
-const { register, loading } = useAuth()
+const { register, loginWithGoogle, loading } = useAuth()
 
 const form = reactive({
-  firstName: '',
-  lastName: '',
+  displayName: '',
   email: '',
   password: '',
   confirmPassword: ''
@@ -68,7 +67,11 @@ function validatePasswords() {
 
 async function handleSubmit() {
   if (!validatePasswords()) return
-  await register(form.email, form.password, form.firstName, form.lastName)
+  await register(form.email, form.password, form.displayName)
+}
+
+async function handleGoogleLogin() {
+  await loginWithGoogle()
 }
 </script>
 
@@ -111,32 +114,19 @@ async function handleSubmit() {
           class="space-y-4"
           @submit="handleSubmit"
         >
-          <!-- Nombre + Apellido -->
-          <div class="grid grid-cols-2 gap-3">
-            <UFormField
-              label="Nombre"
-              name="firstName"
-            >
-              <UInput
-                v-model="form.firstName"
-                placeholder="Juan"
-                icon="i-lucide-user"
-                autocomplete="given-name"
-                class="w-full"
-              />
-            </UFormField>
-            <UFormField
-              label="Apellido"
-              name="lastName"
-            >
-              <UInput
-                v-model="form.lastName"
-                placeholder="García"
-                autocomplete="family-name"
-                class="w-full"
-              />
-            </UFormField>
-          </div>
+          <!-- Nombre completo -->
+          <UFormField
+            label="Nombre completo"
+            name="displayName"
+          >
+            <UInput
+              v-model="form.displayName"
+              placeholder="Juan García"
+              icon="i-lucide-user"
+              autocomplete="name"
+              class="w-full"
+            />
+          </UFormField>
 
           <UFormField
             label="Correo electrónico"
@@ -203,6 +193,26 @@ async function handleSubmit() {
             Crear cuenta
           </UButton>
         </UForm>
+
+        <div class="relative flex items-center justify-center my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-(--ui-border)/50" />
+          </div>
+          <span class="relative bg-(--ui-bg-elevated) px-3 text-xs text-(--ui-text-muted) uppercase font-semibold tracking-wider">
+            o regístrate con
+          </span>
+        </div>
+
+        <UButton
+          color="neutral"
+          variant="subtle"
+          class="w-full h-12 rounded-[20px] font-bold tracking-wide flex items-center justify-center gap-2 border border-(--ui-border)/50 hover:bg-(--ui-bg-muted) transition-colors"
+          icon="i-simple-icons-google"
+          :loading="loading"
+          @click="handleGoogleLogin"
+        >
+          Google
+        </UButton>
 
         <div class="text-center mt-8">
           <NuxtLink

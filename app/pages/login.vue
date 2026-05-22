@@ -3,13 +3,17 @@ import { mundial2026 } from '~/config/tournaments/mundial2026'
 
 definePageMeta({ layout: 'auth', middleware: 'guest' })
 
-const { login, loading } = useAuth()
+const { login, loginWithGoogle, loading } = useAuth()
 
 const form = reactive({ email: '', password: '' })
 const showPassword = ref(false)
 
 async function handleSubmit() {
   await login(form.email, form.password)
+}
+
+async function handleGoogleLogin() {
+  await loginWithGoogle()
 }
 </script>
 
@@ -108,6 +112,26 @@ async function handleSubmit() {
             Entrar
           </UButton>
         </UForm>
+
+        <div class="relative flex items-center justify-center my-6">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-(--ui-border)/50" />
+          </div>
+          <span class="relative bg-(--ui-bg-elevated) px-3 text-xs text-(--ui-text-muted) uppercase font-semibold tracking-wider">
+            o entra con
+          </span>
+        </div>
+
+        <UButton
+          color="neutral"
+          variant="subtle"
+          class="w-full h-12 rounded-[20px] font-bold tracking-wide flex items-center justify-center gap-2 border border-(--ui-border)/50 hover:bg-(--ui-bg-muted) transition-colors mb-6"
+          icon="i-simple-icons-google"
+          :loading="loading"
+          @click="handleGoogleLogin"
+        >
+          Google
+        </UButton>
 
         <div class="flex flex-col gap-4 mt-8 text-center">
           <UButton

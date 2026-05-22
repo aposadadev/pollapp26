@@ -33,11 +33,10 @@ export function useAuth() {
   async function register(
     email: string,
     password: string,
-    firstName: string,
-    lastName: string
+    displayName: string
   ): Promise<boolean> {
     try {
-      await store.register(email, password, firstName, lastName)
+      await store.register(email, password, displayName)
       const hasSeenRules = import.meta.client ? localStorage.getItem('hasSeenRules') : false
       if (!hasSeenRules) {
         await router.push('/instructions')
@@ -49,6 +48,26 @@ export function useAuth() {
       toast.add({
         title: 'Error al registrarse',
         description: parseFirebaseError(err, 'No pudimos crear tu cuenta. Intenta de nuevo.'),
+        color: 'error'
+      })
+      return false
+    }
+  }
+
+  async function loginWithGoogle(): Promise<boolean> {
+    try {
+      await store.loginWithGoogle()
+      const hasSeenRules = import.meta.client ? localStorage.getItem('hasSeenRules') : false
+      if (!hasSeenRules) {
+        await router.push('/instructions')
+      } else {
+        await router.push('/')
+      }
+      return true
+    } catch (err: unknown) {
+      toast.add({
+        title: 'Error al iniciar sesión',
+        description: parseFirebaseError(err, 'No pudimos iniciar sesión con Google. Intenta de nuevo.'),
         color: 'error'
       })
       return false
@@ -95,6 +114,7 @@ export function useAuth() {
     loading: computed(() => store.loading),
     login,
     register,
+    loginWithGoogle,
     logout,
     sendPasswordReset
   }

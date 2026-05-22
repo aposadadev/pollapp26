@@ -10,6 +10,8 @@ import {
   createUserWithEmailAndPassword,
   signOut,
   sendPasswordResetEmail,
+  signInWithPopup,
+  GoogleAuthProvider,
   type Auth,
   type User
 } from 'firebase/auth'
@@ -38,7 +40,10 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
   'auth/invalid-email': 'El formato del correo electrónico no es válido.',
   'auth/too-many-requests': 'Demasiados intentos fallidos. Intenta más tarde.',
-  'auth/network-request-failed': 'Error de conexión. Verifica tu internet.'
+  'auth/network-request-failed': 'Error de conexión. Verifica tu internet.',
+  'auth/popup-closed-by-user': 'El inicio de sesión fue cancelado.',
+  'auth/cancelled-popup-request': 'Inicio de sesión en progreso. Cierra la otra ventana o espera.',
+  'auth/popup-blocked': 'El navegador bloqueó la ventana emergente. Habilita las ventanas emergentes e intenta de nuevo.'
 }
 
 function mapAuthError(code: string): string {
@@ -62,21 +67,43 @@ export class AuthService {
   async register(
     email: string,
     password: string,
-    firstName: string,
-    lastName: string
+    displayName: string
   ): Promise<UserProfile> {
     try {
       const credential = await createUserWithEmailAndPassword(getAuth(), email, password)
-      const displayName = `${firstName} ${lastName}`
       const profileData: Omit<UserProfile, 'id' | 'createdAt'> = {
         displayName,
-        firstName,
-        lastName,
         email,
         isAdmin: false
       }
       await userRepository.createProfile(credential.user.uid, profileData)
       return { id: credential.user.uid, ...profileData, createdAt: new Date() }
+    } catch (err: unknown) {
+      if (err instanceof AuthError) throw err
+      const code = (err as { code?: string }).code ?? 'unknown'
+      throw new AuthError(mapAuthError(code), code)
+    }
+  }
+
+  async loginWithGoogle(): Promise<UserProfile> {
+    try {
+      const provider = new GoogleAuthProvider()
+      const credential = await signInWithPopup(getAuth(), provider)
+      const { uid, email, displayName, photoURL } = credential.user
+
+      const profile = await userRepository.findById(uid)
+      if (profile) {
+        return profile
+      }
+
+      const profileData: Omit<UserProfile, 'id' | 'createdAt'> = {
+        displayName: displayName || email?.split('@')[0] || 'Usuario de Google',
+        email: email || '',
+        photoURL: photoURL || undefined,
+        isAdmin: false
+      }
+      await userRepository.createProfile(uid, profileData)
+      return { id: uid, ...profileData, createdAt: new Date() }
     } catch (err: unknown) {
       if (err instanceof AuthError) throw err
       const code = (err as { code?: string }).code ?? 'unknown'

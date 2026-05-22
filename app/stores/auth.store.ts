@@ -48,15 +48,23 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
+    async loginWithGoogle(): Promise<void> {
+      this.loading = true
+      try {
+        this.user = await authService.loginWithGoogle()
+      } finally {
+        this.loading = false
+      }
+    },
+
     async register(
       email: string,
       password: string,
-      firstName: string,
-      lastName: string
+      displayName: string
     ): Promise<void> {
       this.loading = true
       try {
-        this.user = await authService.register(email, password, firstName, lastName)
+        this.user = await authService.register(email, password, displayName)
       } finally {
         this.loading = false
       }

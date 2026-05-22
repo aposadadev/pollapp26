@@ -64,11 +64,11 @@ const isClean = process.argv.includes('--clean')
 
 // ── Usuarios de prueba ────────────────────────────────────────────────────────
 const TEST_USERS = [
-  { email: 'admin@polla.com', firstName: 'Admin', lastName: 'Polla', isAdmin: true },
-  { email: 'test1@polla.com', firstName: 'Carlos', lastName: 'Rodríguez', isAdmin: false },
-  { email: 'test2@polla.com', firstName: 'María', lastName: 'González', isAdmin: false },
-  { email: 'test3@polla.com', firstName: 'Juan', lastName: 'Martínez', isAdmin: false },
-  { email: 'test4@polla.com', firstName: 'Ana', lastName: 'López', isAdmin: false }
+  { email: 'admin@polla.com', displayName: 'Admin Polla', isAdmin: true },
+  { email: 'test1@polla.com', displayName: 'Carlos Rodríguez', isAdmin: false },
+  { email: 'test2@polla.com', displayName: 'María González', isAdmin: false },
+  { email: 'test3@polla.com', displayName: 'Juan Martínez', isAdmin: false },
+  { email: 'test4@polla.com', displayName: 'Ana López', isAdmin: false }
 ]
 
 const TEST_GROUPS = [
@@ -106,7 +106,7 @@ function calcPoints(pred: [number, number], actual: [number, number]): 0 | 1 | 3
 }
 
 // ── Crear usuario vía Firebase Auth REST API ──────────────────────────────────
-async function createOrGetUser(email: string, firstName: string, lastName: string): Promise<{ uid: string, isNew: boolean }> {
+async function createOrGetUser(email: string, displayName: string): Promise<{ uid: string, isNew: boolean }> {
   // Intentar sign-in primero (puede que ya exista)
   const signInRes = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseConfig.apiKey}`,
@@ -131,7 +131,7 @@ async function createOrGetUser(email: string, firstName: string, lastName: strin
       body: JSON.stringify({
         email,
         password: PASSWORD,
-        displayName: `${firstName} ${lastName}`,
+        displayName,
         returnSecureToken: true
       })
     }
@@ -208,13 +208,11 @@ async function main() {
   const userIds: string[] = []
 
   for (const u of TEST_USERS) {
-    const { uid, isNew } = await createOrGetUser(u.email, u.firstName, u.lastName)
+    const { uid, isNew } = await createOrGetUser(u.email, u.displayName)
     userIds.push(uid)
 
     await setDoc(doc(db, 'users', uid), {
-      displayName: `${u.firstName} ${u.lastName}`,
-      firstName: u.firstName,
-      lastName: u.lastName,
+      displayName: u.displayName,
       email: u.email,
       isAdmin: u.isAdmin,
       createdAt: new Date()

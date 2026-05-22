@@ -60,8 +60,6 @@ export class UserRepository extends BaseRepository<UserProfile> {
     return {
       id,
       displayName: data['displayName'] as string ?? '',
-      firstName: data['firstName'] as string ?? '',
-      lastName: data['lastName'] as string ?? '',
       email: data['email'] as string ?? '',
       isAdmin: data['isAdmin'] as boolean ?? false,
       photoURL: data['photoURL'] as string | undefined,

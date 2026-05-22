@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth'
+import { userRepository } from '~/repositories/user.repository'
 
 definePageMeta({ middleware: 'auth' })
 
@@ -22,10 +23,15 @@ async function saveDisplayName() {
   if (!newDisplayName.value.trim() || !$firebaseAuth.currentUser) return
   savingName.value = true
   try {
-    await updateProfile($firebaseAuth.currentUser, { displayName: newDisplayName.value.trim() })
+    const newName = newDisplayName.value.trim()
+    const uid = $firebaseAuth.currentUser.uid
+    await Promise.all([
+      updateProfile($firebaseAuth.currentUser, { displayName: newName }),
+      userRepository.update(uid, { displayName: newName })
+    ])
     // Sync store
     if (authStore.user) {
-      authStore.user = { ...authStore.user, displayName: newDisplayName.value.trim() }
+      authStore.user = { ...authStore.user, displayName: newName }
     }
     editingName.value = false
     toast.add({ title: 'Nombre actualizado', color: 'secondary' })
