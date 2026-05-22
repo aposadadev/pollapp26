@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import dayjs from 'dayjs'
 import 'dayjs/locale/es'
-import type { Match } from '~/types'
+import type { Match, MatchPhase } from '~/types'
 import { isMatchActive, isMatchClosed } from '~/types/match'
 
 dayjs.locale('es')
@@ -17,12 +17,48 @@ onMounted(async () => {
   await loadAll()
 })
 
+const orderedPhases: MatchPhase[] = [
+  'Fase de Grupos',
+  'Dieciseisavos de Final',
+  'Octavos de Final',
+  'Cuartos de Final',
+  'Semifinales',
+  'Tercer Lugar',
+  'Final'
+]
+
+const activePhase = ref<string>('Todos')
+
+const phases = computed(() => {
+  const presentPhases = new Set(matches.value.map(m => m.phase))
+  const known = orderedPhases.filter(p => presentPhases.has(p))
+  const unknown = Array.from(presentPhases).filter(p => !orderedPhases.includes(p))
+  return ['Todos', ...known, ...unknown]
+})
+
 const statusFilters = ['Todos', 'En Vivo', 'Programados', 'Cerrados'] as const
 type StatusFilter = typeof statusFilters[number]
 const activeFilter = ref<StatusFilter>('Todos')
 
 const filteredMatches = computed(() => {
-  const sorted = [...matches.value].sort((a, b) => {
+  let list = [...matches.value]
+
+  // Filtrar por fase
+  if (activePhase.value !== 'Todos') {
+    list = list.filter(m => m.phase === activePhase.value)
+  }
+
+  // Filtrar por estado
+  if (activeFilter.value === 'En Vivo') {
+    list = list.filter(m => isMatchActive(m))
+  } else if (activeFilter.value === 'Programados') {
+    list = list.filter(m => !isMatchActive(m) && !isMatchClosed(m))
+  } else if (activeFilter.value === 'Cerrados') {
+    list = list.filter(m => isMatchClosed(m))
+  }
+
+  // Ordenar
+  return list.sort((a, b) => {
     const da = dayjs(a.date)
     const db = dayjs(b.date)
     // Active first, then scheduled, then closed
@@ -32,11 +68,6 @@ const filteredMatches = computed(() => {
     if (isMatchClosed(a) && !isMatchClosed(b)) return 1
     return da.valueOf() - db.valueOf()
   })
-
-  if (activeFilter.value === 'En Vivo') return sorted.filter(m => isMatchActive(m))
-  if (activeFilter.value === 'Programados') return sorted.filter(m => !isMatchActive(m) && !isMatchClosed(m))
-  if (activeFilter.value === 'Cerrados') return sorted.filter(m => isMatchClosed(m))
-  return sorted
 })
 
 function formatDate(date: Date) {
@@ -59,22 +90,46 @@ function getStatusLabel(match: Match) {
     />
 
     <div class="p-4 space-y-4 pb-24">
-      <!-- Filter chips -->
-      <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide stagger-up stagger-d1">
-        <button
-          v-for="filter in statusFilters"
-          :key="filter"
-          class="px-3 py-1.5 rounded-full text-xs font-heading font-semibold whitespace-nowrap
-                 transition-all duration-200 uppercase tracking-wider"
-          :class="[
-            activeFilter === filter
-              ? 'gradient-tricolor text-white shadow-md'
-              : 'bg-(--ui-bg-muted) text-(--ui-text-muted) hover:bg-(--ui-bg-muted)/80'
-          ]"
-          @click="activeFilter = filter"
+      <!-- Filtros de búsqueda (Fase y Estado) -->
+      <div class="space-y-2">
+        <!-- Filtro por Fases -->
+        <div
+          v-if="phases.length > 2"
+          class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide stagger-up stagger-d1"
         >
-          {{ filter }}
-        </button>
+          <button
+            v-for="phase in phases"
+            :key="phase"
+            class="px-3 py-1.5 rounded-full text-xs font-heading font-semibold whitespace-nowrap
+                   transition-all duration-200 uppercase tracking-wider"
+            :class="[
+              activePhase === phase
+                ? 'bg-primary-500 text-white shadow-md shadow-primary-500/20'
+                : 'bg-(--ui-bg-muted) text-(--ui-text-muted) hover:bg-(--ui-bg-muted)/80'
+            ]"
+            @click="activePhase = phase"
+          >
+            {{ phase }}
+          </button>
+        </div>
+
+        <!-- Filtro por Estado -->
+        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-hide stagger-up stagger-d1">
+          <button
+            v-for="filter in statusFilters"
+            :key="filter"
+            class="px-3 py-1.5 rounded-full text-xs font-heading font-semibold whitespace-nowrap
+                   transition-all duration-200 uppercase tracking-wider"
+            :class="[
+              activeFilter === filter
+                ? 'gradient-tricolor text-white shadow-md'
+                : 'bg-(--ui-bg-muted) text-(--ui-text-muted) hover:bg-(--ui-bg-muted)/80'
+            ]"
+            @click="activeFilter = filter"
+          >
+            {{ filter }}
+          </button>
+        </div>
       </div>
 
       <!-- Lista de partidos -->
