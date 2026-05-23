@@ -127,17 +127,17 @@ async function handleRandomize() {
 
   let ticks = 0
   const maxTicks = 10 // ~600ms total
-  
+
   const interval = setInterval(() => {
     const temp = predictionService.generateRandom()
     localGoals.value = temp.local
     visitorGoals.value = temp.visitor
     ticks++
-    
+
     if (ticks >= maxTicks) {
       clearInterval(interval)
       localRandomizing.value = false
-      
+
       // Schedule save in 1 second (1000ms)
       isSavingSoon.value = true
       saveTimeout = setTimeout(() => {
@@ -211,20 +211,29 @@ async function handleRandomize() {
             {{ prediction.match.localTeamName }}
           </span>
           <!-- Botones debajo del equipo local -->
-          <div v-if="!isLocked" class="flex items-center gap-1 mt-0.5">
+          <div
+            v-if="!isLocked"
+            class="flex items-center gap-1 mt-0.5"
+          >
             <button
               type="button"
               class="w-7 h-7 rounded-lg text-(--ui-text-muted) hover:text-(--ui-text) hover:bg-(--ui-bg-muted) border border-(--ui-border)/50 transition-all duration-200 active:scale-90 flex items-center justify-center cursor-pointer"
               @click="decrement('local')"
             >
-              <UIcon name="i-lucide-minus" class="size-4" />
+              <UIcon
+                name="i-lucide-minus"
+                class="size-4"
+              />
             </button>
             <button
               type="button"
               class="w-7 h-7 rounded-lg text-(--ui-text-muted) hover:text-(--ui-text) hover:bg-(--ui-bg-muted) border border-(--ui-border)/50 transition-all duration-200 active:scale-90 flex items-center justify-center cursor-pointer"
               @click="increment('local')"
             >
-              <UIcon name="i-lucide-plus" class="size-4" />
+              <UIcon
+                name="i-lucide-plus"
+                class="size-4"
+              />
             </button>
           </div>
         </div>
@@ -252,20 +261,29 @@ async function handleRandomize() {
             {{ prediction.match.visitorTeamName }}
           </span>
           <!-- Botones debajo del equipo visitante -->
-          <div v-if="!isLocked" class="flex items-center gap-1 mt-0.5">
+          <div
+            v-if="!isLocked"
+            class="flex items-center gap-1 mt-0.5"
+          >
             <button
               type="button"
               class="w-7 h-7 rounded-lg text-(--ui-text-muted) hover:text-(--ui-text) hover:bg-(--ui-bg-muted) border border-(--ui-border)/50 transition-all duration-200 active:scale-90 flex items-center justify-center cursor-pointer"
               @click="decrement('visitor')"
             >
-              <UIcon name="i-lucide-minus" class="size-4" />
+              <UIcon
+                name="i-lucide-minus"
+                class="size-4"
+              />
             </button>
             <button
               type="button"
               class="w-7 h-7 rounded-lg text-(--ui-text-muted) hover:text-(--ui-text) hover:bg-(--ui-bg-muted) border border-(--ui-border)/50 transition-all duration-200 active:scale-90 flex items-center justify-center cursor-pointer"
               @click="increment('visitor')"
             >
-              <UIcon name="i-lucide-plus" class="size-4" />
+              <UIcon
+                name="i-lucide-plus"
+                class="size-4"
+              />
             </button>
           </div>
         </div>

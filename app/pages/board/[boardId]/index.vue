@@ -22,8 +22,7 @@ const {
   loading: predsLoading,
   saving,
   load,
-  save,
-  randomize
+  save
 } = usePredictions(boardId)
 
 const activeTab = ref('upcoming')
