@@ -85,8 +85,8 @@ export const mundial2026: TournamentThemeConfig = {
   assets: {
     bannerLight: '/img/tournaments/mundial2026/banner-light.jpg',
     bannerDark: '/img/tournaments/mundial2026/banner-dark.jpg',
-    logo: '/img/tournaments/mundial2026/logo.svg',
-    favicon: '/img/tournaments/mundial2026/favicon.ico',
+    logo: '/img/tournaments/mundial2026/logo.png',
+    favicon: '/img/tournaments/mundial2026/favicon.png',
     loginBg: '/img/tournaments/mundial2026/login-bg.jpg'
   },
 

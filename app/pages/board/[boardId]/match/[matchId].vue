@@ -140,11 +140,11 @@ const formattedDate = computed(() =>
             <div class="flex flex-col items-center gap-1">
               <div class="flex items-center gap-3">
                 <span class="font-heading text-4xl font-black text-(--ui-text-highlighted) tabular-nums">
-                  {{ match.localGoals ?? '-' }}
+                  {{ match.localGoals !== null ? match.localGoals + (match.localGoalsOT ?? 0) : '-' }}
                 </span>
                 <span class="text-primary-500 font-black text-xl">:</span>
                 <span class="font-heading text-4xl font-black text-(--ui-text-highlighted) tabular-nums">
-                  {{ match.visitorGoals ?? '-' }}
+                  {{ match.visitorGoals !== null ? match.visitorGoals + (match.visitorGoalsOT ?? 0) : '-' }}
                 </span>
               </div>
               <UBadge
@@ -157,13 +157,15 @@ const formattedDate = computed(() =>
                 Finalizado
               </UBadge>
               <div
-                v-if="isMatchClosed(match) && match.localGoalsOT !== undefined && match.localGoalsOT !== null"
+                v-if="isMatchClosed(match)"
                 class="text-[10px] text-primary-500 font-bold uppercase tracking-wider text-center mt-1"
               >
-                {{ match.localGoalsOT }} - {{ match.visitorGoalsOT }} T.E.
+                <span v-if="(match.localGoalsOT ?? 0) > 0 || (match.visitorGoalsOT ?? 0) > 0">
+                  90 min: {{ match.localGoals }} - {{ match.visitorGoals }}
+                </span>
                 <span
                   v-if="match.localPenalties !== undefined && match.localPenalties !== null"
-                  class="block text-[9px] text-primary-400"
+                  class="block text-[9px] text-primary-400 mt-0.5"
                 >
                   ({{ match.localPenalties }} - {{ match.visitorPenalties }} Pen)
                 </span>

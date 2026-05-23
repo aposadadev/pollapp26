@@ -223,10 +223,22 @@ async function handleUpdateTeams() {
 
               <div
                 v-if="isMatchClosed(match)"
-                class="mt-2"
+                class="mt-2 flex flex-col gap-1 items-start"
               >
                 <span class="score-pill inline-flex">
-                  {{ match.localGoals }} – {{ match.visitorGoals }}
+                  {{ match.localGoals !== null ? match.localGoals + (match.localGoalsOT ?? 0) : '-' }} – {{ match.visitorGoals !== null ? match.visitorGoals + (match.visitorGoalsOT ?? 0) : '-' }}
+                </span>
+                <span
+                  v-if="(match.localGoalsOT ?? 0) > 0 || (match.visitorGoalsOT ?? 0) > 0"
+                  class="text-[9px] text-primary-500 font-bold uppercase tracking-wider block"
+                >
+                  90 min: {{ match.localGoals }} - {{ match.visitorGoals }}
+                </span>
+                <span
+                  v-if="match.localPenalties !== undefined && match.localPenalties !== null"
+                  class="text-[8px] text-primary-400 font-bold block"
+                >
+                  ({{ match.localPenalties }} - {{ match.visitorPenalties }} Pen)
                 </span>
               </div>
             </div>
@@ -294,7 +306,10 @@ async function handleUpdateTeams() {
       <template #body>
         <div class="space-y-6">
           <div class="grid grid-cols-2 gap-6">
-            <UFormField label="Goles Local">
+            <UFormField
+              label="Goles Local (90 min)"
+              description="Tiempo reglamentario"
+            >
               <UInput
                 v-model="closeForm.localGoals"
                 type="number"
@@ -305,7 +320,10 @@ async function handleUpdateTeams() {
                 :ui="{ base: 'text-center' }"
               />
             </UFormField>
-            <UFormField label="Goles Visitante">
+            <UFormField
+              label="Goles Visitante (90 min)"
+              description="Tiempo reglamentario"
+            >
               <UInput
                 v-model="closeForm.visitorGoals"
                 type="number"
@@ -319,7 +337,7 @@ async function handleUpdateTeams() {
           </div>
 
           <div
-            v-if="currentClosingMatch && currentClosingMatch.phase !== 'Fase de Grupos'"
+            v-if="currentClosingMatch"
             class="space-y-4 pt-4 border-t border-(--ui-border)"
           >
             <div class="flex items-center justify-between">
@@ -331,7 +349,10 @@ async function handleUpdateTeams() {
               v-if="closeForm.hasExtraTime"
               class="grid grid-cols-2 gap-6 pt-2"
             >
-              <UFormField label="Goles Local T.E.">
+              <UFormField
+                label="Goles Local T.E."
+                description="Solo los marcados en la prórroga"
+              >
                 <UInput
                   v-model="closeForm.localGoalsOT"
                   type="number"
@@ -342,7 +363,10 @@ async function handleUpdateTeams() {
                   :ui="{ base: 'text-center' }"
                 />
               </UFormField>
-              <UFormField label="Goles Visitante T.E.">
+              <UFormField
+                label="Goles Visitante T.E."
+                description="Solo los marcados en la prórroga"
+              >
                 <UInput
                   v-model="closeForm.visitorGoalsOT"
                   type="number"

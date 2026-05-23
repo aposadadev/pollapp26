@@ -103,11 +103,6 @@ async function handleSave(
 ) {
   await save(predictionId, local, visitor)
 }
-
-async function handleRandomize(predictionId: string) {
-  const { local, visitor } = randomize(predictionId)
-  await save(predictionId, local, visitor)
-}
 </script>
 
 <template>
@@ -206,7 +201,6 @@ async function handleRandomize(predictionId: string) {
                 :board-id="boardId"
                 :saving="saving === pred.id"
                 @save="handleSave"
-                @randomize="handleRandomize"
               />
             </div>
 
@@ -245,7 +239,6 @@ async function handleRandomize(predictionId: string) {
                 :is-readonly="true"
                 :board-id="boardId"
                 @save="handleSave"
-                @randomize="handleRandomize"
               />
             </div>
 

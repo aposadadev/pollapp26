@@ -23,7 +23,7 @@ const emit = defineEmits<{
       icon="i-lucide-minus"
       color="neutral"
       variant="soft"
-      class="rounded-full flex items-center justify-center transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-90"
+      class="rounded-full flex items-center justify-center transition-all bg-neutral-100 dark:bg-neutral-800/60 hover:bg-neutral-200 dark:hover:bg-neutral-700/80 border border-neutral-200/60 dark:border-neutral-700/40 text-neutral-800 dark:text-neutral-200 active:scale-90"
       :class="size === 'sm' ? 'w-8 h-8 text-xs' : 'w-11 h-11'"
       @click="emit('decrement')"
     />
@@ -41,7 +41,7 @@ const emit = defineEmits<{
       icon="i-lucide-plus"
       color="neutral"
       variant="soft"
-      class="rounded-full flex items-center justify-center transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-90"
+      class="rounded-full flex items-center justify-center transition-all bg-neutral-100 dark:bg-neutral-800/60 hover:bg-neutral-200 dark:hover:bg-neutral-700/80 border border-neutral-200/60 dark:border-neutral-700/40 text-neutral-800 dark:text-neutral-200 active:scale-90"
       :class="size === 'sm' ? 'w-8 h-8 text-xs' : 'w-11 h-11'"
       @click="emit('increment')"
     />

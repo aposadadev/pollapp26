@@ -219,7 +219,7 @@ function getStatusLabel(match: Match) {
                   v-if="isMatchClosed(match) || isMatchActive(match)"
                   class="score-pill py-0.5 text-base sm:text-lg min-w-[55px]"
                 >
-                  {{ match.localGoals ?? '-' }} - {{ match.visitorGoals ?? '-' }}
+                  {{ match.localGoals !== null ? match.localGoals + (match.localGoalsOT ?? 0) : '-' }} - {{ match.visitorGoals !== null ? match.visitorGoals + (match.visitorGoalsOT ?? 0) : '-' }}
                 </div>
                 <span
                   v-else
@@ -230,13 +230,15 @@ function getStatusLabel(match: Match) {
 
                 <!-- Prórroga / Penales -->
                 <div
-                  v-if="isMatchClosed(match) && match.localGoalsOT !== undefined && match.localGoalsOT !== null"
+                  v-if="isMatchClosed(match)"
                   class="text-[8px] sm:text-[9px] text-primary-500 font-bold uppercase tracking-wider text-center mt-0.5"
                 >
-                  {{ match.localGoalsOT }} - {{ match.visitorGoalsOT }} T.E.
+                  <span v-if="(match.localGoalsOT ?? 0) > 0 || (match.visitorGoalsOT ?? 0) > 0">
+                    90 min: {{ match.localGoals }} - {{ match.visitorGoals }}
+                  </span>
                   <span
                     v-if="match.localPenalties !== undefined && match.localPenalties !== null"
-                    class="block text-[7px] sm:text-[8px] text-primary-400"
+                    class="block text-[7px] sm:text-[8px] text-primary-400 mt-0.5"
                   >
                     ({{ match.localPenalties }} - {{ match.visitorPenalties }} Pen)
                   </span>
