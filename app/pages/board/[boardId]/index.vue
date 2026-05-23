@@ -203,6 +203,7 @@ async function handleRandomize(predictionId: string) {
             >
               <MatchCard
                 :prediction="pred"
+                :board-id="boardId"
                 :saving="saving === pred.id"
                 @save="handleSave"
                 @randomize="handleRandomize"

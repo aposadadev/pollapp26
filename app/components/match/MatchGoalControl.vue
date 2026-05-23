@@ -1,8 +1,13 @@
 <script setup lang="ts">
 interface Props {
   value: number | null
+  size?: 'sm' | 'md'
 }
-defineProps<Props>()
+
+withDefaults(defineProps<Props>(), {
+  size: 'md'
+})
+
 const emit = defineEmits<{
   increment: []
   decrement: []
@@ -10,18 +15,23 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex items-center gap-3">
+  <div
+    class="flex items-center"
+    :class="size === 'sm' ? 'gap-2' : 'gap-3'"
+  >
     <UButton
       icon="i-lucide-minus"
       color="neutral"
       variant="soft"
-      class="rounded-full w-11 h-11 flex items-center justify-center transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-90"
+      class="rounded-full flex items-center justify-center transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-90"
+      :class="size === 'sm' ? 'w-8 h-8 text-xs' : 'w-11 h-11'"
       @click="emit('decrement')"
     />
 
-    <div class="w-10 text-center">
+    <div :class="size === 'sm' ? 'w-8 text-center' : 'w-10 text-center'">
       <span
-        class="text-3xl font-heading font-bold text-secondary-600 dark:text-secondary-400 tabular-nums"
+        class="font-heading font-bold text-secondary-600 dark:text-secondary-400 tabular-nums"
+        :class="size === 'sm' ? 'text-xl' : 'text-3xl'"
       >
         {{ value === null ? '-' : value }}
       </span>
@@ -31,7 +41,8 @@ const emit = defineEmits<{
       icon="i-lucide-plus"
       color="neutral"
       variant="soft"
-      class="rounded-full w-11 h-11 flex items-center justify-center transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-90"
+      class="rounded-full flex items-center justify-center transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-90"
+      :class="size === 'sm' ? 'w-8 h-8 text-xs' : 'w-11 h-11'"
       @click="emit('increment')"
     />
   </div>

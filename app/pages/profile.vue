@@ -86,7 +86,11 @@ async function savePassword() {
 }
 
 const initials = computed(() => {
-  const name = authStore.user?.displayName ?? authStore.user?.email ?? '?'
+  const name = (authStore.user?.displayName || authStore.user?.email || '?').trim()
+  const parts = name.split(/\s+/)
+  if (parts.length >= 2) {
+    return (parts[0]!.charAt(0) + parts[1]!.charAt(0)).toUpperCase()
+  }
   return name.slice(0, 2).toUpperCase()
 })
 

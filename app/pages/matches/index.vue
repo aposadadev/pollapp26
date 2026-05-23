@@ -89,7 +89,7 @@ function getStatusLabel(match: Match) {
       subtitle="Resultados y marcadores del torneo"
     />
 
-    <div class="p-4 space-y-4 pb-24">
+    <div class="p-4 space-y-4 pb-24 max-w-2xl mx-auto w-full">
       <!-- Filtros de búsqueda (Fase y Estado) -->
       <div class="space-y-2">
         <!-- Filtro por Fases -->
@@ -181,19 +181,17 @@ function getStatusLabel(match: Match) {
           class="stagger-left"
           :class="`stagger-d${Math.min(i + 2, 12)}`"
         >
-          <div class="card-elevated overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5">
-            <!-- Header de la card -->
-            <div class="flex items-center justify-between px-4 pt-4 pb-2">
-              <span class="font-heading text-[10px] font-black text-primary-500 dark:text-primary-400 uppercase tracking-widest">
-                {{ match.phase }}
-              </span>
-              <div class="flex items-center gap-2">
+          <div class="card-elevated p-3 sm:p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex flex-col gap-2">
+            <!-- Header de la fila (Fase y número de partido) -->
+            <div class="flex items-center justify-between text-[9px] text-(--ui-text-muted) uppercase font-bold tracking-wider">
+              <span>#{{ match.matchNumber }} · {{ match.phase }}</span>
+              <div class="flex items-center gap-1.5">
                 <span
                   v-if="isMatchActive(match)"
                   class="live-indicator"
                 />
                 <span
-                  class="text-[11px] font-bold uppercase tracking-wider"
+                  class="font-black text-[10px] tracking-wider"
                   :class="isMatchActive(match) ? 'text-error-500' : 'text-(--ui-text-muted)'"
                 >
                   {{ getStatusLabel(match) }}
@@ -201,59 +199,58 @@ function getStatusLabel(match: Match) {
               </div>
             </div>
 
-            <!-- Equipos -->
-            <div class="flex items-center gap-3 px-4 pb-4">
+            <!-- Fila principal -->
+            <div class="flex items-center gap-3">
               <!-- Equipo local -->
-              <div class="flex-1 flex flex-col items-center gap-2">
+              <div class="flex-1 flex items-center justify-end gap-2.5 min-w-0">
+                <span class="text-xs sm:text-sm font-heading font-black text-(--ui-text-highlighted) uppercase tracking-wide truncate text-right">
+                  {{ match.localTeamName ?? 'TBD' }}
+                </span>
                 <MatchTeamLogo
                   :logo-url="match.localTeamLogo"
                   :name="match.localTeamName ?? ''"
-                  size="lg"
+                  size="md"
                 />
-                <span class="text-xs font-heading font-black text-(--ui-text-highlighted) text-center leading-tight line-clamp-2 uppercase tracking-wide">
-                  {{ match.localTeamName ?? 'TBD' }}
-                </span>
               </div>
 
-              <!-- Marcador / VS -->
-              <div class="flex flex-col items-center gap-1 shrink-0 min-w-[60px]">
+              <!-- Marcador o VS -->
+              <div class="flex flex-col items-center justify-center shrink-0 min-w-[70px] sm:min-w-[90px]">
                 <div
                   v-if="isMatchClosed(match) || isMatchActive(match)"
-                  class="score-pill inline-flex items-center justify-center"
+                  class="score-pill py-0.5 text-base sm:text-lg min-w-[55px]"
                 >
                   {{ match.localGoals ?? '-' }} - {{ match.visitorGoals ?? '-' }}
                 </div>
+                <span
+                  v-else
+                  class="font-heading text-xs sm:text-sm font-black text-(--ui-text-muted) tracking-widest"
+                >
+                  VS
+                </span>
+
+                <!-- Prórroga / Penales -->
                 <div
                   v-if="isMatchClosed(match) && match.localGoalsOT !== undefined && match.localGoalsOT !== null"
-                  class="text-[9px] text-primary-500 font-bold uppercase tracking-wider text-center"
+                  class="text-[8px] sm:text-[9px] text-primary-500 font-bold uppercase tracking-wider text-center mt-0.5"
                 >
                   {{ match.localGoalsOT }} - {{ match.visitorGoalsOT }} T.E.
                   <span
                     v-if="match.localPenalties !== undefined && match.localPenalties !== null"
-                    class="block text-[8px] text-primary-400"
+                    class="block text-[7px] sm:text-[8px] text-primary-400"
                   >
                     ({{ match.localPenalties }} - {{ match.visitorPenalties }} Pen)
                   </span>
                 </div>
-                <span
-                  v-else
-                  class="font-heading text-sm font-black text-(--ui-text-muted) tracking-widest"
-                >
-                  VS
-                </span>
-                <span class="text-[9px] text-(--ui-text-muted) font-mono uppercase tracking-widest">
-                  #{{ match.matchNumber }}
-                </span>
               </div>
 
               <!-- Equipo visitante -->
-              <div class="flex-1 flex flex-col items-center gap-2">
+              <div class="flex-1 flex items-center justify-start gap-2.5 min-w-0">
                 <MatchTeamLogo
                   :logo-url="match.visitorTeamLogo"
                   :name="match.visitorTeamName ?? ''"
-                  size="lg"
+                  size="md"
                 />
-                <span class="text-xs font-heading font-black text-(--ui-text-highlighted) text-center leading-tight line-clamp-2 uppercase tracking-wide">
+                <span class="text-xs sm:text-sm font-heading font-black text-(--ui-text-highlighted) uppercase tracking-wide truncate text-left">
                   {{ match.visitorTeamName ?? 'TBD' }}
                 </span>
               </div>

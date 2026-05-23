@@ -18,7 +18,7 @@ async function handleSubmit() {
   <div class="bg-(--ui-bg) min-h-screen relative font-sans">
     <!-- Hero / Branding Massive Gradient -->
     <div
-      class="relative w-full pb-[100px] rounded-b-[48px] bg-gradient-to-b from-[#0a1028] to-[#1b2b66] dark:from-[#050815] dark:to-[#0f172a] px-6 pt-16 flex flex-col items-center"
+      class="relative w-full pb-[100px] rounded-b-[48px] bg-gradient-to-b from-primary-900 to-primary-700 dark:from-primary-950 dark:to-primary-900 px-6 pt-16 flex flex-col items-center"
     >
       <div
         class="size-16 rounded-[20px] bg-white/10 ring-1 ring-white/20 flex items-center justify-center mb-6 shadow-xl backdrop-blur-md stagger-up"

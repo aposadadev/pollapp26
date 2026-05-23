@@ -104,9 +104,9 @@ function handleRandomize() {
   <UCard
     class="overflow-hidden transition-all duration-300 hover:shadow-xl border border-(--ui-border)"
     :ui="{
-      header: 'px-6 pt-6 pb-2',
-      body: 'px-6 py-6',
-      footer: 'px-6 pb-6 pt-2'
+      header: 'px-4 pt-4 pb-2',
+      body: 'px-4 py-3.5',
+      footer: 'px-4 pb-4 pt-2'
     }"
   >
     <!-- Fase + fecha -->
@@ -115,17 +115,38 @@ function handleRandomize() {
         class="flex items-center justify-between text-[11px] text-neutral-500 font-bold tracking-widest uppercase"
       >
         <div class="flex flex-col gap-0.5">
-          <span class="font-heading text-primary-500 dark:text-primary-400">{{ prediction.match.phase }}</span>
+          <span class="font-heading text-primary-500 dark:text-primary-400">
+            {{ prediction.match.phase }}
+            <span
+              v-if="prediction.match.stadium"
+              class="text-[9px] text-(--ui-text-muted) font-normal normal-case tracking-normal"
+            >
+              · {{ prediction.match.stadium }}
+            </span>
+          </span>
           <span class="text-[10px] text-(--ui-text-muted) font-mono normal-case tracking-normal">{{ formattedDate }}</span>
         </div>
         <div class="flex items-center gap-2">
+          <UBadge
+            v-if="isLocked && !isMatchClosed(prediction.match)"
+            color="neutral"
+            variant="soft"
+            size="xs"
+            class="rounded-full px-2 py-0.5 text-[9px] uppercase tracking-wider font-extrabold"
+          >
+            <UIcon
+              name="i-lucide-lock"
+              class="size-2.5 mr-0.5 text-neutral-400 dark:text-neutral-500"
+            />
+            Cerrado
+          </UBadge>
           <span
             v-if="isMatchActive(prediction.match)"
             class="live-indicator"
           />
           <span
             v-if="isMatchActive(prediction.match)"
-            class="text-error-500 font-black"
+            class="text-error-500 font-black text-[10px] tracking-wider"
           >
             EN VIVO
           </span>
@@ -134,106 +155,65 @@ function handleRandomize() {
     </template>
 
     <!-- Equipos y controles -->
-    <div class="flex flex-col gap-6">
-      <div
-        class="text-center text-[11px] text-neutral-400 uppercase tracking-widest font-bold"
-      >
-        {{ prediction.match.stadium || "Estadio Mundialista" }}
-      </div>
-
-      <div class="flex items-center justify-around gap-2">
-        <!-- Equipo local -->
-        <div class="flex-1 flex flex-col items-center gap-4">
-          <div class="relative">
-            <MatchTeamLogo
-              :logo-url="prediction.match.localTeamLogo"
-              :name="prediction.match.localTeamName"
-              size="lg"
-              class="w-16 h-16"
-            />
-          </div>
-          <span
-            class="text-sm font-heading font-bold text-neutral-700 dark:text-white text-center leading-tight line-clamp-1 uppercase whitespace-nowrap"
-          >
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <!-- Equipo local -->
+      <div class="flex items-center justify-between sm:justify-end gap-3 sm:flex-1 min-w-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <MatchTeamLogo
+            :logo-url="prediction.match.localTeamLogo"
+            :name="prediction.match.localTeamName"
+            size="md"
+          />
+          <span class="text-xs sm:text-sm font-heading font-black text-neutral-800 dark:text-white truncate uppercase tracking-wide">
             {{ prediction.match.localTeamName }}
           </span>
-          <!-- Controles goles local -->
-          <MatchGoalControl
-            v-if="!isLocked"
-            :value="localGoals"
-            @increment="increment('local')"
-            @decrement="decrement('local')"
+        </div>
+        <MatchGoalControl
+          v-if="!isLocked"
+          size="sm"
+          :value="localGoals"
+          @increment="increment('local')"
+          @decrement="decrement('local')"
+        />
+        <div
+          v-else
+          class="score-pill py-1 text-sm min-w-[44px] h-8 flex items-center justify-center font-bold"
+        >
+          {{ localGoals ?? '-' }}
+        </div>
+      </div>
+
+      <!-- Separador VS (solo en pantallas sm y mayores) -->
+      <div class="hidden sm:flex flex-col items-center justify-center shrink-0 min-w-[50px]">
+        <span class="font-heading text-[10px] font-black text-neutral-300 dark:text-neutral-600 tracking-wider">VS</span>
+      </div>
+      <div class="block sm:hidden border-t border-neutral-100 dark:border-neutral-800/40 my-1" />
+
+      <!-- Equipo visitante -->
+      <div class="flex items-center justify-between sm:justify-start gap-3 sm:flex-1 min-w-0">
+        <div class="flex items-center gap-2.5 min-w-0 sm:order-2">
+          <MatchTeamLogo
+            :logo-url="prediction.match.visitorTeamLogo"
+            :name="prediction.match.visitorTeamName"
+            size="md"
           />
-          <div
-            v-else
-            class="score-pill"
-          >
-            {{ localGoals }}
-          </div>
-        </div>
-
-        <!-- Separador VS -->
-        <div class="flex flex-col items-center gap-2 shrink-0">
-          <span
-            class="font-heading text-xs font-black text-neutral-300 tracking-widest"
-          >VS</span>
-          <UBadge
-            v-if="isLocked && !isMatchClosed(prediction.match)"
-            color="neutral"
-            variant="soft"
-            size="xs"
-            class="rounded-full px-2"
-          >
-            <UIcon
-              name="i-lucide-lock"
-              class="size-3 mr-1"
-            />
-            Cerrado
-          </UBadge>
-          <UBadge
-            v-if="isMatchClosed(prediction.match)"
-            color="neutral"
-            variant="outline"
-            size="xs"
-            class="rounded-full px-2"
-          >
-            {{ prediction.match.localGoals }}-{{ prediction.match.visitorGoals }}
-            <span
-              v-if="prediction.match.localGoalsOT !== undefined && prediction.match.localGoalsOT !== null"
-              class="ml-1 text-[10px] text-primary-500 font-semibold"
-            >
-              ({{ prediction.match.localGoalsOT }}-{{ prediction.match.visitorGoalsOT }} T.E.<span v-if="prediction.match.localPenalties !== undefined && prediction.match.localPenalties !== null">, {{ prediction.match.localPenalties }}-{{ prediction.match.visitorPenalties }} Pen</span>)
-            </span>
-          </UBadge>
-        </div>
-
-        <!-- Equipo visitante -->
-        <div class="flex-1 flex flex-col items-center gap-4">
-          <div class="relative">
-            <MatchTeamLogo
-              :logo-url="prediction.match.visitorTeamLogo"
-              :name="prediction.match.visitorTeamName"
-              size="lg"
-              class="w-16 h-16"
-            />
-          </div>
-          <span
-            class="text-sm font-heading font-bold text-neutral-700 dark:text-white text-center leading-tight line-clamp-1 uppercase whitespace-nowrap"
-          >
+          <span class="text-xs sm:text-sm font-heading font-black text-neutral-800 dark:text-white truncate uppercase tracking-wide">
             {{ prediction.match.visitorTeamName }}
           </span>
-          <MatchGoalControl
-            v-if="!isLocked"
-            :value="visitorGoals"
-            @increment="increment('visitor')"
-            @decrement="decrement('visitor')"
-          />
-          <div
-            v-else
-            class="score-pill"
-          >
-            {{ visitorGoals }}
-          </div>
+        </div>
+        <MatchGoalControl
+          v-if="!isLocked"
+          size="sm"
+          :value="visitorGoals"
+          class="sm:order-1"
+          @increment="increment('visitor')"
+          @decrement="decrement('visitor')"
+        />
+        <div
+          v-else
+          class="score-pill py-1 text-sm min-w-[44px] h-8 flex items-center justify-center font-bold sm:order-1"
+        >
+          {{ visitorGoals ?? '-' }}
         </div>
       </div>
     </div>
@@ -297,7 +277,6 @@ function handleRandomize() {
             </span>
           </div>
         </div>
-
         <!-- Fila Inferior: Puntos Ganados + Enlace Ver Todos -->
         <div class="flex items-center justify-between gap-4">
           <MatchResultBadge
@@ -317,6 +296,25 @@ function handleRandomize() {
             Ver todos
           </NuxtLink>
         </div>
+      </div>
+      <!-- Predicciones cerradas pero partido no cerrado (en vivo o antes de empezar) -->
+      <div
+        v-else-if="boardId && predictionsClosed"
+        class="w-full flex items-center justify-between gap-4 py-1"
+      >
+        <span class="text-xs text-neutral-400 dark:text-neutral-500 font-medium">
+          Predicciones cerradas.
+        </span>
+        <NuxtLink
+          :to="`/board/${boardId}/match/${prediction.match.id}`"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300 bg-primary-500/5 hover:bg-primary-500/10 dark:bg-primary-400/5 dark:hover:bg-primary-400/10 transition-all active:scale-95 shrink-0"
+        >
+          <UIcon
+            name="i-lucide-users-round"
+            class="size-3.5"
+          />
+          Ver todos
+        </NuxtLink>
       </div>
     </template>
   </UCard>

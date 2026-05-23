@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { lang: 'es' },
       meta: [
-        { name: 'theme-color', content: '#2D47A8' },
+        { name: 'theme-color', content: '#2A398D' },
         { name: 'apple-mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
         { name: 'apple-mobile-web-app-title', content: 'Mundial 26' }
@@ -80,7 +80,7 @@ export default defineNuxtConfig({
       name: 'Quiniela Mundial 2026',
       short_name: 'Mundial 26',
       description: 'Quiniela del Copa Mundial de Fútbol 2026',
-      theme_color: '#2D47A8',
+      theme_color: '#2A398D',
       background_color: '#ffffff',
       display: 'standalone',
       orientation: 'portrait',

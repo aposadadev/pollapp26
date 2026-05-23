@@ -47,7 +47,7 @@ const isActive = (item: { to: string, matchPrefix?: string }) => {
       <!-- Active indicator -->
       <div
         v-if="isActive(item)"
-        class="absolute inset-x-1 inset-y-1 bg-secondary-500/15 dark:bg-secondary-400/20 rounded-[30px] z-0 transition-all duration-500"
+        class="absolute inset-x-1 inset-y-1 bg-primary-500/10 dark:bg-primary-400/10 rounded-[30px] z-0 transition-all duration-500"
       />
 
       <UIcon
@@ -55,7 +55,7 @@ const isActive = (item: { to: string, matchPrefix?: string }) => {
         class="size-5 relative z-10 transition-transform"
         :class="[
           isActive(item)
-            ? 'text-secondary-600 dark:text-secondary-400 scale-110'
+            ? 'text-primary-600 dark:text-primary-400 scale-110'
             : ''
         ]"
       />
@@ -63,7 +63,7 @@ const isActive = (item: { to: string, matchPrefix?: string }) => {
         class="text-[9px] font-bold tracking-widest relative z-10 mt-0.5"
         :class="[
           isActive(item)
-            ? 'text-secondary-600 dark:text-secondary-400'
+            ? 'text-primary-600 dark:text-primary-400'
             : ''
         ]"
       >{{ item.label }}</span>

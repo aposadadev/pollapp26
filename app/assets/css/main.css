@@ -9,30 +9,30 @@
   --font-heading: "Oswald", sans-serif;
 
   /* Primary — Azul más saturado y vibrante */
-  --color-primary-50: #e8edfa;
-  --color-primary-100: #c5d0f4;
-  --color-primary-200: #97abea;
-  --color-primary-300: #6985df;
-  --color-primary-400: #4363d0;
-  --color-primary-500: #2d47a8;
-  --color-primary-600: #243988;
-  --color-primary-700: #1b2b66;
-  --color-primary-800: #121d44;
-  --color-primary-900: #0a1028;
-  --color-primary-950: #050815;
+  --color-primary-50: #e8ebf7;
+  --color-primary-100: #c5cdeb;
+  --color-primary-200: #9ba8dd;
+  --color-primary-300: #6c7fcf;
+  --color-primary-400: #4559c1;
+  --color-primary-500: #2a398d;
+  --color-primary-600: #212c70;
+  --color-primary-700: #182053;
+  --color-primary-800: #101537;
+  --color-primary-900: #080a1c;
+  --color-primary-950: #04050f;
 
   /* Secondary — Verde más saturado y vibrante */
-  --color-secondary-50: #e5f9e5;
-  --color-secondary-100: #c0f1bf;
-  --color-secondary-200: #82e381;
-  --color-secondary-300: #52d451;
-  --color-secondary-400: #34c433;
-  --color-secondary-500: #28a527;
-  --color-secondary-600: #1f841e;
-  --color-secondary-700: #176317;
-  --color-secondary-800: #104810;
-  --color-secondary-900: #0a2f0a;
-  --color-secondary-950: #071f07;
+  --color-secondary-50: #ebf7eb;
+  --color-secondary-100: #cceccc;
+  --color-secondary-200: #9ddb9c;
+  --color-secondary-300: #6ccb6b;
+  --color-secondary-400: #4cb94b;
+  --color-secondary-500: #3cac3b;
+  --color-secondary-600: #308a2f;
+  --color-secondary-700: #246723;
+  --color-secondary-800: #184517;
+  --color-secondary-900: #0c220c;
+  --color-secondary-950: #061106;
 
   /* Error — Rojo (#E61D25) */
   --color-error-50: #fef2f2;
@@ -48,17 +48,17 @@
   --color-error-950: #170304;
 
   /* Accent — Alias de Secondary/Verde (para compatibilidad con componentes legacy) */
-  --color-accent-50: #e5f9e5;
-  --color-accent-100: #c0f1bf;
-  --color-accent-200: #82e381;
-  --color-accent-300: #52d451;
-  --color-accent-400: #34c433;
-  --color-accent-500: #28a527;
-  --color-accent-600: #1f841e;
-  --color-accent-700: #176317;
-  --color-accent-800: #104810;
-  --color-accent-900: #0a2f0a;
-  --color-accent-950: #071f07;
+  --color-accent-50: #ebf7eb;
+  --color-accent-100: #cceccc;
+  --color-accent-200: #9ddb9c;
+  --color-accent-300: #6ccb6b;
+  --color-accent-400: #4cb94b;
+  --color-accent-500: #3cac3b;
+  --color-accent-600: #308a2f;
+  --color-accent-700: #246723;
+  --color-accent-800: #184517;
+  --color-accent-900: #0c220c;
+  --color-accent-950: #061106;
 
   /* Neutral — Gris Oscuro Heather (#474A4A) */
   --color-neutral-50: #f2f3f3;
@@ -148,8 +148,8 @@
 .dark {
   --ui-primary: var(--ui-color-primary-400);
   --mundial-red: #e61d25;
-  --mundial-blue: #2d47a8;
-  --mundial-green: #28a527;
+  --mundial-blue: #2a398d;
+  --mundial-green: #3cac3b;
 
   /* Override dark mode: gris azulado premium (world-cup-hub hsl(220,15%,10%)) */
   --ui-bg: #1a1e26;

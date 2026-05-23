@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 <template>
   <div
-    class="relative w-full pb-[100px] rounded-b-[48px] bg-gradient-to-b from-[#0a1028] to-[#1b2b66] dark:from-[#050815] dark:to-[#0f172a] px-6 pt-6"
+    class="relative w-full pb-[100px] rounded-b-[48px] bg-gradient-to-b from-primary-900 to-primary-700 dark:from-primary-950 dark:to-primary-900 px-6 pt-6"
   >
     <!-- Top nav row inside hero -->
     <div class="flex items-center justify-between pt-safe-top">
