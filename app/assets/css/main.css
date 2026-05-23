@@ -69,9 +69,9 @@
   --color-neutral-500: #474a4a;
   --color-neutral-600: #3b3e3e;
   --color-neutral-700: #2f3131;
-  --color-neutral-800: #232525;
-  --color-neutral-900: #181a1a;
-  --color-neutral-950: #0c0d0d;
+  --color-neutral-800: #333535;
+  --color-neutral-900: #222424;
+  --color-neutral-950: #121313;
 
   /* Animations */
   --animate-slide-up: slide-up 0.4s cubic-bezier(0.4, 0, 0.2, 1) both;
