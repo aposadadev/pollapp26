@@ -11,10 +11,24 @@ const form = reactive({
 })
 
 const showPassword = ref(false)
+const displayNameError = ref('')
+const emailError = ref('')
 const passwordError = ref('')
 const confirmPasswordError = ref('')
 
 // Reactive real-time validation to clear errors as the user types
+watch(() => form.displayName, (val) => {
+  if (val.trim()) {
+    displayNameError.value = ''
+  }
+})
+
+watch(() => form.email, (val) => {
+  if (val.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+    emailError.value = ''
+  }
+})
+
 watch(() => form.password, (val) => {
   if (val.length >= 6) {
     passwordError.value = ''
@@ -37,8 +51,28 @@ watch(() => form.confirmPassword, (val) => {
   }
 })
 
-function validatePasswords() {
+function validateForm() {
   let isValid = true
+
+  // Validar nombre completo
+  if (!form.displayName.trim()) {
+    displayNameError.value = 'El nombre completo es requerido.'
+    isValid = false
+  } else {
+    displayNameError.value = ''
+  }
+
+  // Validar correo electrónico
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!form.email.trim()) {
+    emailError.value = 'El correo electrónico es requerido.'
+    isValid = false
+  } else if (!emailRegex.test(form.email.trim())) {
+    emailError.value = 'El formato del correo electrónico no es válido.'
+    isValid = false
+  } else {
+    emailError.value = ''
+  }
 
   // Validate first password
   if (!form.password) {
@@ -66,7 +100,7 @@ function validatePasswords() {
 }
 
 async function handleSubmit() {
-  if (!validatePasswords()) return
+  if (!validateForm()) return
   await register(form.email, form.password, form.displayName)
 }
 
@@ -118,6 +152,7 @@ async function handleGoogleLogin() {
           <UFormField
             label="Nombre completo"
             name="displayName"
+            :error="displayNameError || undefined"
           >
             <UInput
               v-model="form.displayName"
@@ -125,12 +160,14 @@ async function handleGoogleLogin() {
               icon="i-lucide-user"
               autocomplete="name"
               class="w-full"
+              :color="displayNameError ? 'error' : undefined"
             />
           </UFormField>
 
           <UFormField
             label="Correo electrónico"
             name="email"
+            :error="emailError || undefined"
           >
             <UInput
               v-model="form.email"
@@ -139,6 +176,7 @@ async function handleGoogleLogin() {
               icon="i-lucide-mail"
               autocomplete="email"
               class="w-full"
+              :color="emailError ? 'error' : undefined"
             />
           </UFormField>
 

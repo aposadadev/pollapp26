@@ -7,8 +7,50 @@ const { login, loginWithGoogle, loading } = useAuth()
 
 const form = reactive({ email: '', password: '' })
 const showPassword = ref(false)
+const emailError = ref('')
+const passwordError = ref('')
+
+// Reactive real-time validation to clear errors as the user types
+watch(() => form.email, (val) => {
+  if (val.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+    emailError.value = ''
+  }
+})
+
+watch(() => form.password, (val) => {
+  if (val.trim()) {
+    passwordError.value = ''
+  }
+})
+
+function validateForm() {
+  let isValid = true
+
+  // Validar correo electrónico
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!form.email.trim()) {
+    emailError.value = 'El correo electrónico es requerido.'
+    isValid = false
+  } else if (!emailRegex.test(form.email.trim())) {
+    emailError.value = 'El formato del correo electrónico no es válido.'
+    isValid = false
+  } else {
+    emailError.value = ''
+  }
+
+  // Validar contraseña
+  if (!form.password) {
+    passwordError.value = 'La contraseña es requerida.'
+    isValid = false
+  } else {
+    passwordError.value = ''
+  }
+
+  return isValid
+}
 
 async function handleSubmit() {
+  if (!validateForm()) return
   await login(form.email, form.password)
 }
 
@@ -68,6 +110,7 @@ async function handleGoogleLogin() {
           <UFormField
             label="Correo electrónico"
             name="email"
+            :error="emailError || undefined"
           >
             <UInput
               v-model="form.email"
@@ -76,12 +119,14 @@ async function handleGoogleLogin() {
               icon="i-lucide-mail"
               autocomplete="email"
               class="w-full"
+              :color="emailError ? 'error' : undefined"
             />
           </UFormField>
 
           <UFormField
             label="Contraseña"
             name="password"
+            :error="passwordError || undefined"
           >
             <UInput
               v-model="form.password"
@@ -90,6 +135,7 @@ async function handleGoogleLogin() {
               icon="i-lucide-lock"
               autocomplete="current-password"
               class="w-full"
+              :color="passwordError ? 'error' : undefined"
             >
               <template #trailing>
                 <UButton

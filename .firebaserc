@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "pollapp26"
+    "production": "pollapp26",
+    "development": "pollapp-2026-dev"
   }
 }
