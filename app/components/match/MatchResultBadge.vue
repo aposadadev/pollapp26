@@ -19,13 +19,13 @@ const config = computed(() => {
   }
   const map = {
     3: {
-      label: '3 PTS (Exacto)',
+      label: '3 PTS',
       class: 'bg-emerald-500 text-white dark:bg-emerald-600 ring-4 ring-emerald-500/20 dark:ring-emerald-600/30 shadow-lg shadow-emerald-500/20 uppercase tracking-wider',
       icon: 'i-lucide-award',
       iconClass: 'animate-bounce text-yellow-300'
     },
     1: {
-      label: '1 PT (Acierto)',
+      label: '1 PT',
       class: 'bg-amber-500 text-white dark:bg-amber-600 ring-4 ring-amber-500/20 dark:ring-amber-600/30 shadow-md shadow-amber-500/20 uppercase tracking-wider',
       icon: 'i-lucide-check-circle',
       iconClass: 'text-amber-100'

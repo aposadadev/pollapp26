@@ -10,25 +10,25 @@ defineProps<Props>()
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
+  <div class="flex flex-col gap-2">
     <div
       v-for="(entry, i) in entries"
       :key="entry.boardId"
-      class="card-elevated flex items-center justify-between p-4 transition-all duration-300 stagger-up active:scale-[0.98]"
+      class="card-elevated flex items-center justify-between py-2.5 px-3.5 transition-all duration-300 stagger-up active:scale-[0.98]"
       :class="[
         entry.userId === currentUserId ? 'border-primary-500/30' : '',
         `stagger-d${Math.min(i + 1, 12)}`
       ]"
     >
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3 min-w-0">
         <!-- Rank -->
-        <span class="font-heading text-lg font-black text-neutral-300 w-6">
+        <span class="font-heading text-base font-black text-neutral-300 w-7 text-center shrink-0">
           {{ entry.currentPos }}
         </span>
 
         <!-- Avatar / Initials -->
         <div
-          class="size-10 rounded-xl flex items-center justify-center font-heading font-bold text-sm transition-all"
+          class="size-9 rounded-xl flex items-center justify-center font-heading font-bold text-xs transition-all shrink-0"
           :class="
             entry.userId === currentUserId
               ? 'bg-primary-500 text-white shadow-lg'
@@ -39,25 +39,41 @@ defineProps<Props>()
         </div>
 
         <!-- Name -->
-        <div class="flex flex-col">
-          <span class="font-bold text-neutral-800 dark:text-white leading-none">
-            {{ entry.userDisplayName }}
+        <div class="flex flex-col min-w-0">
+          <span class="flex items-center gap-1 font-bold text-sm text-neutral-800 dark:text-white leading-none min-w-0">
+            <span class="truncate">{{ entry.userDisplayName }}</span>
             <span
               v-if="entry.userId === currentUserId"
-              class="ml-1 text-[9px] text-primary-500 font-black uppercase tracking-widest"
+              class="text-[9px] text-primary-500 font-black uppercase tracking-widest shrink-0"
             >Tú</span>
           </span>
-          <span
-            class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1"
-          >#{{ entry.boardNumber }}</span>
+          <div class="flex items-center gap-1.5 mt-1 text-[9px] xs:text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
+            <span>#{{ entry.boardNumber }}</span>
+            <span class="text-neutral-300 dark:text-neutral-800">•</span>
+            <span class="flex items-center gap-0.5 text-secondary-500 dark:text-secondary-400">
+              <UIcon
+                name="i-lucide-target"
+                class="size-3.5 shrink-0"
+              />
+              <span>{{ entry.predsThreePoints }}</span>
+            </span>
+            <span class="text-neutral-300 dark:text-neutral-800">•</span>
+            <span class="flex items-center gap-0.5 text-primary-500 dark:text-primary-400">
+              <UIcon
+                name="i-lucide-check-circle"
+                class="size-3.5 shrink-0"
+              />
+              <span>{{ entry.predsOnePoints }}</span>
+            </span>
+          </div>
         </div>
       </div>
 
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3">
         <!-- Points -->
         <div class="text-right">
           <span
-            class="block font-heading text-lg font-black text-secondary-600 dark:text-secondary-400 leading-none"
+            class="block font-heading text-base font-black text-secondary-600 dark:text-secondary-400 leading-none"
           >
             {{ entry.totalPoints }}
           </span>

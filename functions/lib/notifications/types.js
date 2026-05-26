@@ -7,4 +7,4 @@
  * 3. Llama a sendNotification() con el nuevo tipo desde donde corresponda
  *    (scheduled function, trigger de Firestore, callable, etc.)
  */
-export {}
+export {};

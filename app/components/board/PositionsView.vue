@@ -45,9 +45,6 @@ const tableEntries = computed(() => {
     }))
   }
 
-  if (props.entries.length >= 3) {
-    return props.entries.slice(3)
-  }
   return props.entries
 })
 </script>

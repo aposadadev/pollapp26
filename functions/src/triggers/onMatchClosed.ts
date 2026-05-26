@@ -98,7 +98,12 @@ export const onMatchClosed = onDocumentUpdated(
 
       const boards = groupBoardsSnap.docs.map(d => ({
         id: d.id,
+        boardNumber: d.data()['number'] as number ?? 0,
+        userId: d.data()['userId'] as string ?? '',
+        userDisplayName: d.data()['userDisplayName'] as string ?? '',
         totalPoints: d.data()['totalPoints'] as number ?? 0,
+        predsThreePoints: d.data()['predsThreePoints'] as number ?? 0,
+        predsOnePoints: d.data()['predsOnePoints'] as number ?? 0,
         currentPos: d.data()['currentPos'] as number ?? 0,
         previousPos: d.data()['previousPos'] as number ?? 0
       }))
@@ -117,17 +122,10 @@ export const onMatchClosed = onDocumentUpdated(
       await batch2.commit()
 
       // Escribir ranking en Realtime DB
-      const rankingData = entries.reduce<Record<string, object>>((acc, e) => {
-        acc[e.boardId] = {
-          position: e.position,
-          previousPosition: e.previousPosition,
-          totalPoints: e.totalPoints,
-          positionDelta: e.positionDelta
-        }
-        return acc
-      }, {})
-
-      await rtdb().ref(`rankings/${groupId}`).set(rankingData)
+      await rtdb().ref(`rankings/${groupId}`).set({
+        updatedAt: Date.now(),
+        entries
+      })
     }
   }
 )
