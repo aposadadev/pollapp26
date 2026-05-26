@@ -58,10 +58,73 @@ export function useNotifications() {
   /** Operación en curso (para UI de carga) */
   const loading = ref(false)
 
+  /** Si el navegador es Brave */
+  const isBrave = ref(false)
+  if (typeof navigator !== 'undefined') {
+    const nav = navigator as unknown as { brave?: { isBrave?: () => Promise<boolean> } }
+    if (nav.brave && typeof nav.brave.isBrave === 'function') {
+      nav.brave.isBrave().then((val: boolean) => {
+        isBrave.value = val
+      })
+    }
+  }
+
+  /**
+   * Inicializa y sincroniza el estado de las notificaciones para el usuario actual.
+   * Si el permiso ya está otorgado pero el token no está en Firestore, lo registra silenciosamente.
+   */
+  async function initialize(): Promise<void> {
+    if (!isSupported.value || !authStore.user?.id) {
+      isSubscribed.value = false
+      currentToken.value = null
+      return
+    }
+
+    try {
+      const registrationPromise = navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+      const timeoutRegPromise = new Promise<null>(resolve => setTimeout(() => resolve(null), 2000))
+      const registration = await Promise.race([registrationPromise, timeoutRegPromise]).catch(() => null)
+
+      if (registration) {
+        const tokenPromise = getToken(messaging!, {
+          vapidKey: config.public.firebaseVapidKey,
+          serviceWorkerRegistration: registration
+        })
+        const timeoutPromise = new Promise<null>(resolve => setTimeout(() => resolve(null), 5000))
+        const token = await Promise.race([tokenPromise, timeoutPromise]).catch(() => null)
+
+        if (token) {
+          currentToken.value = token
+          const userTokens = authStore.user.fcmTokens ?? []
+          isSubscribed.value = userTokens.includes(token)
+
+          // Si el navegador tiene permiso pero el token no está registrado,
+          // lo sincronizamos silenciosamente para evitar estados huérfanos.
+          if (permission.value === 'granted' && !isSubscribed.value) {
+            await userRepository.saveFcmToken(authStore.user.id, token)
+            isSubscribed.value = true
+            // Actualizar localmente el store
+            const currentTokens = authStore.user.fcmTokens ?? []
+            if (!currentTokens.includes(token)) {
+              authStore.user.fcmTokens = [...currentTokens, token]
+            }
+          }
+        } else {
+          isSubscribed.value = false
+        }
+      } else {
+        isSubscribed.value = false
+      }
+    } catch (err) {
+      if (import.meta.dev) console.warn('[FCM] Error al inicializar suscripción:', err)
+      isSubscribed.value = false
+    }
+  }
+
   // Sincronizar prefs y estado desde el perfil del usuario
   watch(
     () => authStore.user,
-    (user) => {
+    async (user) => {
       if (!user) {
         isSubscribed.value = false
         currentToken.value = null
@@ -69,9 +132,14 @@ export function useNotifications() {
         return
       }
       prefs.value = user.notificationPrefs ?? { ...DEFAULT_PREFS }
+      await initialize()
     },
     { immediate: true }
   )
+
+  onMounted(() => {
+    initialize()
+  })
 
   // ── Registro del SW y obtención de token ─────────────────────────────────────
 
@@ -81,40 +149,89 @@ export function useNotifications() {
    * Retorna la registration para pasarla a getToken().
    */
   async function _registerFcmSW(): Promise<ServiceWorkerRegistration> {
-    const existing = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
-    const registration = existing ?? await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-      scope: '/'
-    })
+    const swUrl = `/firebase-messaging-sw.js`
 
-    // Esperar a que el SW esté activo
+    try {
+      const existingPromise = navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+      const timeoutRegPromise = new Promise<null>(resolve => setTimeout(() => resolve(null), 2000))
+      const existing = await Promise.race([existingPromise, timeoutRegPromise]).catch(() => null)
+
+      if (existing) {
+        const hasParams = existing.active?.scriptURL.includes('apiKey=')
+        if (hasParams) {
+          // Desregistrar el antiguo SW parametrizado con un timeout de 2 segundos para evitar bloqueos
+          await Promise.race([
+            existing.unregister(),
+            new Promise<boolean>(resolve => setTimeout(() => resolve(false), 2000))
+          ]).catch(() => null)
+        }
+      }
+    } catch (err) {
+      if (import.meta.dev) console.warn('[FCM] Error checking existing SW registration:', err)
+    }
+
+    const registerPromise = navigator.serviceWorker.register(swUrl, { scope: '/' })
+    const timeoutRegisterPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('SW registration timed out')), 6000)
+    )
+    const registration = await Promise.race([registerPromise, timeoutRegisterPromise])
+
+    // Esperar a que el SW esté activo con un timeout de 5 segundos
     if (registration.installing || registration.waiting) {
       await new Promise<void>((resolve) => {
         const sw = registration.installing ?? registration.waiting
-        sw?.addEventListener('statechange', function handler(e) {
+        function handler(e: Event) {
           if ((e.target as ServiceWorker).state === 'activated') {
-            sw.removeEventListener('statechange', handler)
+            clearTimeout(timeoutId)
+            sw?.removeEventListener('statechange', handler)
             resolve()
           }
-        })
+        }
+
+        const timeoutId = setTimeout(() => {
+          sw?.removeEventListener('statechange', handler)
+          resolve() // Resolver de todos modos para evitar colgar el flujo
+        }, 5000)
+
+        sw?.addEventListener('statechange', handler)
       })
     }
 
-    // Enviar Firebase config al SW para que pueda inicializar el SDK compat
-    const firebaseConfig = {
-      apiKey: config.public.firebaseApiKey,
-      authDomain: config.public.firebaseAuthDomain,
-      projectId: config.public.firebaseProjectId,
-      storageBucket: config.public.firebaseStorageBucket,
-      messagingSenderId: config.public.firebaseMessagingSenderId,
-      appId: config.public.firebaseAppId
-    }
-
-    const sw = registration.active
-    if (sw) {
-      sw.postMessage({ type: 'FCM_FIREBASE_CONFIG', config: firebaseConfig })
-    }
-
     return registration
+  }
+
+  /**
+   * Solicita permiso de forma segura soportando callbacks (Safari legacy)
+   * y promesas (navegadores modernos).
+   */
+  async function _requestPermissionSafe(): Promise<NotificationPermission> {
+    if (typeof Notification === 'undefined') return 'default'
+
+    if (Notification.permission !== 'default') {
+      return Notification.permission
+    }
+
+    return new Promise((resolve) => {
+      try {
+        const p = Notification.requestPermission()
+        if (p && typeof p.then === 'function') {
+          p.then(resolve).catch(() => resolve('default'))
+          return
+        }
+      } catch (error) {
+        // Ignorar y pasar a fallback de callback
+        console.error('Error al solicitar permiso de notificaciones:', error)
+      }
+
+      try {
+        Notification.requestPermission((result) => {
+          resolve(result)
+        })
+      } catch {
+        // Fallback final
+        resolve('default')
+      }
+    })
   }
 
   /**
@@ -143,10 +260,10 @@ export function useNotifications() {
 
     loading.value = true
     try {
-      // 1. Pedir permiso
-      const result = await Notification.requestPermission()
+      // 1. Pedir permiso de forma segura
+      const result = await _requestPermissionSafe()
       permission.value = result
-
+      console.log('Permiso de notificaciones:', result)
       if (result !== 'granted') {
         toast.add({
           title: 'Permiso denegado',
@@ -158,10 +275,14 @@ export function useNotifications() {
 
       // 2. Registrar SW y obtener token
       const registration = await _registerFcmSW()
-      const token = await getToken(messaging!, {
+      const tokenPromise = getToken(messaging!, {
         vapidKey: config.public.firebaseVapidKey,
         serviceWorkerRegistration: registration
       })
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('FCM token request timed out')), 8000)
+      )
+      const token = await Promise.race([tokenPromise, timeoutPromise])
 
       currentToken.value = token
 
@@ -183,11 +304,30 @@ export function useNotifications() {
       return true
     } catch (err: unknown) {
       if (import.meta.dev) console.error('[FCM] Error al activar notificaciones:', err)
-      toast.add({
-        title: 'Error al activar',
-        description: 'No pudimos activar las notificaciones. Intenta de nuevo.',
-        color: 'error'
-      })
+
+      const errorMsg = err instanceof Error ? err.message : String(err)
+      const isTimeout = errorMsg.includes('timed out') || errorMsg.includes('timeout')
+
+      if (isBrave.value) {
+        toast.add({
+          title: 'Configuración en Brave requerida',
+          description: 'Brave requiere activar manualmente "Usar servicios de Google para la mensajería push" en brave://settings/privacy, reiniciar el navegador y reintentar.',
+          color: 'warning',
+          duration: 12000
+        })
+      } else if (isTimeout) {
+        toast.add({
+          title: 'Tiempo de espera agotado',
+          description: 'No se pudo conectar con los servidores de notificaciones. Verifica tu conexión o bloqueador de publicidad.',
+          color: 'error'
+        })
+      } else {
+        toast.add({
+          title: 'Error al activar',
+          description: 'No pudimos activar las notificaciones. Intenta de nuevo.',
+          color: 'error'
+        })
+      }
       return false
     } finally {
       loading.value = false
@@ -235,14 +375,38 @@ export function useNotifications() {
     }
   }
 
+  /**
+   * Limpia el token FCM de este dispositivo del perfil del usuario en Firestore.
+   * Diseñado para llamarse durante el logout.
+   */
+  async function cleanupTokenOnLogout(): Promise<void> {
+    try {
+      if (!isSupported.value || !authStore.user?.id) return
+      const registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
+      if (registration) {
+        const token = await getToken(messaging!, {
+          vapidKey: config.public.firebaseVapidKey,
+          serviceWorkerRegistration: registration
+        }).catch(() => null)
+        if (token && authStore.user.id) {
+          await userRepository.removeFcmToken(authStore.user.id, token)
+        }
+      }
+    } catch (err) {
+      if (import.meta.dev) console.error('[FCM] Error al remover token en logout:', err)
+    }
+  }
+
   return {
     isSupported: readonly(isSupported),
     isSubscribed: readonly(isSubscribed),
+    isBrave: readonly(isBrave),
     permission: readonly(permission),
     prefs: readonly(prefs),
     loading: readonly(loading),
     enableNotifications,
     disableNotifications,
-    savePrefs
+    savePrefs,
+    cleanupTokenOnLogout
   }
 }

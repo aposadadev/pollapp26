@@ -45,5 +45,6 @@ onMounted(() => {
     </NuxtLayout>
 
     <UToaster />
+    <UiNotificationPrompt />
   </UApp>
 </template>

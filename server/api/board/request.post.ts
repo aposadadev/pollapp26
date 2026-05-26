@@ -13,6 +13,7 @@
  * Returns: { success: true, boardId: string, number: number }
  */
 import { FieldValue } from 'firebase-admin/firestore'
+import { sendToTokens } from '../../utils/notifications/sender'
 
 export default defineEventHandler(async (event) => {
   const user = await requireAuth(event)
@@ -93,6 +94,41 @@ export default defineEventHandler(async (event) => {
     previousPos: 0,
     createdAt: FieldValue.serverTimestamp()
   })
+
+  // Enviar notificación push a administradores globales
+  try {
+    const adminsSnap = await db.collection('users').where('isAdmin', '==', true).get()
+    const adminTokens: string[] = []
+    const adminUserIds: string[] = []
+
+    adminsSnap.forEach((doc) => {
+      const data = doc.data()
+      const tokens = data['fcmTokens'] as string[] | undefined
+      if (tokens && tokens.length > 0) {
+        tokens.forEach((t) => {
+          adminTokens.push(t)
+          adminUserIds.push(doc.id)
+        })
+      }
+    })
+
+    if (adminTokens.length > 0) {
+      const payload = {
+        notification: {
+          title: '🚨 Nueva Tabla Solicitada',
+          body: `${userDisplayName || 'Un usuario'} solicitó una tabla. Entra a revisar y aprobar.`
+        },
+        data: {
+          url: '/admin/groups',
+          tag: `board-request-${boardRef.id}`,
+          type: 'match_reminder' as const
+        }
+      }
+      await sendToTokens(adminTokens, payload, adminUserIds)
+    }
+  } catch (err) {
+    console.error('[FCM] Error sending new board request notification to admins:', err)
+  }
 
   return { success: true, boardId: boardRef.id, number }
 })

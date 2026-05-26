@@ -76,6 +76,13 @@ export function useAuth() {
 
   async function logout(): Promise<void> {
     try {
+      const { cleanupTokenOnLogout } = useNotifications()
+      await cleanupTokenOnLogout()
+    } catch {
+      // Ignorar errores al limpiar el token en logout para no bloquear el flujo de salida
+    }
+
+    try {
       await store.logout()
     } catch (err: unknown) {
       toast.add({

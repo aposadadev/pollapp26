@@ -6,6 +6,7 @@ const adminNav = [
   { to: '/admin/groups', label: 'Grupos', icon: 'i-lucide-users' },
   { to: '/admin/matches', label: 'Partidos', icon: 'i-lucide-trophy' },
   { to: '/admin/teams', label: 'Equipos', icon: 'i-lucide-shield' },
+  { to: '/admin/notifications', label: 'Notificaciones', icon: 'i-lucide-bell-ring' },
   { to: '/admin/seed', label: 'Seed', icon: 'i-lucide-database' }
 ]
 </script>

@@ -39,6 +39,15 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     ? getDatabase(app)
     : null
 
+  // Early assign services to nuxtApp so repositories can access them during initialization
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const anyNuxtApp = nuxtApp as any
+  anyNuxtApp.$firestore = db
+  anyNuxtApp.$firebaseAuth = auth
+  anyNuxtApp.$firebaseApp = app
+  anyNuxtApp.$firebaseStorage = storage
+  anyNuxtApp.$firebaseRtdb = rtdb
+
   /**
    * Loads the Firestore profile and reads the `admin` Custom Claim from the
    * Firebase ID token. The claim is set server-side via Admin SDK / Cloud

@@ -106,6 +106,7 @@ const memberSince = computed(() => {
 const {
   isSupported: notifSupported,
   isSubscribed,
+  isBrave,
   permission: notifPermission,
   prefs: notifPrefs,
   loading: notifLoading,
@@ -118,12 +119,6 @@ const localPrefs = ref({ ...notifPrefs.value })
 watch(notifPrefs, (p) => {
   localPrefs.value = { ...p }
 })
-
-const reminderOptions = [
-  { label: '1 hora antes', value: 1 },
-  { label: '2 horas antes', value: 2 },
-  { label: '4 horas antes', value: 4 }
-]
 
 async function handleToggleNotifications() {
   if (isSubscribed.value) {
@@ -344,7 +339,7 @@ async function handleSavePrefs() {
               Notificaciones
             </span>
           </div>
-          <UToggle
+          <USwitch
             :model-value="isSubscribed"
             :loading="notifLoading"
             color="secondary"
@@ -375,36 +370,11 @@ async function handleSavePrefs() {
                 Te avisamos antes de que empiece
               </p>
             </div>
-            <UToggle
+            <USwitch
               v-model="localPrefs.matchReminder"
               color="secondary"
               size="sm"
             />
-          </div>
-
-          <!-- Cuántas horas antes -->
-          <div
-            v-if="localPrefs.matchReminder"
-            class="flex items-center justify-between"
-          >
-            <p class="text-sm text-(--ui-text-muted)">
-              Anticipación
-            </p>
-            <div class="flex gap-1">
-              <button
-                v-for="opt in reminderOptions"
-                :key="opt.value"
-                class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
-                :class="[
-                  localPrefs.reminderHoursBeforeMatch === opt.value
-                    ? 'bg-secondary-500 text-white'
-                    : 'bg-(--ui-bg-muted) text-(--ui-text-muted) hover:bg-(--ui-bg-elevated)'
-                ]"
-                @click="localPrefs.reminderHoursBeforeMatch = opt.value as 1 | 2 | 4"
-              >
-                {{ opt.label.split(' ')[0] }}h
-              </button>
-            </div>
           </div>
 
           <UButton
@@ -426,6 +396,20 @@ async function handleSavePrefs() {
         >
           Actívalas para recibir recordatorios antes de los partidos.
         </p>
+
+        <!-- Advertencia específica para Brave -->
+        <div
+          v-if="isBrave"
+          class="mt-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex gap-2.5 items-start"
+        >
+          <UIcon
+            name="i-lucide-info"
+            class="size-5 text-amber-500 shrink-0 mt-0.5"
+          />
+          <div class="text-xs text-amber-600 dark:text-amber-400 leading-relaxed">
+            <span class="font-bold">Usuario de Brave:</span> Si las notificaciones no se activan o no llegan, debes activar <code class="bg-amber-500/15 px-1 py-0.5 rounded font-mono text-[10px]">Usar servicios de Google para la mensajería push</code> en <code class="bg-amber-500/15 px-1 py-0.5 rounded font-mono text-[10px]">brave://settings/privacy</code> y reiniciar el navegador.
+          </div>
+        </div>
       </div>
 
       <!-- Cerrar sesión -->

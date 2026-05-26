@@ -43,6 +43,13 @@ const adminActions = [
     icon: 'i-lucide-shield-check',
     color: 'bg-secondary-500/10 text-secondary-600',
     description: 'Configuración de participantes'
+  },
+  {
+    to: '/admin/notifications',
+    label: 'Notificaciones Push',
+    icon: 'i-lucide-bell-ring',
+    color: 'bg-primary-500/10 text-primary-600',
+    description: 'Enviar avisos globales o segmentados'
   }
 ]
 </script>
