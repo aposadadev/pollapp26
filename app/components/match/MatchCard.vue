@@ -109,6 +109,68 @@ function decrement(team: 'local' | 'visitor') {
   }
 }
 
+function handleKeyDown(event: KeyboardEvent, team: 'local' | 'visitor') {
+  if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    increment(team)
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    decrement(team)
+  } else if (event.key === 'Enter') {
+    event.preventDefault()
+    handleSave()
+    ;(event.target as HTMLInputElement).blur()
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    localGoals.value = savedLocal.value
+    visitorGoals.value = savedVisitor.value
+    ;(event.target as HTMLInputElement).blur()
+  } else {
+    const isDigit = /^[0-9]$/.test(event.key)
+    const allowedKeys = [
+      'Backspace', 'Delete', 'Tab', 'Escape', 'Enter',
+      'ArrowLeft', 'ArrowRight', 'Home', 'End'
+    ]
+    const isShortcut = event.ctrlKey || event.metaKey
+
+    if (!isDigit && !allowedKeys.includes(event.key) && !isShortcut) {
+      event.preventDefault()
+    }
+  }
+}
+
+function handleInput(event: Event, team: 'local' | 'visitor') {
+  const target = event.target as HTMLInputElement
+  cancelScheduledSave()
+  isSavingSoon.value = false
+
+  let cleanValue = target.value.replace(/\D/g, '')
+
+  if (cleanValue !== '') {
+    let num = parseInt(cleanValue, 10)
+    if (num > 20) {
+      num = 20
+      cleanValue = '20'
+    } else {
+      cleanValue = num.toString()
+    }
+
+    if (team === 'local') {
+      localGoals.value = num
+    } else {
+      visitorGoals.value = num
+    }
+  } else {
+    if (team === 'local') {
+      localGoals.value = null
+    } else {
+      visitorGoals.value = null
+    }
+  }
+
+  target.value = cleanValue
+}
+
 function handleSave() {
   cancelScheduledSave()
   isSavingSoon.value = false
@@ -240,11 +302,41 @@ async function handleRandomize() {
 
         <!-- Controles de marcador -->
         <div class="flex items-center justify-center gap-2.5 shrink-0">
-          <div class="score-pill py-1 text-sm min-w-[36px] h-8 flex items-center justify-center font-bold">
+          <input
+            v-if="!isLocked"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            class="score-pill py-1 text-sm w-12 h-8 text-center font-bold focus:outline-hidden focus:ring-2 focus:ring-primary-500"
+            :value="localGoals ?? ''"
+            placeholder="-"
+            @keydown="handleKeyDown($event, 'local')"
+            @input="handleInput($event, 'local')"
+          >
+          <div
+            v-else
+            class="score-pill py-1 text-sm min-w-[36px] h-8 flex items-center justify-center font-bold"
+          >
             {{ localGoals ?? '-' }}
           </div>
+
           <span class="text-xs font-black text-neutral-400 dark:text-neutral-500 font-heading tracking-wider">VS</span>
-          <div class="score-pill py-1 text-sm min-w-[36px] h-8 flex items-center justify-center font-bold">
+
+          <input
+            v-if="!isLocked"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            class="score-pill py-1 text-sm w-12 h-8 text-center font-bold focus:outline-hidden focus:ring-2 focus:ring-primary-500"
+            :value="visitorGoals ?? ''"
+            placeholder="-"
+            @keydown="handleKeyDown($event, 'visitor')"
+            @input="handleInput($event, 'visitor')"
+          >
+          <div
+            v-else
+            class="score-pill py-1 text-sm min-w-[36px] h-8 flex items-center justify-center font-bold"
+          >
             {{ visitorGoals ?? '-' }}
           </div>
         </div>
