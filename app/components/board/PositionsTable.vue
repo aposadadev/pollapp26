@@ -35,7 +35,7 @@ defineProps<Props>()
               : 'bg-secondary-500/10 text-secondary-600'
           "
         >
-          {{ entry.userDisplayName.substring(0, 2).toUpperCase() }}
+          {{ (entry.userDisplayName || '').substring(0, 2).toUpperCase() }}
         </div>
 
         <!-- Name -->
