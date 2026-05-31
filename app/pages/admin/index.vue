@@ -38,6 +38,13 @@ const adminActions = [
     description: 'Resultados finales y puntajes'
   },
   {
+    to: '/admin/qualifiers',
+    label: 'Clasificaciones Fases',
+    icon: 'i-lucide-award',
+    color: 'bg-primary-500/10 text-primary-600',
+    description: 'Tiempo límite y clasificados por fase'
+  },
+  {
     to: '/admin/teams',
     label: 'Equipos y Sedes',
     icon: 'i-lucide-shield-check',

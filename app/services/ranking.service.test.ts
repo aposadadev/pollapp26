@@ -93,6 +93,15 @@ describe('RankingService', () => {
       expect(result[0]!.boardId).toBe('b2')
     })
 
+    it('breaks predsOnePoints tie by totalTeamsGuessed', () => {
+      const boards = [
+        makeBoard({ id: 'b1', userId: 'u1', number: 1, totalPoints: 4, predsThreePoints: 1, predsOnePoints: 1, totalTeamsGuessed: 2, currentPos: 0, previousPos: 0 }),
+        makeBoard({ id: 'b2', userId: 'u2', number: 2, totalPoints: 4, predsThreePoints: 1, predsOnePoints: 1, totalTeamsGuessed: 5, currentPos: 0, previousPos: 0 })
+      ]
+      const result = service.recalculate(boards)
+      expect(result[0]!.boardId).toBe('b2')
+    })
+
     it('sets positionDelta correctly for first-time boards (previousPos=0)', () => {
       const boards = [
         makeBoard({ id: 'b1', userId: 'u1', number: 1, totalPoints: 9, predsThreePoints: 3, predsOnePoints: 0, currentPos: 0, previousPos: 0 })

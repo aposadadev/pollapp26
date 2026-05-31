@@ -70,8 +70,16 @@ const matchStarted = computed(() => {
   return dayjs().isAfter(matchDate.subtract(30, 'minute'))
 })
 
+const isTbdMatch = computed(() => {
+  return props.prediction.match.localTeamName === 'TBD' || props.prediction.match.visitorTeamName === 'TBD'
+})
+
 const isLocked = computed(
-  () => props.isReadonly || matchStarted.value || isMatchClosed(props.prediction.match) || isMatchActive(props.prediction.match)
+  () => props.isReadonly
+    || matchStarted.value
+    || isMatchClosed(props.prediction.match)
+    || isMatchActive(props.prediction.match)
+    || isTbdMatch.value
 )
 
 const predictionsClosed = computed(() => {
@@ -384,9 +392,23 @@ async function handleRandomize() {
 
     <!-- Botones o Resultados (Footer) -->
     <div class="px-4 pb-4 pt-1 flex flex-col gap-2">
+      <!-- Esperando definición de equipos -->
+      <div
+        v-if="isTbdMatch"
+        class="w-full flex items-center justify-center py-2 px-3 rounded-lg bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 dark:border-amber-500/30 text-amber-600 dark:text-amber-400"
+      >
+        <span class="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-center">
+          <UIcon
+            name="i-lucide-hourglass"
+            class="size-3.5 animate-pulse"
+          />
+          Esperando definición de equipos
+        </span>
+      </div>
+
       <!-- Botones para predicciones abiertas -->
       <div
-        v-if="!isLocked"
+        v-else-if="!isLocked"
         class="flex gap-2"
       >
         <UButton

@@ -99,13 +99,13 @@ export class PredictionService {
 
   getUpcoming(predictions: PredictionWithMatch[]): PredictionWithMatch[] {
     return predictions
-      .filter(p => !isMatchClosed(p.match))
+      .filter(p => !isMatchClosed(p.match) && p.match.localTeamName.toUpperCase() !== 'TBD' && p.match.visitorTeamName.toUpperCase() !== 'TBD')
       .sort((a, b) => a.match.date.getTime() - b.match.date.getTime())
   }
 
   getPrevious(predictions: PredictionWithMatch[]): PredictionWithMatch[] {
     return predictions
-      .filter(p => isMatchClosed(p.match))
+      .filter(p => isMatchClosed(p.match) && p.match.localTeamName.toUpperCase() !== 'TBD' && p.match.visitorTeamName.toUpperCase() !== 'TBD')
       .sort((a, b) => b.match.date.getTime() - a.match.date.getTime())
   }
 

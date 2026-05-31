@@ -3,8 +3,6 @@
  * Orquesta la creación, activación y consulta de boards.
  */
 import { boardRepository } from '~/repositories/board.repository'
-import { predictionRepository } from '~/repositories/prediction.repository'
-import { matchRepository } from '~/repositories/match.repository'
 import type { Board } from '~/types'
 
 export class BoardError extends Error {
@@ -54,20 +52,24 @@ export class BoardService {
   }
 
   /** Activar una tabla pendiente y crear todas las predicciones vacías */
-  async activateBoard(boardId: string, _tournamentId?: string): Promise<void> {
-    const board = await boardRepository.findById(boardId)
-    if (!board) throw new BoardError('Tabla no encontrada.', 'board/not-found')
-    if (board.isActive) throw new BoardError('La tabla ya está activa.', 'board/already-active')
+  async activateBoard(boardId: string, tournamentId: string): Promise<void> {
+    const { $firebaseAuth } = useNuxtApp() as unknown as {
+      $firebaseAuth: import('firebase/auth').Auth
+    }
+    const currentUser = $firebaseAuth.currentUser
+    if (!currentUser) {
+      throw new BoardError('No hay usuario autenticado.', 'auth/no-user')
+    }
+    const idToken = await currentUser.getIdToken()
 
-    // Usar siempre el tournamentId del propio board — ignorar parámetro externo
-    const matches = await matchRepository.findByTournament(board.tournamentId)
-    if (!matches.length) throw new BoardError('No hay partidos cargados para este torneo.', 'board/no-matches')
-
-    // Crear predicciones vacías en batch
-    await predictionRepository.batchCreate(boardId, matches.map(m => m.id))
-
-    // Activar la tabla
-    await boardRepository.activate(boardId)
+    await $fetch<{ success: boolean }>(
+      '/api/admin/board/activate',
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${idToken}` },
+        body: { boardId, tournamentId }
+      }
+    )
   }
 
   async findById(boardId: string): Promise<Board | null> {

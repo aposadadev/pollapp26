@@ -95,19 +95,24 @@ export class BoardRepository extends BaseRepository<Board> {
       totalPoints: number
       predsThreePoints: number
       predsOnePoints: number
+      totalTeamsGuessed?: number
     }>
   ): Promise<void> {
     const db = getDb()
     const batch = writeBatch(db)
     for (const u of updates) {
       const ref = doc(db, 'boards', u.boardId)
-      batch.update(ref, {
+      const dataToUpdate: Record<string, string | number | undefined> = {
         currentPos: u.currentPos,
         previousPos: u.previousPos,
         totalPoints: u.totalPoints,
         predsThreePoints: u.predsThreePoints,
         predsOnePoints: u.predsOnePoints
-      })
+      }
+      if (u.totalTeamsGuessed !== undefined) {
+        dataToUpdate.totalTeamsGuessed = u.totalTeamsGuessed
+      }
+      batch.update(ref, dataToUpdate)
     }
     await batch.commit()
   }
@@ -125,6 +130,8 @@ export class BoardRepository extends BaseRepository<Board> {
       totalPoints: data['totalPoints'] as number ?? 0,
       predsThreePoints: data['predsThreePoints'] as number ?? 0,
       predsOnePoints: data['predsOnePoints'] as number ?? 0,
+      qualifierPoints: data['qualifierPoints'] as number | undefined,
+      totalTeamsGuessed: data['totalTeamsGuessed'] as number | undefined,
       currentPos: data['currentPos'] as number ?? 0,
       previousPos: data['previousPos'] as number ?? 0,
       createdAt: (data['createdAt'] as { toDate?: () => Date })?.toDate?.() ?? new Date()

@@ -6,6 +6,7 @@ export interface RankingEntry {
   totalPoints: number
   predsThreePoints: number
   predsOnePoints: number
+  totalTeamsGuessed?: number
   currentPos: number
   previousPos: number
   positionDelta: 'up' | 'down' | 'same'

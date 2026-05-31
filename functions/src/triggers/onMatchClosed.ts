@@ -55,21 +55,25 @@ export const onMatchClosed = onDocumentUpdated(
 
     // 3. Actualizar stats de cada board
     for (const boardId of affectedBoardIds) {
-      const allPreds = await db()
-        .collection('predictions')
-        .where('boardId', '==', boardId)
-        .get()
+      const [allPreds, boardSnap] = await Promise.all([
+        db().collection('predictions').where('boardId', '==', boardId).get(),
+        db().collection('boards').doc(boardId).get()
+      ])
 
-      let totalPoints = 0
+      let matchPoints = 0
       let predsThreePoints = 0
       let predsOnePoints = 0
 
       for (const p of allPreds.docs) {
         const pts = p.data()['points'] as number ?? 0
-        totalPoints += pts
+        matchPoints += pts
         if (pts === 3) predsThreePoints++
         if (pts === 1) predsOnePoints++
       }
+
+      const boardData = boardSnap.data()
+      const qualifierPoints = boardData?.['qualifierPoints'] as number ?? 0
+      const totalPoints = matchPoints + qualifierPoints
 
       await db().collection('boards').doc(boardId).update({
         totalPoints,
@@ -104,6 +108,7 @@ export const onMatchClosed = onDocumentUpdated(
         totalPoints: d.data()['totalPoints'] as number ?? 0,
         predsThreePoints: d.data()['predsThreePoints'] as number ?? 0,
         predsOnePoints: d.data()['predsOnePoints'] as number ?? 0,
+        totalTeamsGuessed: d.data()['totalTeamsGuessed'] as number ?? 0,
         currentPos: d.data()['currentPos'] as number ?? 0,
         previousPos: d.data()['previousPos'] as number ?? 0
       }))
@@ -116,7 +121,11 @@ export const onMatchClosed = onDocumentUpdated(
       for (const upd of updates) {
         batch2.update(db().collection('boards').doc(upd.boardId), {
           currentPos: upd.currentPos,
-          previousPos: upd.previousPos
+          previousPos: upd.previousPos,
+          totalPoints: upd.totalPoints,
+          predsThreePoints: upd.predsThreePoints,
+          predsOnePoints: upd.predsOnePoints,
+          totalTeamsGuessed: upd.totalTeamsGuessed
         })
       }
       await batch2.commit()

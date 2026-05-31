@@ -1,6 +1,6 @@
 {
   "projects": {
-    "production": "pollapp26",
+    "production": "pollapp-2026",
     "development": "pollapp-2026-dev"
   }
 }

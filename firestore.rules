@@ -95,6 +95,23 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── Settings ──────────────────────────────────────────────────────────────
+    match /settings/{settingId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+
+    // ── Qualifier Predictions ──────────────────────────────────────────────────
+    match /qualifier_predictions/{boardId} {
+      function isQualifierBoardOwner() {
+        return isOwner(resource.data.userId) || isOwner(request.resource.data.userId);
+      }
+      allow read: if isAuth();
+      allow create: if isAuth() && request.auth.uid == request.resource.data.userId;
+      allow update: if (isAuth() && isQualifierBoardOwner()) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
     // ── Counters (internal, server-side only) ────────────────────────────────
     // Managed exclusively by Cloud Functions via Admin SDK (requestBoard callable).
     // Clients must NOT read or write this collection; board creation goes through

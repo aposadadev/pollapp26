@@ -12,6 +12,8 @@ export interface Board {
   predsOnePoints: number
   currentPos: number
   previousPos: number
+  qualifierPoints?: number
+  totalTeamsGuessed?: number
   createdAt: Date
 }
 

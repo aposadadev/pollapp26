@@ -17,30 +17,8 @@ const mockMatchRepo = vi.hoisted(() => ({
 
 const mockTeamRepo = vi.hoisted(() => ({ findById: vi.fn() }))
 
-const mockPredictionRepo = vi.hoisted(() => ({
-  findByMatch: vi.fn(),
-  batchUpdatePoints: vi.fn(),
-  findByBoard: vi.fn()
-}))
-
-const mockBoardRepo = vi.hoisted(() => ({
-  findById: vi.fn(),
-  updatePointsStats: vi.fn(),
-  findActiveByGroup: vi.fn(),
-  batchUpdatePositions: vi.fn()
-}))
-
-const mockRankingsRepo = vi.hoisted(() => ({ write: vi.fn() }))
-const mockScoringService = vi.hoisted(() => ({ calculatePoints: vi.fn() }))
-const mockRankingService = vi.hoisted(() => ({ recalculate: vi.fn(), toBoardUpdates: vi.fn() }))
-
 vi.mock('~/repositories/match.repository', () => ({ matchRepository: mockMatchRepo }))
 vi.mock('~/repositories/team.repository', () => ({ teamRepository: mockTeamRepo }))
-vi.mock('~/repositories/prediction.repository', () => ({ predictionRepository: mockPredictionRepo }))
-vi.mock('~/repositories/board.repository', () => ({ boardRepository: mockBoardRepo }))
-vi.mock('~/repositories/rankings.repository', () => ({ rankingsRepository: mockRankingsRepo }))
-vi.mock('./scoring.service', () => ({ scoringService: mockScoringService }))
-vi.mock('./ranking.service', () => ({ rankingService: mockRankingService }))
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 describe('MatchService.updateTeams', () => {
@@ -99,6 +77,19 @@ describe('MatchService.updateTeams', () => {
   })
 })
 
+// Stub useNuxtApp and $fetch for closeMatch tests
+const mockGetIdToken = vi.fn().mockResolvedValue('mock-token')
+const mockFirebaseAuth = {
+  currentUser: {
+    getIdToken: mockGetIdToken
+  }
+}
+vi.stubGlobal('useNuxtApp', () => ({
+  $firebaseAuth: mockFirebaseAuth
+}))
+const mockFetch = vi.fn()
+vi.stubGlobal('$fetch', mockFetch)
+
 describe('MatchService.closeMatch', () => {
   let service: MatchService
 
@@ -107,31 +98,23 @@ describe('MatchService.closeMatch', () => {
     service = new MatchService()
   })
 
-  it('calls matchRepository.closeMatch with goals, overtime goals, and penalties', async () => {
-    mockMatchRepo.closeMatch.mockResolvedValue(undefined)
-    mockPredictionRepo.findByMatch.mockResolvedValue([])
+  it('calls the server API endpoint with goals, overtime goals, and penalties', async () => {
+    mockFetch.mockResolvedValue({ success: true })
 
     await service.closeMatch('match1', 1, 1, 2, 2, 4, 3)
 
-    expect(mockMatchRepo.closeMatch).toHaveBeenCalledWith('match1', 1, 1, 2, 2, 4, 3)
-  })
-
-  it('calculates prediction points based on 90-minute goals', async () => {
-    mockMatchRepo.closeMatch.mockResolvedValue(undefined)
-    mockPredictionRepo.findByMatch.mockResolvedValue([
-      { id: 'pred1', boardId: 'board1', localGoalPrediction: 1, visitorGoalPrediction: 1 }
-    ])
-    mockPredictionRepo.findByBoard.mockResolvedValue([])
-    mockBoardRepo.findById.mockResolvedValue({ id: 'board1', groupId: 'group1' })
-    mockBoardRepo.findActiveByGroup.mockResolvedValue([])
-    mockScoringService.calculatePoints.mockReturnValue(3)
-
-    await service.closeMatch('match1', 1, 1, 2, 2, 4, 3)
-
-    // Ensure it was calculated with 90-min goals (1, 1) and not overtime goals (2, 2)
-    expect(mockScoringService.calculatePoints).toHaveBeenCalledWith(
-      { localGoals: 1, visitorGoals: 1 },
-      { localGoals: 1, visitorGoals: 1 }
-    )
+    expect(mockFetch).toHaveBeenCalledWith('/api/admin/match/close', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer mock-token' },
+      body: {
+        matchId: 'match1',
+        localGoals: 1,
+        visitorGoals: 1,
+        localGoalsOT: 2,
+        visitorGoalsOT: 2,
+        localPenalties: 4,
+        visitorPenalties: 3
+      }
+    })
   })
 })
