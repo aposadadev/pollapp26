@@ -62,6 +62,25 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     if (profile) {
       // Override isAdmin from custom claim — not from the Firestore document field
       profile.isAdmin = tokenResult.claims['admin'] === true
+
+      // Sync Google photoURL if it exists in Firebase Auth but is missing/different in Firestore profile
+      if (firebaseUser.photoURL && profile.photoURL !== firebaseUser.photoURL) {
+        try {
+          const { userRepository } = await import('~/repositories/user.repository')
+          await userRepository.update(firebaseUser.uid, { photoURL: firebaseUser.photoURL })
+          profile.photoURL = firebaseUser.photoURL
+
+          const { boardRepository } = await import('~/repositories/board.repository')
+          const boards = await boardRepository.findByUser(firebaseUser.uid)
+          for (const b of boards) {
+            if (b.userPhotoURL !== firebaseUser.photoURL) {
+              await boardRepository.update(b.id, { userPhotoURL: firebaseUser.photoURL })
+            }
+          }
+        } catch (e) {
+          console.error('Error syncing photoURL to profile/boards on restore:', e)
+        }
+      }
     }
     return profile
   }
