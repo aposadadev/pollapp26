@@ -59,6 +59,7 @@ onMounted(async () => {
           boardNumber: b?.number ?? 0,
           userId: b?.userId ?? '',
           userDisplayName: b?.userDisplayName ?? '',
+          userPhotoURL: b?.userPhotoURL,
           localGoalPrediction: pred.localGoalPrediction,
           visitorGoalPrediction: pred.visitorGoalPrediction,
           points: pred.points
@@ -253,14 +254,21 @@ const formattedDate = computed(() =>
                   <td class="px-2.5 xs:px-4 py-2.5 xs:py-3.5 min-w-0">
                     <div class="flex items-center gap-2 xs:gap-3 min-w-0">
                       <div
-                        class="size-7 xs:size-8 rounded-full flex items-center justify-center text-[9px] xs:text-[10px] font-black shadow-sm shrink-0"
+                        class="size-7 xs:size-8 rounded-full flex items-center justify-center text-[9px] xs:text-[10px] font-black shadow-sm shrink-0 overflow-hidden border border-(--ui-border)/50"
                         :class="[
                           pred.userId === authStore.user?.id
                             ? 'bg-primary-500 text-white'
                             : 'bg-(--ui-bg-muted) text-(--ui-text-muted)'
                         ]"
                       >
-                        {{ pred.userDisplayName?.charAt(0).toUpperCase() || '?' }}
+                        <img
+                          v-if="pred.userPhotoURL"
+                          :src="pred.userPhotoURL"
+                          alt="Avatar"
+                          class="size-full object-cover"
+                          referrerpolicy="no-referrer"
+                        >
+                        <span v-else>{{ pred.userDisplayName?.charAt(0).toUpperCase() || '?' }}</span>
                       </div>
                       <div class="min-w-0 flex-1">
                         <p

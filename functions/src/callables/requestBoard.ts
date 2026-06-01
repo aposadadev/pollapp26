@@ -58,11 +58,13 @@ export const requestBoard = onCall(async (request) => {
   }
 
   const userDisplayName = (userSnap.data()?.['displayName'] as string | undefined) ?? ''
+  const userPhotoURL = (userSnap.data()?.['photoURL'] as string | undefined) ?? ''
   const groupName = (groupSnap.data()?.['name'] as string | undefined) ?? ''
 
   const boardRef = await db().collection('boards').add({
     userId,
     userDisplayName,
+    userPhotoURL,
     groupId,
     groupName,
     tournamentId,

@@ -7,6 +7,7 @@ export interface BoardSnapshot {
   boardNumber: number
   userId: string
   userDisplayName?: string
+  userPhotoURL?: string
   totalPoints: number
   predsThreePoints: number
   predsOnePoints: number
@@ -20,6 +21,7 @@ export interface RankingEntry {
   boardNumber: number
   userId: string
   userDisplayName: string
+  userPhotoURL?: string
   totalPoints: number
   predsThreePoints: number
   predsOnePoints: number
@@ -53,6 +55,7 @@ export function recalculate(boards: BoardSnapshot[]): RankingEntry[] {
       boardNumber: board.boardNumber,
       userId: board.userId,
       userDisplayName: board.userDisplayName ?? '',
+      userPhotoURL: board.userPhotoURL ?? '',
       totalPoints: board.totalPoints,
       predsThreePoints: board.predsThreePoints,
       predsOnePoints: board.predsOnePoints,

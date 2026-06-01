@@ -122,6 +122,7 @@ export class BoardRepository extends BaseRepository<Board> {
       id,
       userId: data['userId'] as string ?? '',
       userDisplayName: data['userDisplayName'] as string | undefined,
+      userPhotoURL: data['userPhotoURL'] as string | undefined,
       groupId: data['groupId'] as string ?? '',
       groupName: data['groupName'] as string | undefined,
       tournamentId: data['tournamentId'] as string ?? '',

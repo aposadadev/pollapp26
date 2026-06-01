@@ -143,8 +143,18 @@ async function handleSavePrefs() {
     <div class="p-4 space-y-4 pb-24">
       <!-- Avatar + info básica -->
       <div class="card-elevated p-6 flex flex-col items-center gap-3 stagger-up stagger-d1">
-        <div class="size-20 rounded-full gradient-tricolor flex items-center justify-center shadow-lg">
-          <span class="font-heading text-2xl font-black text-white">{{ initials }}</span>
+        <div class="size-20 rounded-full gradient-tricolor flex items-center justify-center shadow-lg overflow-hidden border border-(--ui-border)">
+          <img
+            v-if="authStore.user?.photoURL"
+            :src="authStore.user.photoURL"
+            alt="Foto de perfil"
+            class="size-full object-cover"
+            referrerpolicy="no-referrer"
+          >
+          <span
+            v-else
+            class="font-heading text-2xl font-black text-white"
+          >{{ initials }}</span>
         </div>
         <div class="text-center">
           <p class="font-heading text-lg font-black text-(--ui-text-highlighted) uppercase tracking-wide">

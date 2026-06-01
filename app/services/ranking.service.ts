@@ -38,6 +38,7 @@ export class RankingService {
         boardNumber: board.number,
         userId: board.userId,
         userDisplayName: board.userDisplayName ?? '',
+        userPhotoURL: board.userPhotoURL ?? '',
         totalPoints: board.totalPoints,
         predsThreePoints: board.predsThreePoints,
         predsOnePoints: board.predsOnePoints,

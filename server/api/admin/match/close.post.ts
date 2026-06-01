@@ -154,6 +154,7 @@ export default defineEventHandler(async (event) => {
       number: d.data().number as number ?? 0,
       userId: d.data().userId as string ?? '',
       userDisplayName: d.data().userDisplayName as string ?? '',
+      userPhotoURL: d.data().userPhotoURL as string ?? '',
       totalPoints: d.data().totalPoints as number ?? 0,
       predsThreePoints: d.data().predsThreePoints as number ?? 0,
       predsOnePoints: d.data().predsOnePoints as number ?? 0,

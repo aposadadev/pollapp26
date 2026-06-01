@@ -40,6 +40,7 @@ export interface MatchPredictionEntry {
   boardNumber: number
   userId: string
   userDisplayName: string
+  userPhotoURL?: string
   localGoalPrediction: number | null
   visitorGoalPrediction: number | null
   points: PredictionPoints

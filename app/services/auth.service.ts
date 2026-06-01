@@ -99,6 +99,23 @@ export class AuthService {
 
       const profile = await userRepository.findById(uid)
       if (profile) {
+        if (photoURL && profile.photoURL !== photoURL) {
+          await userRepository.update(uid, { photoURL })
+          profile.photoURL = photoURL
+        }
+        if (photoURL && useNuxtApp().$firestore) {
+          try {
+            const { boardRepository } = await import('~/repositories/board.repository')
+            const boards = await boardRepository.findByUser(uid)
+            for (const b of boards) {
+              if (b.userPhotoURL !== photoURL) {
+                await boardRepository.update(b.id, { userPhotoURL: photoURL })
+              }
+            }
+          } catch (e) {
+            console.error('Error syncing photoURL to boards:', e)
+          }
+        }
         return profile
       }
 

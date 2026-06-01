@@ -32,14 +32,22 @@ const displayOrder = [1, 0, 2] // 2nd, 1st, 3rd
           />
         </div>
         <div
-          class="rounded-full bg-(--ui-bg-elevated) border-2 flex items-center justify-center shadow-md transition-transform duration-500"
+          class="rounded-full bg-(--ui-bg-elevated) border-2 flex items-center justify-center shadow-md transition-transform duration-500 overflow-hidden"
           :class="
             idx === 0
               ? 'w-20 h-20 border-secondary-500 scale-110'
               : 'w-16 h-16 border-(--ui-border)'
           "
         >
+          <img
+            v-if="entries[idx]?.userPhotoURL"
+            :src="entries[idx].userPhotoURL"
+            alt="Avatar"
+            class="size-full object-cover"
+            referrerpolicy="no-referrer"
+          >
           <span
+            v-else
             class="font-heading font-bold text-secondary-600 dark:text-secondary-400"
             :class="idx === 0 ? 'text-xl' : 'text-lg'"
           >

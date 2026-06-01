@@ -3,6 +3,7 @@ export interface RankingEntry {
   boardNumber: number
   userId: string
   userDisplayName: string
+  userPhotoURL?: string
   totalPoints: number
   predsThreePoints: number
   predsOnePoints: number

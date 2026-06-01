@@ -28,14 +28,21 @@ defineProps<Props>()
 
         <!-- Avatar / Initials -->
         <div
-          class="size-9 rounded-xl flex items-center justify-center font-heading font-bold text-xs transition-all shrink-0"
+          class="size-9 rounded-xl flex items-center justify-center font-heading font-bold text-xs transition-all shrink-0 overflow-hidden border border-(--ui-border)/50"
           :class="
             entry.userId === currentUserId
               ? 'bg-primary-500 text-white shadow-lg'
               : 'bg-secondary-500/10 text-secondary-600'
           "
         >
-          {{ (entry.userDisplayName || '').substring(0, 2).toUpperCase() }}
+          <img
+            v-if="entry.userPhotoURL"
+            :src="entry.userPhotoURL"
+            alt="Avatar"
+            class="size-full object-cover"
+            referrerpolicy="no-referrer"
+          >
+          <span v-else>{{ (entry.userDisplayName || '').substring(0, 2).toUpperCase() }}</span>
         </div>
 
         <!-- Name -->

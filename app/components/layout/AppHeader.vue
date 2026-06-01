@@ -116,10 +116,20 @@ const userMenuItems = computed(() => [
               class="flex items-center gap-1.5 text-xs font-medium"
               aria-label="Menú de usuario"
             >
-              <UIcon
-                name="i-lucide-circle-user"
-                class="size-4"
-              />
+              <div class="size-5 rounded-full overflow-hidden flex items-center justify-center shrink-0 border border-(--ui-border)">
+                <img
+                  v-if="authStore.user?.photoURL"
+                  :src="authStore.user.photoURL"
+                  alt="Avatar"
+                  class="size-full object-cover"
+                  referrerpolicy="no-referrer"
+                >
+                <UIcon
+                  v-else
+                  name="i-lucide-circle-user"
+                  class="size-full"
+                />
+              </div>
               <span class="hidden sm:block max-w-24 truncate">{{
                 authStore.displayName ?? "Usuario"
               }}</span>

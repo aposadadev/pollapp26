@@ -2,6 +2,7 @@ export interface Board {
   id: string
   userId: string
   userDisplayName?: string
+  userPhotoURL?: string
   groupId: string
   groupName?: string
   tournamentId: string
