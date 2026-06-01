@@ -41,20 +41,20 @@ const currentClosingMatch = computed(() => {
 const isValidClose = computed(() => {
   const lg = closeForm.localGoals
   const vg = closeForm.visitorGoals
-  if (lg === undefined || lg === null || (lg as any) === '' || isNaN(Number(lg)) || Number(lg) < 0) return false
-  if (vg === undefined || vg === null || (vg as any) === '' || isNaN(Number(vg)) || Number(vg) < 0) return false
+  if (lg === undefined || lg === null || (lg as unknown) === '' || isNaN(Number(lg)) || Number(lg) < 0) return false
+  if (vg === undefined || vg === null || (vg as unknown) === '' || isNaN(Number(vg)) || Number(vg) < 0) return false
 
   if (closeForm.hasExtraTime) {
     const lgOt = closeForm.localGoalsOT
     const vgOt = closeForm.visitorGoalsOT
-    if (lgOt === undefined || lgOt === null || (lgOt as any) === '' || isNaN(Number(lgOt)) || Number(lgOt) < 0) return false
-    if (vgOt === undefined || vgOt === null || (vgOt as any) === '' || isNaN(Number(vgOt)) || Number(vgOt) < 0) return false
+    if (lgOt === undefined || lgOt === null || (lgOt as unknown) === '' || isNaN(Number(lgOt)) || Number(lgOt) < 0) return false
+    if (vgOt === undefined || vgOt === null || (vgOt as unknown) === '' || isNaN(Number(vgOt)) || Number(vgOt) < 0) return false
 
     if (closeForm.hasPenalties) {
       const lp = closeForm.localPenalties
       const vp = closeForm.visitorPenalties
-      if (lp === undefined || lp === null || (lp as any) === '' || isNaN(Number(lp)) || Number(lp) < 0) return false
-      if (vp === undefined || vp === null || (vp as any) === '' || isNaN(Number(vp)) || Number(vp) < 0) return false
+      if (lp === undefined || lp === null || (lp as unknown) === '' || isNaN(Number(lp)) || Number(lp) < 0) return false
+      if (vp === undefined || vp === null || (vp as unknown) === '' || isNaN(Number(vp)) || Number(vp) < 0) return false
       if (Number(lp) === Number(vp)) return false
     }
   }

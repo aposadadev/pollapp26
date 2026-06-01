@@ -82,11 +82,15 @@ export default defineEventHandler(async (event) => {
 
   for (const docSnap of predsSnap.docs) {
     const pred = docSnap.data()
-    const hasPrediction = pred.localGoalPrediction !== null && pred.localGoalPrediction !== undefined &&
-                          pred.visitorGoalPrediction !== null && pred.visitorGoalPrediction !== undefined
+    const localPred = pred.localGoalPrediction
+    const visitorPred = pred.visitorGoalPrediction
+    const hasPrediction = localPred !== null
+      && localPred !== undefined
+      && visitorPred !== null
+      && visitorPred !== undefined
     const points = hasPrediction
       ? scoringService.calculatePoints(
-          { localGoals: pred.localGoalPrediction, visitorGoals: pred.visitorGoalPrediction },
+          { localGoals: localPred, visitorGoals: visitorPred },
           { localGoals, visitorGoals }
         )
       : 0
