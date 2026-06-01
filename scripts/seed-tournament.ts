@@ -124,129 +124,121 @@ type MatchPhase
     | 'Tercer Lugar'
     | 'Final'
 
-interface MatchDef {
-  localIdx: number
-  visitorIdx: number
-  date: Date
-  phase: MatchPhase
+interface RealMatchDef {
   matchNumber: number
+  localTeam: string
+  visitorTeam: string
+  date: string
+  phase: MatchPhase
+  stadium: string
 }
 
-// Generación de partidos de fase de grupos (72 partidos)
-const groupMatches: MatchDef[] = []
-const GROUP_START_DATE = new Date('2026-06-11T13:00:00Z')
-const HOURS = [13, 16, 19, 22]
-
-let matchCounter = 1
-
-for (let round = 1; round <= 3; round++) {
-  for (let g = 0; g < 12; g++) {
-    const startIdx = g * 4
-
-    // Función auxiliar para obtener la fecha del partido secuencialmente
-    const getMatchDate = (index: number) => {
-      const dayOffset = Math.floor((index - 1) / 4)
-      const slot = (index - 1) % 4
-      const d = new Date(GROUP_START_DATE)
-      d.setUTCDate(d.getUTCDate() + dayOffset)
-      d.setUTCHours(HOURS[slot])
-      return d
-    }
-
-    if (round === 1) {
-      groupMatches.push({
-        localIdx: startIdx,
-        visitorIdx: startIdx + 1,
-        date: getMatchDate(matchCounter),
-        phase: 'Fase de Grupos',
-        matchNumber: matchCounter++
-      })
-      groupMatches.push({
-        localIdx: startIdx + 2,
-        visitorIdx: startIdx + 3,
-        date: getMatchDate(matchCounter),
-        phase: 'Fase de Grupos',
-        matchNumber: matchCounter++
-      })
-    } else if (round === 2) {
-      groupMatches.push({
-        localIdx: startIdx,
-        visitorIdx: startIdx + 2,
-        date: getMatchDate(matchCounter),
-        phase: 'Fase de Grupos',
-        matchNumber: matchCounter++
-      })
-      groupMatches.push({
-        localIdx: startIdx + 1,
-        visitorIdx: startIdx + 3,
-        date: getMatchDate(matchCounter),
-        phase: 'Fase de Grupos',
-        matchNumber: matchCounter++
-      })
-    } else {
-      groupMatches.push({
-        localIdx: startIdx,
-        visitorIdx: startIdx + 3,
-        date: getMatchDate(matchCounter),
-        phase: 'Fase de Grupos',
-        matchNumber: matchCounter++
-      })
-      groupMatches.push({
-        localIdx: startIdx + 1,
-        visitorIdx: startIdx + 2,
-        date: getMatchDate(matchCounter),
-        phase: 'Fase de Grupos',
-        matchNumber: matchCounter++
-      })
-    }
-  }
-}
-
-// Definición de partidos de fase de eliminación (32 partidos)
-const TBD_INDEX = 48
-const knockoutMatchesDefs: Array<{ count: number, phase: MatchPhase, startDateStr: string, hourIntervalHours: number, dailyCount: number }> = [
-  { count: 16, phase: 'Dieciseisavos de Final', startDateStr: '2026-06-29T13:00:00Z', hourIntervalHours: 3, dailyCount: 4 },
-  { count: 8, phase: 'Octavos de Final', startDateStr: '2026-07-04T16:00:00Z', hourIntervalHours: 4, dailyCount: 2 },
-  { count: 4, phase: 'Cuartos de Final', startDateStr: '2026-07-09T16:00:00Z', hourIntervalHours: 4, dailyCount: 2 },
-  { count: 2, phase: 'Semifinales', startDateStr: '2026-07-14T20:00:00Z', hourIntervalHours: 24, dailyCount: 1 },
-  { count: 1, phase: 'Tercer Lugar', startDateStr: '2026-07-18T20:00:00Z', hourIntervalHours: 0, dailyCount: 1 },
-  { count: 1, phase: 'Final', startDateStr: '2026-07-19T20:00:00Z', hourIntervalHours: 0, dailyCount: 1 }
+const REAL_MATCHES: RealMatchDef[] = [
+  { matchNumber: 1, localTeam: 'MEX', visitorTeam: 'RSA', date: '2026-06-11T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Ciudad de México' },
+  { matchNumber: 2, localTeam: 'KOR', visitorTeam: 'CZE', date: '2026-06-12T02:00:00Z', phase: 'Fase de Grupos', stadium: 'Guadalajara' },
+  { matchNumber: 3, localTeam: 'CAN', visitorTeam: 'BIH', date: '2026-06-12T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Toronto' },
+  { matchNumber: 4, localTeam: 'USA', visitorTeam: 'PAR', date: '2026-06-13T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Los Ángeles' },
+  { matchNumber: 5, localTeam: 'HAI', visitorTeam: 'SCO', date: '2026-06-14T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Boston' },
+  { matchNumber: 6, localTeam: 'AUS', visitorTeam: 'TUR', date: '2026-06-14T04:00:00Z', phase: 'Fase de Grupos', stadium: 'Vancouver' },
+  { matchNumber: 7, localTeam: 'BRA', visitorTeam: 'MAR', date: '2026-06-13T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Nueva York / Nueva Jersey' },
+  { matchNumber: 8, localTeam: 'QAT', visitorTeam: 'SUI', date: '2026-06-13T19:00:00Z', phase: 'Fase de Grupos', stadium: 'San Francisco' },
+  { matchNumber: 9, localTeam: 'CIV', visitorTeam: 'ECU', date: '2026-06-14T23:00:00Z', phase: 'Fase de Grupos', stadium: 'Philadelphia' },
+  { matchNumber: 10, localTeam: 'GER', visitorTeam: 'CUW', date: '2026-06-14T17:00:00Z', phase: 'Fase de Grupos', stadium: 'Houston' },
+  { matchNumber: 11, localTeam: 'NED', visitorTeam: 'JPN', date: '2026-06-14T20:00:00Z', phase: 'Fase de Grupos', stadium: 'Dallas' },
+  { matchNumber: 12, localTeam: 'SWE', visitorTeam: 'TUN', date: '2026-06-15T02:00:00Z', phase: 'Fase de Grupos', stadium: 'Monterrey' },
+  { matchNumber: 13, localTeam: 'KSA', visitorTeam: 'URU', date: '2026-06-15T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Miami' },
+  { matchNumber: 14, localTeam: 'ESP', visitorTeam: 'CPV', date: '2026-06-15T16:00:00Z', phase: 'Fase de Grupos', stadium: 'Atlanta' },
+  { matchNumber: 15, localTeam: 'IRN', visitorTeam: 'NZL', date: '2026-06-16T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Los Ángeles' },
+  { matchNumber: 16, localTeam: 'BEL', visitorTeam: 'EGY', date: '2026-06-15T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Seattle' },
+  { matchNumber: 17, localTeam: 'FRA', visitorTeam: 'SEN', date: '2026-06-16T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Nueva York / Nueva Jersey' },
+  { matchNumber: 18, localTeam: 'IRQ', visitorTeam: 'NOR', date: '2026-06-16T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Boston' },
+  { matchNumber: 19, localTeam: 'ARG', visitorTeam: 'ALG', date: '2026-06-17T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Kansas City' },
+  { matchNumber: 20, localTeam: 'AUT', visitorTeam: 'JOR', date: '2026-06-17T04:00:00Z', phase: 'Fase de Grupos', stadium: 'San Francisco' },
+  { matchNumber: 21, localTeam: 'GHA', visitorTeam: 'PAN', date: '2026-06-17T23:00:00Z', phase: 'Fase de Grupos', stadium: 'Toronto' },
+  { matchNumber: 22, localTeam: 'ENG', visitorTeam: 'CRO', date: '2026-06-17T20:00:00Z', phase: 'Fase de Grupos', stadium: 'Dallas' },
+  { matchNumber: 23, localTeam: 'POR', visitorTeam: 'COD', date: '2026-06-17T17:00:00Z', phase: 'Fase de Grupos', stadium: 'Houston' },
+  { matchNumber: 24, localTeam: 'UZB', visitorTeam: 'COL', date: '2026-06-18T02:00:00Z', phase: 'Fase de Grupos', stadium: 'Ciudad de México' },
+  { matchNumber: 25, localTeam: 'CZE', visitorTeam: 'RSA', date: '2026-06-18T16:00:00Z', phase: 'Fase de Grupos', stadium: 'Atlanta' },
+  { matchNumber: 26, localTeam: 'SUI', visitorTeam: 'BIH', date: '2026-06-18T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Los Ángeles' },
+  { matchNumber: 27, localTeam: 'CAN', visitorTeam: 'QAT', date: '2026-06-18T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Vancouver' },
+  { matchNumber: 28, localTeam: 'MEX', visitorTeam: 'KOR', date: '2026-06-19T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Guadalajara' },
+  { matchNumber: 29, localTeam: 'BRA', visitorTeam: 'HAI', date: '2026-06-20T00:30:00Z', phase: 'Fase de Grupos', stadium: 'Philadelphia' },
+  { matchNumber: 30, localTeam: 'SCO', visitorTeam: 'MAR', date: '2026-06-19T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Boston' },
+  { matchNumber: 31, localTeam: 'TUR', visitorTeam: 'PAR', date: '2026-06-20T03:00:00Z', phase: 'Fase de Grupos', stadium: 'San Francisco' },
+  { matchNumber: 32, localTeam: 'USA', visitorTeam: 'AUS', date: '2026-06-19T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Seattle' },
+  { matchNumber: 33, localTeam: 'GER', visitorTeam: 'CIV', date: '2026-06-20T20:00:00Z', phase: 'Fase de Grupos', stadium: 'Toronto' },
+  { matchNumber: 34, localTeam: 'ECU', visitorTeam: 'CUW', date: '2026-06-21T00:00:00Z', phase: 'Fase de Grupos', stadium: 'Kansas City' },
+  { matchNumber: 35, localTeam: 'NED', visitorTeam: 'SWE', date: '2026-06-20T17:00:00Z', phase: 'Fase de Grupos', stadium: 'Houston' },
+  { matchNumber: 36, localTeam: 'TUN', visitorTeam: 'JPN', date: '2026-06-21T04:00:00Z', phase: 'Fase de Grupos', stadium: 'Monterrey' },
+  { matchNumber: 37, localTeam: 'URU', visitorTeam: 'CPV', date: '2026-06-21T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Miami' },
+  { matchNumber: 38, localTeam: 'ESP', visitorTeam: 'KSA', date: '2026-06-21T16:00:00Z', phase: 'Fase de Grupos', stadium: 'Atlanta' },
+  { matchNumber: 39, localTeam: 'BEL', visitorTeam: 'IRN', date: '2026-06-21T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Los Ángeles' },
+  { matchNumber: 40, localTeam: 'NZL', visitorTeam: 'EGY', date: '2026-06-22T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Vancouver' },
+  { matchNumber: 41, localTeam: 'NOR', visitorTeam: 'SEN', date: '2026-06-23T00:00:00Z', phase: 'Fase de Grupos', stadium: 'Nueva York / Nueva Jersey' },
+  { matchNumber: 42, localTeam: 'FRA', visitorTeam: 'IRQ', date: '2026-06-22T21:00:00Z', phase: 'Fase de Grupos', stadium: 'Philadelphia' },
+  { matchNumber: 43, localTeam: 'ARG', visitorTeam: 'AUT', date: '2026-06-22T17:00:00Z', phase: 'Fase de Grupos', stadium: 'Dallas' },
+  { matchNumber: 44, localTeam: 'JOR', visitorTeam: 'ALG', date: '2026-06-23T03:00:00Z', phase: 'Fase de Grupos', stadium: 'San Francisco' },
+  { matchNumber: 45, localTeam: 'ENG', visitorTeam: 'GHA', date: '2026-06-23T20:00:00Z', phase: 'Fase de Grupos', stadium: 'Boston' },
+  { matchNumber: 46, localTeam: 'PAN', visitorTeam: 'CRO', date: '2026-06-23T23:00:00Z', phase: 'Fase de Grupos', stadium: 'Toronto' },
+  { matchNumber: 47, localTeam: 'POR', visitorTeam: 'UZB', date: '2026-06-23T17:00:00Z', phase: 'Fase de Grupos', stadium: 'Houston' },
+  { matchNumber: 48, localTeam: 'COL', visitorTeam: 'COD', date: '2026-06-24T02:00:00Z', phase: 'Fase de Grupos', stadium: 'Guadalajara' },
+  { matchNumber: 49, localTeam: 'SCO', visitorTeam: 'BRA', date: '2026-06-24T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Miami' },
+  { matchNumber: 50, localTeam: 'MAR', visitorTeam: 'HAI', date: '2026-06-24T22:00:00Z', phase: 'Fase de Grupos', stadium: 'Atlanta' },
+  { matchNumber: 51, localTeam: 'SUI', visitorTeam: 'CAN', date: '2026-06-24T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Vancouver' },
+  { matchNumber: 52, localTeam: 'BIH', visitorTeam: 'QAT', date: '2026-06-24T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Seattle' },
+  { matchNumber: 53, localTeam: 'CZE', visitorTeam: 'MEX', date: '2026-06-25T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Ciudad de México' },
+  { matchNumber: 54, localTeam: 'RSA', visitorTeam: 'KOR', date: '2026-06-25T01:00:00Z', phase: 'Fase de Grupos', stadium: 'Monterrey' },
+  { matchNumber: 55, localTeam: 'CUW', visitorTeam: 'CIV', date: '2026-06-25T20:00:00Z', phase: 'Fase de Grupos', stadium: 'Philadelphia' },
+  { matchNumber: 56, localTeam: 'ECU', visitorTeam: 'GER', date: '2026-06-25T20:00:00Z', phase: 'Fase de Grupos', stadium: 'Nueva York / Nueva Jersey' },
+  { matchNumber: 57, localTeam: 'JPN', visitorTeam: 'SWE', date: '2026-06-25T23:00:00Z', phase: 'Fase de Grupos', stadium: 'Dallas' },
+  { matchNumber: 58, localTeam: 'TUN', visitorTeam: 'NED', date: '2026-06-25T23:00:00Z', phase: 'Fase de Grupos', stadium: 'Kansas City' },
+  { matchNumber: 59, localTeam: 'TUR', visitorTeam: 'USA', date: '2026-06-26T02:00:00Z', phase: 'Fase de Grupos', stadium: 'Los Ángeles' },
+  { matchNumber: 60, localTeam: 'PAR', visitorTeam: 'AUS', date: '2026-06-26T02:00:00Z', phase: 'Fase de Grupos', stadium: 'San Francisco' },
+  { matchNumber: 61, localTeam: 'NOR', visitorTeam: 'FRA', date: '2026-06-26T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Boston' },
+  { matchNumber: 62, localTeam: 'SEN', visitorTeam: 'IRQ', date: '2026-06-26T19:00:00Z', phase: 'Fase de Grupos', stadium: 'Toronto' },
+  { matchNumber: 63, localTeam: 'EGY', visitorTeam: 'IRN', date: '2026-06-27T03:00:00Z', phase: 'Fase de Grupos', stadium: 'Seattle' },
+  { matchNumber: 64, localTeam: 'NZL', visitorTeam: 'BEL', date: '2026-06-27T03:00:00Z', phase: 'Fase de Grupos', stadium: 'Vancouver' },
+  { matchNumber: 65, localTeam: 'CPV', visitorTeam: 'KSA', date: '2026-06-27T00:00:00Z', phase: 'Fase de Grupos', stadium: 'Houston' },
+  { matchNumber: 66, localTeam: 'URU', visitorTeam: 'ESP', date: '2026-06-27T00:00:00Z', phase: 'Fase de Grupos', stadium: 'Guadalajara' },
+  { matchNumber: 67, localTeam: 'PAN', visitorTeam: 'ENG', date: '2026-06-27T21:00:00Z', phase: 'Fase de Grupos', stadium: 'Nueva York / Nueva Jersey' },
+  { matchNumber: 68, localTeam: 'CRO', visitorTeam: 'GHA', date: '2026-06-27T21:00:00Z', phase: 'Fase de Grupos', stadium: 'Philadelphia' },
+  { matchNumber: 69, localTeam: 'ALG', visitorTeam: 'AUT', date: '2026-06-28T02:00:00Z', phase: 'Fase de Grupos', stadium: 'Kansas City' },
+  { matchNumber: 70, localTeam: 'JOR', visitorTeam: 'ARG', date: '2026-06-28T02:00:00Z', phase: 'Fase de Grupos', stadium: 'Dallas' },
+  { matchNumber: 71, localTeam: 'COL', visitorTeam: 'POR', date: '2026-06-27T23:30:00Z', phase: 'Fase de Grupos', stadium: 'Miami' },
+  { matchNumber: 72, localTeam: 'COD', visitorTeam: 'UZB', date: '2026-06-27T23:30:00Z', phase: 'Fase de Grupos', stadium: 'Atlanta' },
+  { matchNumber: 73, localTeam: '2A', visitorTeam: '2B', date: '2026-06-28T19:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Los Ángeles' },
+  { matchNumber: 74, localTeam: '1E', visitorTeam: '3A/B/C/D/F', date: '2026-06-29T20:30:00Z', phase: 'Dieciseisavos de Final', stadium: 'Boston' },
+  { matchNumber: 75, localTeam: '1F', visitorTeam: '2C', date: '2026-06-30T01:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Monterrey' },
+  { matchNumber: 76, localTeam: '1C', visitorTeam: '2F', date: '2026-06-29T17:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Houston' },
+  { matchNumber: 77, localTeam: '1I', visitorTeam: '3C/D/F/G/H', date: '2026-06-30T21:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Nueva York / Nueva Jersey' },
+  { matchNumber: 78, localTeam: '2E', visitorTeam: '2I', date: '2026-06-30T17:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Dallas' },
+  { matchNumber: 79, localTeam: '1A', visitorTeam: '3C/E/F/H/I', date: '2026-07-01T01:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Ciudad de México' },
+  { matchNumber: 80, localTeam: '1L', visitorTeam: '3E/H/I/J/K', date: '2026-07-01T16:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Atlanta' },
+  { matchNumber: 81, localTeam: '1D', visitorTeam: '3B/E/F/I/J', date: '2026-07-02T00:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'San Francisco' },
+  { matchNumber: 82, localTeam: '1G', visitorTeam: '3A/E/H/I/J', date: '2026-07-01T20:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Seattle' },
+  { matchNumber: 83, localTeam: '2K', visitorTeam: '2L', date: '2026-07-02T23:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Toronto' },
+  { matchNumber: 84, localTeam: '1H', visitorTeam: '2J', date: '2026-07-02T19:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Los Ángeles' },
+  { matchNumber: 85, localTeam: '1B', visitorTeam: '3E/F/G/I/J', date: '2026-07-03T03:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Vancouver' },
+  { matchNumber: 86, localTeam: '1J', visitorTeam: '2H', date: '2026-07-03T22:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Miami' },
+  { matchNumber: 87, localTeam: '1K', visitorTeam: '3D/E/I/J/L', date: '2026-07-04T01:30:00Z', phase: 'Dieciseisavos de Final', stadium: 'Kansas City' },
+  { matchNumber: 88, localTeam: '2D', visitorTeam: '2G', date: '2026-07-03T18:00:00Z', phase: 'Dieciseisavos de Final', stadium: 'Dallas' },
+  { matchNumber: 89, localTeam: 'W74', visitorTeam: 'W77', date: '2026-07-04T21:00:00Z', phase: 'Octavos de Final', stadium: 'Philadelphia' },
+  { matchNumber: 90, localTeam: 'W73', visitorTeam: 'W75', date: '2026-07-04T17:00:00Z', phase: 'Octavos de Final', stadium: 'Houston' },
+  { matchNumber: 91, localTeam: 'W76', visitorTeam: 'W78', date: '2026-07-05T20:00:00Z', phase: 'Octavos de Final', stadium: 'Nueva York / Nueva Jersey' },
+  { matchNumber: 92, localTeam: 'W79', visitorTeam: 'W80', date: '2026-07-06T00:00:00Z', phase: 'Octavos de Final', stadium: 'Ciudad de México' },
+  { matchNumber: 93, localTeam: 'W83', visitorTeam: 'W84', date: '2026-07-06T19:00:00Z', phase: 'Octavos de Final', stadium: 'Dallas' },
+  { matchNumber: 94, localTeam: 'W81', visitorTeam: 'W82', date: '2026-07-07T00:00:00Z', phase: 'Octavos de Final', stadium: 'Seattle' },
+  { matchNumber: 95, localTeam: 'W86', visitorTeam: 'W88', date: '2026-07-07T16:00:00Z', phase: 'Octavos de Final', stadium: 'Atlanta' },
+  { matchNumber: 96, localTeam: 'W85', visitorTeam: 'W87', date: '2026-07-07T20:00:00Z', phase: 'Octavos de Final', stadium: 'Vancouver' },
+  { matchNumber: 97, localTeam: 'W89', visitorTeam: 'W90', date: '2026-07-09T20:00:00Z', phase: 'Cuartos de Final', stadium: 'Boston' },
+  { matchNumber: 98, localTeam: 'W93', visitorTeam: 'W94', date: '2026-07-10T19:00:00Z', phase: 'Cuartos de Final', stadium: 'Los Ángeles' },
+  { matchNumber: 99, localTeam: 'W91', visitorTeam: 'W92', date: '2026-07-11T21:00:00Z', phase: 'Cuartos de Final', stadium: 'Miami' },
+  { matchNumber: 100, localTeam: 'W95', visitorTeam: 'W96', date: '2026-07-12T01:00:00Z', phase: 'Cuartos de Final', stadium: 'Kansas City' },
+  { matchNumber: 101, localTeam: 'W97', visitorTeam: 'W98', date: '2026-07-14T19:00:00Z', phase: 'Semifinales', stadium: 'Dallas' },
+  { matchNumber: 102, localTeam: 'W99', visitorTeam: 'W100', date: '2026-07-15T19:00:00Z', phase: 'Semifinales', stadium: 'Atlanta' },
+  { matchNumber: 103, localTeam: 'L101', visitorTeam: 'L102', date: '2026-07-18T21:00:00Z', phase: 'Tercer Lugar', stadium: 'Miami' },
+  { matchNumber: 104, localTeam: 'W101', visitorTeam: 'W102', date: '2026-07-19T19:00:00Z', phase: 'Final', stadium: 'Nueva York / Nueva Jersey' }
 ]
-
-const knockoutMatches: MatchDef[] = []
-for (const def of knockoutMatchesDefs) {
-  const baseDate = new Date(def.startDateStr)
-  for (let i = 0; i < def.count; i++) {
-    const matchDate = new Date(baseDate)
-    if (def.dailyCount === 1) {
-      // 1 partido por día
-      matchDate.setUTCDate(baseDate.getUTCDate() + i)
-    } else {
-      // Múltiples partidos por día
-      const dayOffset = Math.floor(i / def.dailyCount)
-      const slot = i % def.dailyCount
-      matchDate.setUTCDate(baseDate.getUTCDate() + dayOffset)
-
-      if (def.phase === 'Dieciseisavos de Final') {
-        const hours = [13, 16, 19, 22]
-        matchDate.setUTCHours(hours[slot])
-      } else {
-        const hours = [16, 20]
-        matchDate.setUTCHours(hours[slot])
-      }
-    }
-
-    knockoutMatches.push({
-      localIdx: TBD_INDEX,
-      visitorIdx: TBD_INDEX,
-      date: matchDate,
-      phase: def.phase,
-      matchNumber: matchCounter++
-    })
-  }
-}
-
-const ALL_MATCHES = [...groupMatches, ...knockoutMatches]
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
@@ -282,29 +274,39 @@ async function main() {
     // Partidos
     console.log('📦 Creando partidos en Firestore...')
 
-    // Firestore batch admite hasta 500 operaciones por lote. Como son 104 partidos, cabe de sobra en un solo lote!
     const matchesBatch = db.batch()
 
-    for (const m of ALL_MATCHES) {
-      const local = TEAMS[m.localIdx]
-      const visitor = TEAMS[m.visitorIdx]
+    // Crear un mapa de shortName -> index en TEAMS
+    const teamShortNameMap = new Map<string, number>()
+    TEAMS.forEach((team, idx) => {
+      teamShortNameMap.set(team.shortName, idx)
+    })
+    const TBD_INDEX = teamShortNameMap.get('TBD') ?? 48
+
+    for (const m of REAL_MATCHES) {
+      const localIdx = teamShortNameMap.has(m.localTeam) ? teamShortNameMap.get(m.localTeam)! : TBD_INDEX
+      const visitorIdx = teamShortNameMap.has(m.visitorTeam) ? teamShortNameMap.get(m.visitorTeam)! : TBD_INDEX
+
+      const local = TEAMS[localIdx]
+      const visitor = TEAMS[visitorIdx]
       const localLogo = local.logoUrl || (local.country ? `https://flagcdn.com/w80/${local.country.toLowerCase()}.png` : '')
       const visitorLogo = visitor.logoUrl || (visitor.country ? `https://flagcdn.com/w80/${visitor.country.toLowerCase()}.png` : '')
       const matchDocRef = db.collection('matches').doc()
 
       matchesBatch.set(matchDocRef, {
         tournamentId: TOURNAMENT_ID,
-        localTeamId: teamIds[m.localIdx],
-        visitorTeamId: teamIds[m.visitorIdx],
+        localTeamId: teamIds[localIdx],
+        visitorTeamId: teamIds[visitorIdx],
         localTeamName: local.name,
         visitorTeamName: visitor.name,
         localTeamLogo: localLogo,
         visitorTeamLogo: visitorLogo,
         localGoals: null,
         visitorGoals: null,
-        date: m.date,
+        date: new Date(m.date),
         phase: m.phase,
         matchNumber: m.matchNumber,
+        stadium: m.stadium,
         status: 'scheduled',
         isActive: false,
         isClosed: false,
@@ -316,7 +318,7 @@ async function main() {
     }
 
     await matchesBatch.commit()
-    console.log(`   → ${ALL_MATCHES.length} partidos creados\n`)
+    console.log(`   → ${REAL_MATCHES.length} partidos creados\n`)
 
     console.log('✅ Seed de torneo completado con éxito!')
   } catch (err) {
