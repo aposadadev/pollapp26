@@ -44,10 +44,14 @@ export const onMatchClosed = onDocumentUpdated(
     // 2. Calcular y actualizar puntos
     for (const doc of predsSnap.docs) {
       const pred = doc.data()
-      const points = calculatePoints(
-        { localGoals: pred['localGoalPrediction'] ?? 0, visitorGoals: pred['visitorGoalPrediction'] ?? 0 },
-        { localGoals, visitorGoals }
-      )
+      const hasPrediction = pred['localGoalPrediction'] !== null && pred['localGoalPrediction'] !== undefined &&
+                            pred['visitorGoalPrediction'] !== null && pred['visitorGoalPrediction'] !== undefined
+      const points = hasPrediction
+        ? calculatePoints(
+            { localGoals: pred['localGoalPrediction'], visitorGoals: pred['visitorGoalPrediction'] },
+            { localGoals, visitorGoals }
+          )
+        : 0
       batch1.update(doc.ref, { points })
       affectedBoardIds.add(pred['boardId'] as string)
     }

@@ -130,6 +130,15 @@ const positionIcon = (board: Board) => {
             <span class="text-white text-[12px] font-black leading-none">{{ board.predsOnePoints }} Parciales</span>
           </div>
         </div>
+        <div class="flex items-center gap-2">
+          <UIcon
+            name="i-lucide-trophy"
+            class="size-4 text-amber-400 shrink-0"
+          />
+          <div class="flex flex-col">
+            <span class="text-white text-[12px] font-black leading-none">{{ board.totalTeamsGuessed ?? 0 }} Clasificados</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>

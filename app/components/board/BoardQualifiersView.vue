@@ -90,6 +90,11 @@ const isReadonly = computed(() => {
   return props.board.userId !== authStore.user?.id
 })
 
+function isRealTeam(teamId: string | undefined | null): boolean {
+  if (!teamId) return false
+  return teams.value.some(t => t.id === teamId)
+}
+
 const enabledTabs = computed(() => {
   return tabs.filter((t) => {
     if (t.value === 'dieciseisavos') return true
@@ -107,12 +112,7 @@ const enabledTabs = computed(() => {
     const phaseMatches = matches.value.filter(m => m.phase === matchPhase)
     if (phaseMatches.length === 0) return false
 
-    return phaseMatches.every(m =>
-      m.localTeamId
-      && m.visitorTeamId
-      && teams.value.some(t => t.id === m.localTeamId)
-      && teams.value.some(t => t.id === m.visitorTeamId)
-    )
+    return phaseMatches.some(m => isRealTeam(m.localTeamId) && isRealTeam(m.visitorTeamId))
   })
 })
 
@@ -129,7 +129,7 @@ const isDeadlinePassed = computed(() => {
 })
 
 const isLocked = computed(() => {
-  return isReadonly.value
+  return isReadonly.value || isDeadlinePassed.value
 })
 
 const formattedDeadline = computed(() => {
@@ -241,10 +241,9 @@ function toggleDieciseisavosTeam(team: Team) {
   }
 }
 
-// Control de selección por llave (Knockout phases)
 function selectMatchWinner(match: Match, teamId: string) {
   if (isLocked.value) return
-  if (!teamId || teamId === 'tbd') return
+  if (!isRealTeam(teamId)) return
 
   const phase = activeTab.value
   const list = [...localPredictions.value[phase]]
@@ -528,7 +527,7 @@ async function handleSave() {
                     ? 'border-error-500 bg-error-500/10 text-error-600 dark:text-error-400'
                     : 'border-secondary-500 bg-secondary-500/10 text-secondary-600 dark:text-secondary-400 font-extrabold'
                 : 'border-(--ui-border) bg-(--ui-bg-elevated) text-neutral-800 dark:text-neutral-200 hover:border-neutral-400',
-              isLocked || match.localTeamId === 'tbd' || !match.localTeamId ? 'opacity-85 pointer-events-none' : 'active:scale-95'
+              isLocked || !isRealTeam(match.localTeamId) ? 'opacity-85 pointer-events-none' : 'active:scale-95'
             ]"
             @click="selectMatchWinner(match, match.localTeamId)"
           >
@@ -572,7 +571,7 @@ async function handleSave() {
                     ? 'border-error-500 bg-error-500/10 text-error-600 dark:text-error-400'
                     : 'border-secondary-500 bg-secondary-500/10 text-secondary-600 dark:text-secondary-400 font-extrabold'
                 : 'border-(--ui-border) bg-(--ui-bg-elevated) text-neutral-800 dark:text-neutral-200 hover:border-neutral-400',
-              isLocked || match.visitorTeamId === 'tbd' || !match.visitorTeamId ? 'opacity-85 pointer-events-none' : 'active:scale-95'
+              isLocked || !isRealTeam(match.visitorTeamId) ? 'opacity-85 pointer-events-none' : 'active:scale-95'
             ]"
             @click="selectMatchWinner(match, match.visitorTeamId)"
           >

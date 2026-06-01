@@ -23,20 +23,42 @@ const showTeamsModal = computed({
 })
 const tab = ref<'active' | 'scheduled' | 'closed'>('active')
 
-// Close match form
 const closeForm = reactive({
-  localGoals: 0,
-  visitorGoals: 0,
+  localGoals: undefined as number | undefined,
+  visitorGoals: undefined as number | undefined,
   hasExtraTime: false,
-  localGoalsOT: 0,
-  visitorGoalsOT: 0,
+  localGoalsOT: undefined as number | undefined,
+  visitorGoalsOT: undefined as number | undefined,
   hasPenalties: false,
-  localPenalties: 0,
-  visitorPenalties: 0
+  localPenalties: undefined as number | undefined,
+  visitorPenalties: undefined as number | undefined
 })
 
 const currentClosingMatch = computed(() => {
   return matches.value.find(m => m.id === closingMatchId.value)
+})
+
+const isValidClose = computed(() => {
+  const lg = closeForm.localGoals
+  const vg = closeForm.visitorGoals
+  if (lg === undefined || lg === null || (lg as any) === '' || isNaN(Number(lg)) || Number(lg) < 0) return false
+  if (vg === undefined || vg === null || (vg as any) === '' || isNaN(Number(vg)) || Number(vg) < 0) return false
+
+  if (closeForm.hasExtraTime) {
+    const lgOt = closeForm.localGoalsOT
+    const vgOt = closeForm.visitorGoalsOT
+    if (lgOt === undefined || lgOt === null || (lgOt as any) === '' || isNaN(Number(lgOt)) || Number(lgOt) < 0) return false
+    if (vgOt === undefined || vgOt === null || (vgOt as any) === '' || isNaN(Number(vgOt)) || Number(vgOt) < 0) return false
+
+    if (closeForm.hasPenalties) {
+      const lp = closeForm.localPenalties
+      const vp = closeForm.visitorPenalties
+      if (lp === undefined || lp === null || (lp as any) === '' || isNaN(Number(lp)) || Number(lp) < 0) return false
+      if (vp === undefined || vp === null || (vp as any) === '' || isNaN(Number(vp)) || Number(vp) < 0) return false
+      if (Number(lp) === Number(vp)) return false
+    }
+  }
+  return true
 })
 
 watch(() => closeForm.hasExtraTime, (val) => {
@@ -86,14 +108,14 @@ onMounted(async () => {
 
 function openCloseModal(match: Match) {
   closingMatchId.value = match.id
-  closeForm.localGoals = 0
-  closeForm.visitorGoals = 0
+  closeForm.localGoals = undefined
+  closeForm.visitorGoals = undefined
   closeForm.hasExtraTime = false
-  closeForm.localGoalsOT = 0
-  closeForm.visitorGoalsOT = 0
+  closeForm.localGoalsOT = undefined
+  closeForm.visitorGoalsOT = undefined
   closeForm.hasPenalties = false
-  closeForm.localPenalties = 0
-  closeForm.visitorPenalties = 0
+  closeForm.localPenalties = undefined
+  closeForm.visitorPenalties = undefined
 }
 
 function openTeamsModal(match: Match) {
@@ -432,6 +454,7 @@ async function handleUpdateTeams() {
               :loading="loading"
               icon="i-lucide-flag"
               class="flex-1 font-bold"
+              :disabled="!isValidClose"
               @click="handleCloseMatch"
             >
               Confirmar
