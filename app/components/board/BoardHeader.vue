@@ -8,6 +8,9 @@ interface Props {
 
 defineProps<Props>()
 
+const runtimeConfig = useRuntimeConfig()
+const enableQualifiers = computed(() => runtimeConfig.public.enableQualifiers)
+
 const positionIcon = (board: Board) => {
   if (board.currentPos < board.previousPos && board.previousPos > 0)
     return {
@@ -130,7 +133,10 @@ const positionIcon = (board: Board) => {
             <span class="text-white text-[12px] font-black leading-none">{{ board.predsOnePoints }} Parciales</span>
           </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div
+          v-if="enableQualifiers"
+          class="flex items-center gap-2"
+        >
           <UIcon
             name="i-lucide-trophy"
             class="size-4 text-amber-400 shrink-0"

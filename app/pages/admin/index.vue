@@ -22,43 +22,54 @@ onMounted(async () => {
   await loadAll()
 })
 
-const adminActions = [
-  {
-    to: '/admin/groups',
-    label: 'Gestionar Tablas',
-    icon: 'i-lucide-clipboard-list',
-    color: 'bg-secondary-500/10 text-secondary-600',
-    description: 'Aprobación y activación de tablas'
-  },
-  {
-    to: '/admin/matches',
-    label: 'Cerrar Partidos',
-    icon: 'i-lucide-trophy',
-    color: 'bg-primary-500/10 text-primary-600',
-    description: 'Resultados finales y puntajes'
-  },
-  {
-    to: '/admin/qualifiers',
-    label: 'Clasificaciones Fases',
-    icon: 'i-lucide-award',
-    color: 'bg-primary-500/10 text-primary-600',
-    description: 'Tiempo límite y clasificados por fase'
-  },
-  {
-    to: '/admin/teams',
-    label: 'Equipos y Sedes',
-    icon: 'i-lucide-shield-check',
-    color: 'bg-secondary-500/10 text-secondary-600',
-    description: 'Configuración de participantes'
-  },
-  {
-    to: '/admin/notifications',
-    label: 'Notificaciones Push',
-    icon: 'i-lucide-bell-ring',
-    color: 'bg-primary-500/10 text-primary-600',
-    description: 'Enviar avisos globales o segmentados'
+const runtimeConfig = useRuntimeConfig()
+const enableQualifiers = computed(() => runtimeConfig.public.enableQualifiers)
+
+const adminActions = computed(() => {
+  const actions = [
+    {
+      to: '/admin/groups',
+      label: 'Gestionar Tablas',
+      icon: 'i-lucide-clipboard-list',
+      color: 'bg-secondary-500/10 text-secondary-600',
+      description: 'Aprobación y activación de tablas'
+    },
+    {
+      to: '/admin/matches',
+      label: 'Cerrar Partidos',
+      icon: 'i-lucide-trophy',
+      color: 'bg-primary-500/10 text-primary-600',
+      description: 'Resultados finales y puntajes'
+    },
+    {
+      to: '/admin/qualifiers',
+      label: 'Clasificaciones Fases',
+      icon: 'i-lucide-award',
+      color: 'bg-primary-500/10 text-primary-600',
+      description: 'Tiempo límite y clasificados por fase'
+    },
+    {
+      to: '/admin/teams',
+      label: 'Equipos y Sedes',
+      icon: 'i-lucide-shield-check',
+      color: 'bg-secondary-500/10 text-secondary-600',
+      description: 'Configuración de participantes'
+    },
+    {
+      to: '/admin/notifications',
+      label: 'Notificaciones Push',
+      icon: 'i-lucide-bell-ring',
+      color: 'bg-primary-500/10 text-primary-600',
+      description: 'Enviar avisos globales o segmentados'
+    }
+  ]
+
+  if (!enableQualifiers.value) {
+    return actions.filter(action => action.to !== '/admin/qualifiers')
   }
-]
+
+  return actions
+})
 </script>
 
 <template>

@@ -11,6 +11,9 @@ const appStore = useAppStore()
 const authStore = useAuthStore()
 const groupContextStore = useGroupContextStore()
 
+const runtimeConfig = useRuntimeConfig()
+const enableQualifiers = computed(() => runtimeConfig.public.enableQualifiers)
+
 const route = useRoute()
 const router = useRouter()
 const boardId = computed(() => route.params.boardId as string)
@@ -164,6 +167,7 @@ async function handleSave(
           <span class="text-xs font-bold uppercase tracking-wider">Anteriores ({{ previous.length }})</span>
         </button>
         <button
+          v-if="enableQualifiers"
           class="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border-2 transition-all duration-200 active:scale-95 whitespace-nowrap cursor-pointer"
           :class="[
             activeTab === 'qualifiers'
@@ -190,7 +194,7 @@ async function handleSave(
         >
           <!-- Tab Clasificados -->
           <div
-            v-if="activeTab === 'qualifiers'"
+            v-if="enableQualifiers && activeTab === 'qualifiers'"
             class="space-y-4"
           >
             <BoardQualifiersView

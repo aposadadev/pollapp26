@@ -6,6 +6,11 @@ import { qualifierService } from '~/services/qualifier.service'
 import type { Team, QualifierPhase, QualifierConfig } from '~/types'
 import { TEAM_GROUPS } from '~/constants/teams'
 
+const runtimeConfig = useRuntimeConfig()
+if (!runtimeConfig.public.enableQualifiers) {
+  throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+}
+
 definePageMeta({
   layout: 'admin',
   middleware: 'admin'

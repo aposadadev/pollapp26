@@ -57,7 +57,8 @@ export default defineNuxtConfig({
        * Obtenerla en: Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
        * Agregar al .env: NUXT_PUBLIC_FIREBASE_VAPID_KEY=BXXXX...
        */
-      firebaseVapidKey: process.env.NUXT_PUBLIC_FIREBASE_VAPID_KEY ?? ''
+      firebaseVapidKey: process.env.NUXT_PUBLIC_FIREBASE_VAPID_KEY ?? '',
+      enableQualifiers: process.env.NUXT_PUBLIC_ENABLE_QUALIFIERS !== 'false'
     }
   },
 

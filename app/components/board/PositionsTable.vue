@@ -7,6 +7,9 @@ interface Props {
 }
 
 defineProps<Props>()
+
+const runtimeConfig = useRuntimeConfig()
+const enableQualifiers = computed(() => runtimeConfig.public.enableQualifiers)
 </script>
 
 <template>
@@ -72,14 +75,16 @@ defineProps<Props>()
               />
               <span>{{ entry.predsOnePoints }}</span>
             </span>
-            <span class="text-neutral-300 dark:text-neutral-800">•</span>
-            <span class="flex items-center gap-0.5 text-amber-500 dark:text-amber-400">
-              <UIcon
-                name="i-lucide-trophy"
-                class="size-3.5 shrink-0"
-              />
-              <span>{{ entry.totalTeamsGuessed ?? 0 }}</span>
-            </span>
+            <template v-if="enableQualifiers">
+              <span class="text-neutral-300 dark:text-neutral-800">•</span>
+              <span class="flex items-center gap-0.5 text-amber-500 dark:text-amber-400">
+                <UIcon
+                  name="i-lucide-trophy"
+                  class="size-3.5 shrink-0"
+                />
+                <span>{{ entry.totalTeamsGuessed ?? 0 }}</span>
+              </span>
+            </template>
           </div>
         </div>
       </div>
