@@ -57,12 +57,10 @@ describe('AuthService', () => {
         user: mockFirebaseUser
       } as UserCredential)
 
-      vi.mocked(userRepository.findByEmail).mockResolvedValue(null)
       vi.mocked(userRepository.createProfile).mockResolvedValue(undefined)
 
       const result = await authService.register(email, password, displayName)
 
-      expect(userRepository.findByEmail).toHaveBeenCalledWith(email)
       expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(mockAuth, email, password)
       expect(userRepository.createProfile).toHaveBeenCalledWith('user-123', {
         displayName,
@@ -74,26 +72,20 @@ describe('AuthService', () => {
       expect(result.id).toBe('user-123')
     })
 
-    it('throws AuthError if the email already exists in Firestore', async () => {
+    it('throws AuthError if the email already exists in Auth', async () => {
       const email = 'existing@example.com'
       const password = 'Password123'
       const displayName = 'Juan Carlos Pérez'
 
-      const existingProfile: UserProfile = {
-        id: 'user-789',
-        displayName: 'Existing User',
-        email,
-        isAdmin: false,
-        createdAt: new Date()
-      }
-      vi.mocked(userRepository.findByEmail).mockResolvedValue(existingProfile)
+      const mockError = { code: 'auth/email-already-in-use' }
+      vi.mocked(createUserWithEmailAndPassword).mockRejectedValue(mockError)
 
       await expect(authService.register(email, password, displayName)).rejects.toThrow(
-        new AuthError('Ya existe una cuenta registrada con este correo electrónico.', 'auth/email-already-in-use')
+        new AuthError('Ya existe una cuenta con este correo electrónico.', 'auth/email-already-in-use')
       )
 
-      expect(userRepository.findByEmail).toHaveBeenCalledWith(email)
-      expect(createUserWithEmailAndPassword).not.toHaveBeenCalled()
+      expect(createUserWithEmailAndPassword).toHaveBeenCalledWith(mockAuth, email, password)
+      expect(userRepository.createProfile).not.toHaveBeenCalled()
     })
   })
 

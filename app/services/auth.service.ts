@@ -71,11 +71,6 @@ export class AuthService {
     displayName: string
   ): Promise<UserProfile> {
     try {
-      const existingProfile = await userRepository.findByEmail(email)
-      if (existingProfile) {
-        throw new AuthError('Ya existe una cuenta registrada con este correo electrónico.', 'auth/email-already-in-use')
-      }
-
       const credential = await createUserWithEmailAndPassword(getAuth(), email, password)
       const profileData: Omit<UserProfile, 'id' | 'createdAt'> = {
         displayName,
