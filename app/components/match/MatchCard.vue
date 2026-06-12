@@ -519,13 +519,19 @@ async function handleRandomize() {
         v-else-if="boardId && predictionsClosed"
         class="w-full flex items-center justify-between gap-4 py-1"
       >
-        <div v-if="isMatchActive(prediction.match)" class="flex items-center gap-2">
+        <div
+          v-if="isMatchActive(prediction.match)"
+          class="flex items-center gap-2"
+        >
           <span class="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500">Tu pronóstico:</span>
           <span class="text-xs font-black text-neutral-800 dark:text-white bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded font-mono">
             {{ prediction.localGoalPrediction !== null ? prediction.localGoalPrediction : '-' }} - {{ prediction.visitorGoalPrediction !== null ? prediction.visitorGoalPrediction : '-' }}
           </span>
         </div>
-        <span v-else class="text-xs text-neutral-400 dark:text-neutral-500 font-medium">
+        <span
+          v-else
+          class="text-xs text-neutral-400 dark:text-neutral-500 font-medium"
+        >
           Predicciones cerradas.
         </span>
         <NuxtLink

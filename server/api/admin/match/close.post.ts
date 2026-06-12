@@ -194,17 +194,18 @@ export default defineEventHandler(async (event) => {
     }
 
     return { success: true }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[close.post.ts] Error closing match:', error)
-    if (error && error.statusCode) {
+    const err = error as { statusCode?: number, message?: string, stack?: string }
+    if (err && err.statusCode) {
       throw error
     }
     throw createError({
       statusCode: 500,
-      statusMessage: error.message || 'Error interno del servidor al cerrar el partido.',
+      statusMessage: err.message || 'Error interno del servidor al cerrar el partido.',
       data: {
-        message: error.message,
-        stack: error.stack
+        message: err.message,
+        stack: err.stack
       }
     })
   }
