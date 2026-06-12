@@ -27,6 +27,7 @@ export function recalculate(boards) {
             boardNumber: board.boardNumber,
             userId: board.userId,
             userDisplayName: board.userDisplayName ?? '',
+            userPhotoURL: board.userPhotoURL ?? '',
             totalPoints: board.totalPoints,
             predsThreePoints: board.predsThreePoints,
             predsOnePoints: board.predsOnePoints,

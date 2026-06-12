@@ -62,6 +62,7 @@ export const onMatchClosed = onDocumentUpdated(
     await batch1.commit()
 
     // 3. Actualizar stats de cada board
+    const groupIds = new Set<string>()
     for (const boardId of affectedBoardIds) {
       const [allPreds, boardSnap] = await Promise.all([
         db().collection('predictions').where('boardId', '==', boardId).get(),
@@ -83,6 +84,11 @@ export const onMatchClosed = onDocumentUpdated(
       const qualifierPoints = boardData?.['qualifierPoints'] as number ?? 0
       const totalPoints = matchPoints + qualifierPoints
 
+      const groupId = boardData?.['groupId'] as string
+      if (groupId) {
+        groupIds.add(groupId)
+      }
+
       await db().collection('boards').doc(boardId).update({
         totalPoints,
         predsThreePoints,
@@ -91,15 +97,6 @@ export const onMatchClosed = onDocumentUpdated(
     }
 
     // 4. Recalcular posiciones por grupo
-    const boardsSnap = await db()
-      .collection('boards')
-      .where(admin.firestore.FieldPath.documentId(), 'in', [...affectedBoardIds])
-      .get()
-
-    const groupIds = new Set<string>()
-    for (const doc of boardsSnap.docs) {
-      groupIds.add(doc.data()['groupId'] as string)
-    }
 
     for (const groupId of groupIds) {
       const groupBoardsSnap = await db()

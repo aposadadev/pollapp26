@@ -101,6 +101,7 @@ export default defineEventHandler(async (event) => {
 
   // 6. Actualizar las estadísticas de cada Board afectado
   const boardIdsArray = [...affectedBoardIds]
+  const groupIds = new Set<string>()
   await Promise.all(
     boardIdsArray.map(async (boardId) => {
       const [allPreds, boardSnap] = await Promise.all([
@@ -123,6 +124,11 @@ export default defineEventHandler(async (event) => {
       const qualifierPoints = boardData?.qualifierPoints as number ?? 0
       const totalPoints = matchPoints + qualifierPoints
 
+      const groupId = boardData?.groupId as string
+      if (groupId) {
+        groupIds.add(groupId)
+      }
+
       await db.collection('boards').doc(boardId).update({
         totalPoints,
         predsThreePoints,
@@ -132,15 +138,6 @@ export default defineEventHandler(async (event) => {
   )
 
   // 7. Recalcular rankings por grupo en Firestore y Realtime DB
-  const boardsSnap = await db
-    .collection('boards')
-    .where(FieldPath.documentId(), 'in', boardIdsArray)
-    .get()
-
-  const groupIds = new Set<string>()
-  for (const docSnap of boardsSnap.docs) {
-    groupIds.add(docSnap.data().groupId as string)
-  }
 
   for (const groupId of groupIds) {
     const groupBoardsSnap = await db

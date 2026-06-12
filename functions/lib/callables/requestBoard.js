@@ -48,10 +48,12 @@ export const requestBoard = onCall(async (request) => {
         throw new HttpsError('not-found', 'Grupo no encontrado.');
     }
     const userDisplayName = userSnap.data()?.['displayName'] ?? '';
+    const userPhotoURL = userSnap.data()?.['photoURL'] ?? '';
     const groupName = groupSnap.data()?.['name'] ?? '';
     const boardRef = await db().collection('boards').add({
         userId,
         userDisplayName,
+        userPhotoURL,
         groupId,
         groupName,
         tournamentId,
