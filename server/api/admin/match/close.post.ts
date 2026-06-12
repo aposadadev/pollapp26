@@ -1,4 +1,3 @@
-import { FieldPath } from 'firebase-admin/firestore'
 import { scoringService } from '~~/app/services/scoring.service'
 import { rankingService } from '~~/app/services/ranking.service'
 import type { Board } from '~~/app/types'
