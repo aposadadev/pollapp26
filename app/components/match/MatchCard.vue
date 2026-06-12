@@ -23,6 +23,24 @@ const emit = defineEmits<{
 const localGoals = ref<number | null>(props.prediction.localGoalPrediction)
 const visitorGoals = ref<number | null>(props.prediction.visitorGoalPrediction)
 
+const displayedLocalGoals = computed(() => {
+  if (isMatchClosed(props.prediction.match) || isMatchActive(props.prediction.match)) {
+    return props.prediction.match.localGoals !== null
+      ? props.prediction.match.localGoals + (props.prediction.match.localGoalsOT ?? 0)
+      : '-'
+  }
+  return localGoals.value !== null ? localGoals.value : '-'
+})
+
+const displayedVisitorGoals = computed(() => {
+  if (isMatchClosed(props.prediction.match) || isMatchActive(props.prediction.match)) {
+    return props.prediction.match.visitorGoals !== null
+      ? props.prediction.match.visitorGoals + (props.prediction.match.visitorGoalsOT ?? 0)
+      : '-'
+  }
+  return visitorGoals.value !== null ? visitorGoals.value : '-'
+})
+
 // "Saved" baseline: tracks the last value successfully written to Firestore.
 // We compare the live controls against this, NOT against props, so that after
 // randomize() the button stays enabled (randomized ≠ saved) and after save()
@@ -325,7 +343,7 @@ async function handleRandomize() {
             v-else
             class="score-pill py-1 text-sm min-w-[36px] h-8 flex items-center justify-center font-bold"
           >
-            {{ localGoals ?? '-' }}
+            {{ displayedLocalGoals }}
           </div>
 
           <span class="text-xs font-black text-neutral-400 dark:text-neutral-500 font-heading tracking-wider">VS</span>
@@ -345,7 +363,7 @@ async function handleRandomize() {
             v-else
             class="score-pill py-1 text-sm min-w-[36px] h-8 flex items-center justify-center font-bold"
           >
-            {{ visitorGoals ?? '-' }}
+            {{ displayedVisitorGoals }}
           </div>
         </div>
 
@@ -501,7 +519,13 @@ async function handleRandomize() {
         v-else-if="boardId && predictionsClosed"
         class="w-full flex items-center justify-between gap-4 py-1"
       >
-        <span class="text-xs text-neutral-400 dark:text-neutral-500 font-medium">
+        <div v-if="isMatchActive(prediction.match)" class="flex items-center gap-2">
+          <span class="text-[10px] uppercase font-bold tracking-wider text-neutral-400 dark:text-neutral-500">Tu pronóstico:</span>
+          <span class="text-xs font-black text-neutral-800 dark:text-white bg-neutral-100 dark:bg-neutral-800 px-2 py-0.5 rounded font-mono">
+            {{ prediction.localGoalPrediction !== null ? prediction.localGoalPrediction : '-' }} - {{ prediction.visitorGoalPrediction !== null ? prediction.visitorGoalPrediction : '-' }}
+          </span>
+        </div>
+        <span v-else class="text-xs text-neutral-400 dark:text-neutral-500 font-medium">
           Predicciones cerradas.
         </span>
         <NuxtLink
