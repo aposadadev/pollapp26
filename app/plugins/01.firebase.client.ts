@@ -6,7 +6,7 @@
  * campo Firestore. Esto garantiza que solo el Admin SDK puede elevar privilegios.
  */
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
-import { getFirestore, type Firestore } from 'firebase/firestore'
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, type Firestore } from 'firebase/firestore'
 import { getAuth, type Auth, type User } from 'firebase/auth'
 import { getStorage, type FirebaseStorage } from 'firebase/storage'
 import { getDatabase, type Database } from 'firebase/database'
@@ -30,7 +30,17 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     ? getApps()[0]!
     : initializeApp(firebaseConfig)
 
-  const db: Firestore = getFirestore(app)
+  let db: Firestore
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager()
+      })
+    })
+  } catch {
+    db = getFirestore(app)
+  }
+
   const auth: Auth = getAuth(app)
   const storage: FirebaseStorage = getStorage(app)
 

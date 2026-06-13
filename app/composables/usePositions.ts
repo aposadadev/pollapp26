@@ -3,8 +3,6 @@
  */
 import type { MaybeRef } from 'vue'
 import { rankingsRepository } from '~/repositories/rankings.repository'
-import { boardRepository } from '~/repositories/board.repository'
-import { rankingService } from '~/services/ranking.service'
 import type { GroupRanking } from '~/types'
 
 export function usePositions(groupId: MaybeRef<string>) {
@@ -14,23 +12,13 @@ export function usePositions(groupId: MaybeRef<string>) {
   let unsubscribe: (() => void) | null = null
   let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-  async function fallbackToFirestore(id: string) {
-    try {
-      const boards = await boardRepository.findActiveByGroup(id)
-      const entriesFallback = rankingService.recalculate(boards)
-      ranking.value = {
-        groupId: id,
-        updatedAt: Date.now(),
-        entries: entriesFallback
-      }
-    } catch (err) {
-      if (import.meta.dev) {
-        console.error('[usePositions] Error cargando fallback de Firestore:', err)
-      }
-      ranking.value = null
-    } finally {
-      loading.value = false
+  function clearOrSetEmpty(id: string) {
+    ranking.value = {
+      groupId: id,
+      updatedAt: Date.now(),
+      entries: []
     }
+    loading.value = false
   }
 
   function subscribe(id: string) {
@@ -46,42 +34,41 @@ export function usePositions(groupId: MaybeRef<string>) {
     }
     loading.value = true
 
-    // Si RTDB no responde en 2.5 segundos, hacemos fallback a Firestore
+    // Si RTDB no responde en 2.5 segundos, asumimos vacío/cargando lento
     timeoutId = setTimeout(() => {
       if (loading.value) {
         if (import.meta.dev) {
-          console.warn('[usePositions] RTDB connection timed out. Falling back to Firestore.')
+          console.warn('[usePositions] RTDB connection timed out. Setting empty ranking.')
         }
-        fallbackToFirestore(id)
+        clearOrSetEmpty(id)
       }
     }, 2500)
 
     try {
       unsubscribe = rankingsRepository.subscribe(
         id,
-        async (data) => {
+        (data) => {
           if (timeoutId) {
             clearTimeout(timeoutId)
             timeoutId = null
           }
           if (data === null) {
             // El ranking no está en RTDB aún (torneo no empezado).
-            // Hacemos fallback cargando los participantes desde Firestore.
-            await fallbackToFirestore(id)
+            clearOrSetEmpty(id)
           } else {
             ranking.value = data
             loading.value = false
           }
         },
-        async (error) => {
+        (error) => {
           if (timeoutId) {
             clearTimeout(timeoutId)
             timeoutId = null
           }
           if (import.meta.dev) {
-            console.warn('[usePositions] RTDB error callback triggered, falling back to Firestore:', error.message)
+            console.warn('[usePositions] RTDB error callback triggered, setting empty ranking:', error.message)
           }
-          await fallbackToFirestore(id)
+          clearOrSetEmpty(id)
         }
       )
     } catch (err) {
@@ -93,7 +80,7 @@ export function usePositions(groupId: MaybeRef<string>) {
       if (import.meta.dev) {
         console.warn('[usePositions] No se pudo conectar al Realtime DB:', (err as Error).message)
       }
-      fallbackToFirestore(id)
+      clearOrSetEmpty(id)
     }
   }
 
