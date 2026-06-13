@@ -69,10 +69,12 @@ const heroRank = computed(() => {
   return currentUserEntry.value?.currentPos ?? null
 })
 
-// Next scheduled match
-const nextMatch = computed(() =>
-  matchesComposable.matches.value.find(m => m.status === 'scheduled') ?? null
-)
+// Next scheduled match (closest chronologically)
+const nextMatch = computed(() => {
+  const scheduled = matchesComposable.matches.value.filter(m => m.status === 'scheduled')
+  if (scheduled.length === 0) return null
+  return [...scheduled].sort((a, b) => a.date.getTime() - b.date.getTime())[0]
+})
 
 function formatMatchDate(date: Date): string {
   const now = new Date()
