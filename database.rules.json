@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "rankings": {
+      "$groupId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.admin === true"
+      }
+    }
+  }
+}
