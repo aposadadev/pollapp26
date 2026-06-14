@@ -105,7 +105,10 @@ export default defineEventHandler(async (event) => {
     await Promise.all(
       boardIdsArray.map(async (boardId) => {
         const [allPreds, boardSnap] = await Promise.all([
-          db.collection('predictions').where('boardId', '==', boardId).get(),
+          db.collection('predictions')
+            .where('boardId', '==', boardId)
+            .where('points', '>', 0)
+            .get(),
           db.collection('boards').doc(boardId).get()
         ])
 

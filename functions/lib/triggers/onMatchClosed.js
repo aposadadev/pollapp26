@@ -53,7 +53,10 @@ export const onMatchClosed = onDocumentUpdated('matches/{matchId}', async (event
     const groupIds = new Set();
     for (const boardId of affectedBoardIds) {
         const [allPreds, boardSnap] = await Promise.all([
-            db().collection('predictions').where('boardId', '==', boardId).get(),
+            db().collection('predictions')
+                .where('boardId', '==', boardId)
+                .where('points', '>', 0)
+                .get(),
             db().collection('boards').doc(boardId).get()
         ]);
         let matchPoints = 0;

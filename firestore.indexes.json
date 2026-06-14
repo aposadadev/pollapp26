@@ -72,6 +72,14 @@
         { "fieldPath": "matchId", "order": "ASCENDING" },
         { "fieldPath": "boardId", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "predictions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "boardId", "order": "ASCENDING" },
+        { "fieldPath": "points", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
