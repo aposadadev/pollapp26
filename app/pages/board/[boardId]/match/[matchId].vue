@@ -42,17 +42,22 @@ onMounted(async () => {
 
     if (board.value?.groupId) {
       const boards = await boardRepository.findActiveByGroup(board.value.groupId)
-      const boardIds = boards.map(b => b.id)
-      const preds = await predictionRepository.findByMatchAndGroup(matchId.value, boardIds)
 
-      const filteredPreds = predictionsClosed.value
-        ? preds
-        : preds.filter((p) => {
-            const b = boards.find(bb => bb.id === p.boardId)
-            return b?.userId === authStore.user?.id
-          })
+      let preds: import('~/types').Prediction[] = []
+      if (predictionsClosed.value) {
+        const boardIds = boards.map(b => b.id)
+        preds = await predictionRepository.findByMatchAndGroup(matchId.value, boardIds)
+      } else {
+        const ownBoard = boards.find(b => b.userId === authStore.user?.id)
+        if (ownBoard) {
+          const ownPred = await predictionRepository.findByBoardAndMatch(ownBoard.id, matchId.value)
+          if (ownPred) {
+            preds = [ownPred]
+          }
+        }
+      }
 
-      predictions.value = filteredPreds.map((pred): MatchPredictionEntry => {
+      predictions.value = preds.map((pred): MatchPredictionEntry => {
         const b = boards.find(bb => bb.id === pred.boardId)
         return {
           boardId: pred.boardId,
