@@ -36,6 +36,7 @@ export interface PredictionWithMatch extends Prediction {
 }
 
 export interface MatchPredictionEntry {
+  id?: string // ID de la predicción para permitir actualizaciones rápidas
   boardId: string
   boardNumber: number
   userId: string

@@ -4,6 +4,7 @@ import 'dayjs/locale/es'
 import { matchService } from '~/services/match.service'
 import { boardRepository } from '~/repositories/board.repository'
 import { predictionRepository } from '~/repositories/prediction.repository'
+import { groupMatchRepository } from '~/repositories/group-match.repository'
 import { isMatchActive, isMatchClosed } from '~/types/match'
 import type { MatchPredictionEntry } from '~/types'
 
@@ -41,46 +42,81 @@ onMounted(async () => {
     match.value = matchData
 
     if (board.value?.groupId) {
-      const boards = await boardRepository.findActiveByGroup(board.value.groupId)
+      const groupId = board.value.groupId
 
-      let preds: import('~/types').Prediction[] = []
       if (predictionsClosed.value) {
-        const boardIds = boards.map(b => b.id)
-        preds = await predictionRepository.findByMatchAndGroup(matchId.value, boardIds)
+        // 1. Intentar cargar la caché del partido para el grupo
+        const cached = await groupMatchRepository.findByGroupAndMatch(groupId, matchId.value)
+
+        const matchClosed = match.value ? isMatchClosed(match.value) : false
+        const needsUpdate = matchClosed && (!cached || !cached.isCalculated)
+
+        if (!cached || needsUpdate) {
+          // 2. Si no hay caché o falta calcular los puntos (partido cerrado), se genera on-the-fly
+          const boards = await boardRepository.findActiveByGroup(groupId)
+          const boardIds = boards.map(b => b.id)
+          const preds = await predictionRepository.findByMatchAndGroup(matchId.value, boardIds)
+
+          const mappedPredictions = preds.map((pred): MatchPredictionEntry => {
+            const b = boards.find(bb => bb.id === pred.boardId)
+            return {
+              id: pred.id,
+              boardId: pred.boardId,
+              boardNumber: b?.number ?? 0,
+              userId: b?.userId ?? '',
+              userDisplayName: b?.userDisplayName ?? '',
+              userPhotoURL: b?.userPhotoURL,
+              localGoalPrediction: pred.localGoalPrediction,
+              visitorGoalPrediction: pred.visitorGoalPrediction,
+              points: pred.points
+            }
+          }).sort((a, b) => {
+            // Primero los que tienen puntos (partido cerrado), luego los sin pronóstico
+            if (b.points !== null && a.points === null) return 1
+            if (a.points !== null && b.points === null) return -1
+            if (a.points !== null && b.points !== null) return b.points - a.points
+            // Ambos null: los que tienen pronóstico primero
+            const aHas = a.localGoalPrediction !== null
+            const bHas = b.localGoalPrediction !== null
+            if (aHas && !bHas) return -1
+            if (!aHas && bHas) return 1
+            return 0
+          })
+
+          // Guardar en Firestore para futuros accesos
+          await groupMatchRepository.createOrUpdate(groupId, matchId.value, {
+            matchId: matchId.value,
+            groupId,
+            predictions: mappedPredictions,
+            isCalculated: matchClosed
+          })
+
+          predictions.value = mappedPredictions
+        } else {
+          // 3. Usar la caché si ya existe y está al día
+          predictions.value = cached.predictions
+        }
       } else {
+        // Predicciones abiertas: solo mostrar la del usuario autenticado
+        const boards = await boardRepository.findActiveByGroup(groupId)
         const ownBoard = boards.find(b => b.userId === authStore.user?.id)
         if (ownBoard) {
           const ownPred = await predictionRepository.findByBoardAndMatch(ownBoard.id, matchId.value)
           if (ownPred) {
-            preds = [ownPred]
+            predictions.value = [{
+              id: ownPred.id,
+              boardId: ownPred.boardId,
+              boardNumber: ownBoard.number,
+              userId: ownBoard.userId,
+              userDisplayName: ownBoard.userDisplayName ?? '',
+              userPhotoURL: ownBoard.userPhotoURL,
+              localGoalPrediction: ownPred.localGoalPrediction,
+              visitorGoalPrediction: ownPred.visitorGoalPrediction,
+              points: ownPred.points
+            }]
           }
         }
       }
-
-      predictions.value = preds.map((pred): MatchPredictionEntry => {
-        const b = boards.find(bb => bb.id === pred.boardId)
-        return {
-          boardId: pred.boardId,
-          boardNumber: b?.number ?? 0,
-          userId: b?.userId ?? '',
-          userDisplayName: b?.userDisplayName ?? '',
-          userPhotoURL: b?.userPhotoURL,
-          localGoalPrediction: pred.localGoalPrediction,
-          visitorGoalPrediction: pred.visitorGoalPrediction,
-          points: pred.points
-        }
-      }).sort((a, b) => {
-        // Primero los que tienen puntos (partido cerrado), luego los sin pronóstico
-        if (b.points !== null && a.points === null) return 1
-        if (a.points !== null && b.points === null) return -1
-        if (a.points !== null && b.points !== null) return b.points - a.points
-        // Ambos null: los que tienen pronóstico primero
-        const aHas = a.localGoalPrediction !== null
-        const bHas = b.localGoalPrediction !== null
-        if (aHas && !bHas) return -1
-        if (!aHas && bHas) return 1
-        return 0
-      })
     }
   } finally {
     loading.value = false

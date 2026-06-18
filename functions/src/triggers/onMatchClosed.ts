@@ -30,36 +30,137 @@ export const onMatchClosed = onDocumentUpdated(
     const localGoals = after['localGoals'] as number
     const visitorGoals = after['visitorGoals'] as number
 
-    // 1. Obtener predicciones del partido
-    const predsSnap = await db()
-      .collection('predictions')
-      .where('matchId', '==', matchId)
+    // 1. Buscar predicciones utilizando caché cuando esté disponible para evitar lecturas excesivas
+    const tournamentId = (after['tournamentId'] as string) || 'mundial2026'
+    const groupsSnap = await db().collection('groups')
+      .where('tournamentId', '==', tournamentId)
+      .where('isActive', '==', true)
       .get()
 
-    if (predsSnap.empty) return
+    const groups = groupsSnap.docs.map(d => ({ id: d.id, name: d.data()['name'] }))
 
-    const batch1 = db().batch()
+    // Consultar la caché de cada grupo en paralelo
+    const cacheSnaps = await Promise.all(
+      groups.map(g =>
+        db().collection('groups').doc(g.id).collection('matches').doc(matchId).get()
+      )
+    )
+
+    const allPredictionsToUpdate: Array<{
+      id: string
+      boardId: string
+      localGoalPrediction: number | null
+      visitorGoalPrediction: number | null
+      points: number
+    }> = []
+
+    const groupPredictionsMap = new Map<string, typeof allPredictionsToUpdate>()
     const affectedBoardIds = new Set<string>()
 
-    // 2. Calcular y actualizar puntos
-    for (const doc of predsSnap.docs) {
-      const pred = doc.data()
-      const localPred = pred['localGoalPrediction']
-      const visitorPred = pred['visitorGoalPrediction']
-      const hasPrediction = localPred !== null
-        && localPred !== undefined
-        && visitorPred !== null
-        && visitorPred !== undefined
-      const points = hasPrediction
-        ? calculatePoints(
-            { localGoals: localPred, visitorGoals: visitorPred },
-            { localGoals, visitorGoals }
-          )
-        : 0
-      batch1.update(doc.ref, { points })
-      affectedBoardIds.add(pred['boardId'] as string)
+    for (let i = 0; i < groups.length; i++) {
+      const group = groups[i]!
+      const cacheSnap = cacheSnaps[i]!
+
+      // Validar si la caché existe y contiene IDs de predicción para todos los elementos
+      const hasIds = cacheSnap.exists && (cacheSnap.data()?.predictions || []).every((p: any) => p.id)
+
+      if (cacheSnap.exists && hasIds) {
+        // Caso A: Usar la caché
+        const cachedPreds = (cacheSnap.data()!.predictions || []) as any[]
+        const predsList = cachedPreds.map(p => {
+          const localPred = p.localGoalPrediction
+          const visitorPred = p.visitorGoalPrediction
+          const hasPrediction = localPred !== null
+            && localPred !== undefined
+            && visitorPred !== null
+            && visitorPred !== undefined
+          const points = hasPrediction
+            ? calculatePoints(
+                { localGoals: localPred, visitorGoals: visitorPred },
+                { localGoals, visitorGoals }
+              )
+            : 0
+          return {
+            id: p.id as string,
+            boardId: p.boardId as string,
+            localGoalPrediction: localPred as number | null,
+            visitorGoalPrediction: visitorPred as number | null,
+            points
+          }
+        })
+
+        allPredictionsToUpdate.push(...predsList)
+        groupPredictionsMap.set(group.id, predsList)
+        for (const p of predsList) {
+          affectedBoardIds.add(p.boardId)
+        }
+      } else {
+        // Caso B: No existe caché, consultar las boards del grupo y sus predicciones desde la DB
+        const boardsSnap = await db().collection('boards')
+          .where('groupId', '==', group.id)
+          .where('isActive', '==', true)
+          .get()
+
+        if (!boardsSnap.empty) {
+          const boardsList = boardsSnap.docs.map(d => ({
+            id: d.id,
+            number: d.data()['number'] as number ?? 0,
+            userId: d.data()['userId'] as string ?? '',
+            userDisplayName: d.data()['userDisplayName'] as string ?? '',
+            userPhotoURL: d.data()['userPhotoURL'] as string | undefined
+          }))
+
+          const boardIds = boardsList.map(b => b.id)
+
+          const predsSnap = await db().collection('predictions')
+            .where('matchId', '==', matchId)
+            .where('boardId', 'in', boardIds)
+            .get()
+
+          const predsList = predsSnap.docs.map(docSnap => {
+            const pred = docSnap.data()
+            const localPred = pred['localGoalPrediction']
+            const visitorPred = pred['visitorGoalPrediction']
+            const hasPrediction = localPred !== null
+              && localPred !== undefined
+              && visitorPred !== null
+              && visitorPred !== undefined
+            const points = hasPrediction
+              ? calculatePoints(
+                  { localGoals: localPred, visitorGoals: visitorPred },
+                  { localGoals, visitorGoals }
+                )
+              : 0
+            return {
+              id: docSnap.id,
+              boardId: pred['boardId'] as string,
+              localGoalPrediction: localPred as number | null,
+              visitorGoalPrediction: visitorPred as number | null,
+              points
+            }
+          })
+
+          allPredictionsToUpdate.push(...predsList)
+          groupPredictionsMap.set(group.id, predsList)
+          for (const p of predsList) {
+            affectedBoardIds.add(p.boardId)
+          }
+        }
+      }
     }
-    await batch1.commit()
+
+    if (allPredictionsToUpdate.length === 0) return
+
+    // 2. Calcular y actualizar puntos de las predicciones en chunks
+    const CHUNK_SIZE = 400
+    for (let i = 0; i < allPredictionsToUpdate.length; i += CHUNK_SIZE) {
+      const chunk = allPredictionsToUpdate.slice(i, i + CHUNK_SIZE)
+      const batch1 = db().batch()
+      for (const pred of chunk) {
+        batch1.update(db().collection('predictions').doc(pred.id), { points: pred.points })
+      }
+      await batch1.commit()
+    }
 
     // 3. Actualizar stats de cada board
     const groupIds = new Set<string>()
@@ -99,8 +200,7 @@ export const onMatchClosed = onDocumentUpdated(
       })
     }
 
-    // 4. Recalcular posiciones por grupo
-
+    // 4. Recalcular posiciones por grupo y actualizar caché
     for (const groupId of groupIds) {
       const groupBoardsSnap = await db()
         .collection('boards')
@@ -144,6 +244,40 @@ export const onMatchClosed = onDocumentUpdated(
         updatedAt: Date.now(),
         entries
       })
+
+      // Actualizar caché de predicciones por partido en Firestore
+      const predsList = groupPredictionsMap.get(groupId) || []
+      const groupPredictions = boards.map(b => {
+        const pred = predsList.find(p => p.boardId === b.id)
+        return {
+          id: pred?.id,
+          boardId: b.id,
+          boardNumber: b.boardNumber,
+          userId: b.userId,
+          userDisplayName: b.userDisplayName ?? '',
+          userPhotoURL: b.userPhotoURL,
+          localGoalPrediction: pred ? pred.localGoalPrediction : null,
+          visitorGoalPrediction: pred ? pred.visitorGoalPrediction : null,
+          points: pred ? pred.points : 0
+        }
+      }).sort((a, b) => {
+        if (b.points !== null && a.points === null) return 1
+        if (a.points !== null && b.points === null) return -1
+        if (a.points !== null && b.points !== null) return b.points - a.points
+        const aHas = a.localGoalPrediction !== null
+        const bHas = b.localGoalPrediction !== null
+        if (aHas && !bHas) return -1
+        if (!aHas && bHas) return 1
+        return 0
+      })
+
+      await db().collection('groups').doc(groupId).collection('matches').doc(matchId).set({
+        matchId,
+        groupId,
+        predictions: groupPredictions,
+        isCalculated: true,
+        updatedAt: new Date()
+      }, { merge: true })
     }
   }
 )

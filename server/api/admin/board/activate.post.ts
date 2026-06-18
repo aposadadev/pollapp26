@@ -74,7 +74,25 @@ export default defineEventHandler(async (event) => {
     await batch.commit()
   }
 
-  // 5. Activar la tabla
+  // 5. Borrar la caché de partidos del grupo para forzar su regeneración incluyendo el nuevo board
+  const groupId = board.groupId as string
+  if (groupId) {
+    const groupMatchesSnap = await db
+      .collection('groups')
+      .doc(groupId)
+      .collection('matches')
+      .get()
+
+    if (!groupMatchesSnap.empty) {
+      const batchDelete = db.batch()
+      for (const doc of groupMatchesSnap.docs) {
+        batchDelete.delete(doc.ref)
+      }
+      await batchDelete.commit()
+    }
+  }
+
+  // 6. Activar la tabla
   await boardRef.update({ isActive: true })
 
   return { success: true, boardId }

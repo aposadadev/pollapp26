@@ -49,6 +49,11 @@ service cloud.firestore {
       allow create: if isAuth();
       allow update: if isAdmin() || isOwner(resource.data.ownerId);
       allow delete: if isAdmin();
+
+      match /matches/{matchId} {
+        allow read: if isAuth();
+        allow write: if isAuth();
+      }
     }
 
     // ── Boards ────────────────────────────────────────────────────────────────
