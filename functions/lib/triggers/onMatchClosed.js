@@ -44,7 +44,7 @@ export const onMatchClosed = onDocumentUpdated('matches/{matchId}', async (event
         if (cacheSnap.exists && hasIds) {
             // Caso A: Usar la caché
             const cachedPreds = (cacheSnap.data().predictions || []);
-            const predsList = cachedPreds.map(p => {
+            const predsList = cachedPreds.map((p) => {
                 const localPred = p.localGoalPrediction;
                 const visitorPred = p.visitorGoalPrediction;
                 const hasPrediction = localPred !== null
@@ -87,7 +87,7 @@ export const onMatchClosed = onDocumentUpdated('matches/{matchId}', async (event
                     .where('matchId', '==', matchId)
                     .where('boardId', 'in', boardIds)
                     .get();
-                const predsList = predsSnap.docs.map(docSnap => {
+                const predsList = predsSnap.docs.map((docSnap) => {
                     const pred = docSnap.data();
                     const localPred = pred['localGoalPrediction'];
                     const visitorPred = pred['visitorGoalPrediction'];
@@ -214,7 +214,7 @@ export const onMatchClosed = onDocumentUpdated('matches/{matchId}', async (event
         });
         // Actualizar caché del partido en Firestore para el grupo
         const predsList = groupPredictionsMap.get(group.id) || [];
-        const groupPredictions = boardsList.map(b => {
+        const groupPredictions = boardsList.map((b) => {
             const pred = predsList.find(p => p.boardId === b.id);
             return {
                 id: pred?.id,

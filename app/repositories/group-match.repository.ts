@@ -1,5 +1,6 @@
-import { collection, doc, getDoc, setDoc, type Firestore } from 'firebase/firestore'
+import { doc, getDoc, setDoc, type Firestore } from 'firebase/firestore'
 import type { GroupMatch } from '~/types/group-match'
+import type { MatchPredictionEntry } from '~/types/prediction'
 
 function getDb(): Firestore {
   return useNuxtApp().$firestore as Firestore
@@ -18,7 +19,7 @@ export class GroupMatchRepository {
       id: snap.id,
       matchId: data['matchId'] as string,
       groupId: data['groupId'] as string,
-      predictions: data['predictions'] as any[],
+      predictions: data['predictions'] as MatchPredictionEntry[],
       isCalculated: data['isCalculated'] as boolean,
       updatedAt: (data['updatedAt'] as { toDate?: () => Date })?.toDate?.() ?? new Date()
     }

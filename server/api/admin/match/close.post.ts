@@ -1,6 +1,7 @@
 import { scoringService } from '~~/app/services/scoring.service'
 import { rankingService } from '~~/app/services/ranking.service'
 import type { Board } from '~~/app/types'
+import type { MatchPredictionEntry } from '~~/app/types/prediction'
 
 interface CloseMatchBody {
   matchId: string
@@ -98,12 +99,12 @@ export default defineEventHandler(async (event) => {
       const cacheSnap = cacheSnaps[i]!
 
       // Validar si la caché existe y contiene IDs de predicción para todos los elementos
-      const hasIds = cacheSnap.exists && (cacheSnap.data()?.predictions || []).every((p: any) => p.id)
+      const hasIds = cacheSnap.exists && (cacheSnap.data()?.predictions || []).every((p: MatchPredictionEntry) => p.id)
 
       if (cacheSnap.exists && hasIds) {
         // Caso A: Usar la caché
-        const cachedPreds = (cacheSnap.data()!.predictions || []) as any[]
-        const predsList = cachedPreds.map(p => {
+        const cachedPreds = (cacheSnap.data()!.predictions || []) as MatchPredictionEntry[]
+        const predsList = cachedPreds.map((p) => {
           const localPred = p.localGoalPrediction
           const visitorPred = p.visitorGoalPrediction
           const hasPrediction = localPred !== null
@@ -153,7 +154,7 @@ export default defineEventHandler(async (event) => {
             .where('boardId', 'in', boardIds)
             .get()
 
-          const predsList = predsSnap.docs.map(docSnap => {
+          const predsList = predsSnap.docs.map((docSnap) => {
             const pred = docSnap.data()
             const localPred = pred.localGoalPrediction
             const visitorPred = pred.visitorGoalPrediction
@@ -233,7 +234,7 @@ export default defineEventHandler(async (event) => {
 
       // Consultar todas las predicciones puntuadas de los boards en chunks de 30
       const CHUNK_LIMIT = 30
-      const predictionsPromises: Promise<any>[] = []
+      const predictionsPromises: Promise<FirebaseFirestore.QuerySnapshot<FirebaseFirestore.DocumentData>>[] = []
       for (let c = 0; c < boardIds.length; c += CHUNK_LIMIT) {
         const chunkIds = boardIds.slice(c, c + CHUNK_LIMIT)
         predictionsPromises.push(
@@ -303,7 +304,7 @@ export default defineEventHandler(async (event) => {
 
       // Actualizar caché del partido en Firestore para el grupo
       const predsList = groupPredictionsMap.get(group.id) || []
-      const groupPredictions = boardsList.map(b => {
+      const groupPredictions = boardsList.map((b) => {
         const pred = predsList.find(p => p.boardId === b.id)
         return {
           id: pred?.id,
