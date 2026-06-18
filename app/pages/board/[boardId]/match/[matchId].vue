@@ -59,17 +59,20 @@ onMounted(async () => {
 
           const mappedPredictions = preds.map((pred): MatchPredictionEntry => {
             const b = boards.find(bb => bb.id === pred.boardId)
-            return {
+            const entry: MatchPredictionEntry = {
               id: pred.id,
               boardId: pred.boardId,
               boardNumber: b?.number ?? 0,
               userId: b?.userId ?? '',
               userDisplayName: b?.userDisplayName ?? '',
-              userPhotoURL: b?.userPhotoURL,
               localGoalPrediction: pred.localGoalPrediction,
               visitorGoalPrediction: pred.visitorGoalPrediction,
               points: pred.points
             }
+            if (b?.userPhotoURL) {
+              entry.userPhotoURL = b.userPhotoURL
+            }
+            return entry
           }).sort((a, b) => {
             // Primero los que tienen puntos (partido cerrado), luego los sin pronóstico
             if (b.points !== null && a.points === null) return 1

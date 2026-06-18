@@ -216,17 +216,22 @@ export const onMatchClosed = onDocumentUpdated('matches/{matchId}', async (event
         const predsList = groupPredictionsMap.get(group.id) || [];
         const groupPredictions = boardsList.map((b) => {
             const pred = predsList.find(p => p.boardId === b.id);
-            return {
-                id: pred?.id,
+            const entry = {
                 boardId: b.id,
                 boardNumber: b.boardNumber,
                 userId: b.userId,
                 userDisplayName: b.userDisplayName ?? '',
-                userPhotoURL: b.userPhotoURL,
                 localGoalPrediction: pred ? pred.localGoalPrediction : null,
                 visitorGoalPrediction: pred ? pred.visitorGoalPrediction : null,
                 points: pred ? pred.points : 0
             };
+            if (pred?.id) {
+                entry.id = pred.id;
+            }
+            if (b.userPhotoURL) {
+                entry.userPhotoURL = b.userPhotoURL;
+            }
+            return entry;
         }).sort((a, b) => {
             if (b.points !== null && a.points === null)
                 return 1;
