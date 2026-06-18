@@ -200,80 +200,85 @@ export default defineEventHandler(async (event) => {
       await batch1.commit()
     }
 
-    // 6. Actualizar las estadísticas de cada Board afectado
-    const boardIdsArray = [...affectedBoardIds]
-    const groupIds = new Set<string>()
-    await Promise.all(
-      boardIdsArray.map(async (boardId) => {
-        const [allPreds, boardSnap] = await Promise.all([
+    // 6. Recalcular estadísticas, rankings por grupo y actualizar caché de partidos
+    for (const group of groups) {
+      const groupBoardsSnap = await db
+        .collection('boards')
+        .where('groupId', '==', group.id)
+        .where('isActive', '==', true)
+        .get()
+
+      if (groupBoardsSnap.empty) continue
+
+      const boardsList = groupBoardsSnap.docs.map(doc => ({
+        id: doc.id,
+        number: doc.data().number as number ?? 0,
+        userId: doc.data().userId as string ?? '',
+        userDisplayName: doc.data().userDisplayName as string ?? '',
+        userPhotoURL: doc.data().userPhotoURL as string ?? '',
+        totalPoints: doc.data().totalPoints as number ?? 0,
+        predsThreePoints: doc.data().predsThreePoints as number ?? 0,
+        predsOnePoints: doc.data().predsOnePoints as number ?? 0,
+        totalTeamsGuessed: doc.data().totalTeamsGuessed as number ?? 0,
+        currentPos: doc.data().currentPos as number ?? 0,
+        previousPos: doc.data().previousPos as number ?? 0,
+        tournamentId: doc.data().tournamentId as string ?? '',
+        groupId: doc.data().groupId as string ?? '',
+        isActive: doc.data().isActive as boolean ?? true,
+        qualifierPoints: doc.data().qualifierPoints as number ?? 0,
+        createdAt: doc.data().createdAt?.toDate() ?? new Date()
+      })) as Board[]
+
+      const boardIds = boardsList.map(b => b.id)
+
+      // Consultar todas las predicciones puntuadas de los boards en chunks de 30
+      const CHUNK_LIMIT = 30
+      const predictionsPromises: Promise<any>[] = []
+      for (let c = 0; c < boardIds.length; c += CHUNK_LIMIT) {
+        const chunkIds = boardIds.slice(c, c + CHUNK_LIMIT)
+        predictionsPromises.push(
           db.collection('predictions')
-            .where('boardId', '==', boardId)
+            .where('boardId', 'in', chunkIds)
             .where('points', '>', 0)
-            .get(),
-          db.collection('boards').doc(boardId).get()
-        ])
+            .get()
+        )
+      }
+      const predictionsSnaps = await Promise.all(predictionsPromises)
 
-        if (!boardSnap.exists) {
-          console.warn(`[close.post.ts] Board ${boardId} not found in Firestore. Skipping stats update for this orphaned board.`)
-          return
+      // Agrupar predicciones por boardId
+      const predsByBoard = new Map<string, Array<{ points: number }>>()
+      for (const snap of predictionsSnaps) {
+        for (const doc of snap.docs) {
+          const pData = doc.data()
+          const bId = pData.boardId as string
+          if (!predsByBoard.has(bId)) {
+            predsByBoard.set(bId, [])
+          }
+          predsByBoard.get(bId)!.push({ points: pData.points as number })
         }
+      }
 
+      // Recalcular estadísticas individuales
+      for (const board of boardsList) {
+        const boardPreds = predsByBoard.get(board.id) || []
         let matchPoints = 0
         let predsThreePoints = 0
         let predsOnePoints = 0
 
-        for (const p of allPreds.docs) {
-          const pts = p.data().points as number ?? 0
+        for (const p of boardPreds) {
+          const pts = p.points
           matchPoints += pts
           if (pts === 3) predsThreePoints++
           if (pts === 1) predsOnePoints++
         }
 
-        const boardData = boardSnap.data()
-        const qualifierPoints = boardData?.qualifierPoints as number ?? 0
-        const totalPoints = matchPoints + qualifierPoints
+        board.totalPoints = matchPoints + (board.qualifierPoints || 0)
+        board.predsThreePoints = predsThreePoints
+        board.predsOnePoints = predsOnePoints
+      }
 
-        const groupId = boardData?.groupId as string
-        if (groupId) {
-          groupIds.add(groupId)
-        }
-
-        await db.collection('boards').doc(boardId).update({
-          totalPoints,
-          predsThreePoints,
-          predsOnePoints
-        })
-      })
-    )
-
-    // 7. Recalcular rankings por grupo en Firestore y Realtime DB, y guardar la caché del partido
-    for (const groupId of groupIds) {
-      const groupBoardsSnap = await db
-        .collection('boards')
-        .where('groupId', '==', groupId)
-        .where('isActive', '==', true)
-        .get()
-
-      const boards = groupBoardsSnap.docs.map(d => ({
-        id: d.id,
-        number: d.data().number as number ?? 0,
-        userId: d.data().userId as string ?? '',
-        userDisplayName: d.data().userDisplayName as string ?? '',
-        userPhotoURL: d.data().userPhotoURL as string ?? '',
-        totalPoints: d.data().totalPoints as number ?? 0,
-        predsThreePoints: d.data().predsThreePoints as number ?? 0,
-        predsOnePoints: d.data().predsOnePoints as number ?? 0,
-        totalTeamsGuessed: d.data().totalTeamsGuessed as number ?? 0,
-        currentPos: d.data().currentPos as number ?? 0,
-        previousPos: d.data().previousPos as number ?? 0,
-        tournamentId: d.data().tournamentId as string ?? '',
-        groupId: d.data().groupId as string ?? '',
-        isActive: d.data().isActive as boolean ?? true,
-        qualifierPoints: d.data().qualifierPoints as number ?? 0,
-        createdAt: d.data().createdAt?.toDate() ?? new Date()
-      })) as Board[]
-
-      const entries = rankingService.recalculate(boards)
+      // Recalcular posiciones del grupo
+      const entries = rankingService.recalculate(boardsList)
       const updates = rankingService.toBoardUpdates(entries)
 
       // Actualizar posiciones de tablas en batch
@@ -290,15 +295,15 @@ export default defineEventHandler(async (event) => {
       }
       await batch2.commit()
 
-      // Escribir ranking final en Realtime DB para consumo en tiempo real
-      await rtdb.ref(`rankings/${groupId}`).set({
+      // Escribir ranking final en Realtime DB
+      await rtdb.ref(`rankings/${group.id}`).set({
         updatedAt: Date.now(),
         entries
       })
 
       // Actualizar caché del partido en Firestore para el grupo
-      const predsList = groupPredictionsMap.get(groupId) || []
-      const groupPredictions = boards.map(b => {
+      const predsList = groupPredictionsMap.get(group.id) || []
+      const groupPredictions = boardsList.map(b => {
         const pred = predsList.find(p => p.boardId === b.id)
         return {
           id: pred?.id,
@@ -322,9 +327,9 @@ export default defineEventHandler(async (event) => {
         return 0
       })
 
-      await db.collection('groups').doc(groupId).collection('matches').doc(matchId).set({
+      await db.collection('groups').doc(group.id).collection('matches').doc(matchId).set({
         matchId,
-        groupId,
+        groupId: group.id,
         predictions: groupPredictions,
         isCalculated: true,
         updatedAt: new Date()

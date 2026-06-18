@@ -162,53 +162,17 @@ export const onMatchClosed = onDocumentUpdated(
       await batch1.commit()
     }
 
-    // 3. Actualizar stats de cada board
-    const groupIds = new Set<string>()
-    for (const boardId of affectedBoardIds) {
-      const [allPreds, boardSnap] = await Promise.all([
-        db().collection('predictions')
-          .where('boardId', '==', boardId)
-          .where('points', '>', 0)
-          .get(),
-        db().collection('boards').doc(boardId).get()
-      ])
-
-      let matchPoints = 0
-      let predsThreePoints = 0
-      let predsOnePoints = 0
-
-      for (const p of allPreds.docs) {
-        const pts = p.data()['points'] as number ?? 0
-        matchPoints += pts
-        if (pts === 3) predsThreePoints++
-        if (pts === 1) predsOnePoints++
-      }
-
-      const boardData = boardSnap.data()
-      const qualifierPoints = boardData?.['qualifierPoints'] as number ?? 0
-      const totalPoints = matchPoints + qualifierPoints
-
-      const groupId = boardData?.['groupId'] as string
-      if (groupId) {
-        groupIds.add(groupId)
-      }
-
-      await db().collection('boards').doc(boardId).update({
-        totalPoints,
-        predsThreePoints,
-        predsOnePoints
-      })
-    }
-
-    // 4. Recalcular posiciones por grupo y actualizar caché
-    for (const groupId of groupIds) {
+    // 3. Recalcular estadísticas, rankings por grupo y actualizar caché de partidos
+    for (const group of groups) {
       const groupBoardsSnap = await db()
         .collection('boards')
-        .where('groupId', '==', groupId)
+        .where('groupId', '==', group.id)
         .where('isActive', '==', true)
         .get()
 
-      const boards = groupBoardsSnap.docs.map(d => ({
+      if (groupBoardsSnap.empty) continue
+
+      const boardsList = groupBoardsSnap.docs.map(d => ({
         id: d.id,
         boardNumber: d.data()['number'] as number ?? 0,
         userId: d.data()['userId'] as string ?? '',
@@ -219,13 +183,63 @@ export const onMatchClosed = onDocumentUpdated(
         predsOnePoints: d.data()['predsOnePoints'] as number ?? 0,
         totalTeamsGuessed: d.data()['totalTeamsGuessed'] as number ?? 0,
         currentPos: d.data()['currentPos'] as number ?? 0,
-        previousPos: d.data()['previousPos'] as number ?? 0
+        previousPos: d.data()['previousPos'] as number ?? 0,
+        qualifierPoints: d.data()['qualifierPoints'] as number ?? 0
       }))
 
-      const entries = recalculate(boards)
+      const boardIds = boardsList.map(b => b.id)
+
+      // Consultar todas las predicciones puntuadas de los boards en chunks de 30
+      const CHUNK_LIMIT = 30
+      const predictionsPromises: Promise<any>[] = []
+      for (let c = 0; c < boardIds.length; c += CHUNK_LIMIT) {
+        const chunkIds = boardIds.slice(c, c + CHUNK_LIMIT)
+        predictionsPromises.push(
+          db().collection('predictions')
+            .where('boardId', 'in', chunkIds)
+            .where('points', '>', 0)
+            .get()
+        )
+      }
+      const predictionsSnaps = await Promise.all(predictionsPromises)
+
+      // Agrupar predicciones por boardId
+      const predsByBoard = new Map<string, Array<{ points: number }>>()
+      for (const snap of predictionsSnaps) {
+        for (const doc of snap.docs) {
+          const pData = doc.data()
+          const bId = pData.boardId as string
+          if (!predsByBoard.has(bId)) {
+            predsByBoard.set(bId, [])
+          }
+          predsByBoard.get(bId)!.push({ points: pData.points as number })
+        }
+      }
+
+      // Recalcular estadísticas individuales
+      for (const board of boardsList) {
+        const boardPreds = predsByBoard.get(board.id) || []
+        let matchPoints = 0
+        let predsThreePoints = 0
+        let predsOnePoints = 0
+
+        for (const p of boardPreds) {
+          const pts = p.points
+          matchPoints += pts
+          if (pts === 3) predsThreePoints++
+          if (pts === 1) predsOnePoints++
+        }
+
+        board.totalPoints = matchPoints + board.qualifierPoints
+        board.predsThreePoints = predsThreePoints
+        board.predsOnePoints = predsOnePoints
+      }
+
+      // Recalcular posiciones del grupo
+      const entries = recalculate(boardsList)
       const updates = toBoardUpdates(entries)
 
-      // Actualizar posiciones en Firestore
+      // Actualizar posiciones de tablas en batch
       const batch2 = db().batch()
       for (const upd of updates) {
         batch2.update(db().collection('boards').doc(upd.boardId), {
@@ -239,15 +253,15 @@ export const onMatchClosed = onDocumentUpdated(
       }
       await batch2.commit()
 
-      // Escribir ranking en Realtime DB
-      await rtdb().ref(`rankings/${groupId}`).set({
+      // Escribir ranking final en Realtime DB
+      await rtdb().ref(`rankings/${group.id}`).set({
         updatedAt: Date.now(),
         entries
       })
 
-      // Actualizar caché de predicciones por partido en Firestore
-      const predsList = groupPredictionsMap.get(groupId) || []
-      const groupPredictions = boards.map(b => {
+      // Actualizar caché del partido en Firestore para el grupo
+      const predsList = groupPredictionsMap.get(group.id) || []
+      const groupPredictions = boardsList.map(b => {
         const pred = predsList.find(p => p.boardId === b.id)
         return {
           id: pred?.id,
@@ -271,9 +285,9 @@ export const onMatchClosed = onDocumentUpdated(
         return 0
       })
 
-      await db().collection('groups').doc(groupId).collection('matches').doc(matchId).set({
+      await db().collection('groups').doc(group.id).collection('matches').doc(matchId).set({
         matchId,
-        groupId,
+        groupId: group.id,
         predictions: groupPredictions,
         isCalculated: true,
         updatedAt: new Date()
