@@ -182,6 +182,7 @@ async function handleSave(
           />
           <span class="text-xs font-bold uppercase tracking-wider">Clasificados</span>
         </button>
+
       </div>
 
       <Transition
@@ -287,6 +288,8 @@ async function handleSave(
               </p>
             </div>
           </div>
+
+
         </div>
       </Transition>
     </div>

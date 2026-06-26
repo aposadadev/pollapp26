@@ -126,5 +126,14 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // ── API Keys (external API authentication) ───────────────────────────────
+    // Managed exclusively server-side via Admin SDK.
+    // Clients must NEVER read or write this collection directly.
+    // Only the hashed key is stored — the plaintext key is never persisted.
+
+    match /apiKeys/{userId} {
+      allow read, write: if false;
+    }
+
   }
 }

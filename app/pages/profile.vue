@@ -422,8 +422,11 @@ async function handleSavePrefs() {
         </div>
       </div>
 
+      <!-- API Externa -->
+      <ProfileApiKey class="stagger-up stagger-d5" />
+
       <!-- Cerrar sesión -->
-      <div class="stagger-up stagger-d5">
+      <div class="stagger-up stagger-d6">
         <UButton
           color="error"
           variant="soft"
