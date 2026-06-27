@@ -170,7 +170,12 @@ export const onMatchClosed = onDocumentUpdated('matches/{matchId}', async (event
                 if (!predsByBoard.has(bId)) {
                     predsByBoard.set(bId, []);
                 }
-                predsByBoard.get(bId).push({ points: pData.points });
+                predsByBoard.get(bId).push({
+                    matchId: pData['matchId'],
+                    localGoalPrediction: pData['localGoalPrediction'],
+                    visitorGoalPrediction: pData['visitorGoalPrediction'],
+                    points: pData['points']
+                });
             }
         }
         // Recalcular estadísticas individuales
@@ -212,6 +217,22 @@ export const onMatchClosed = onDocumentUpdated('matches/{matchId}', async (event
             updatedAt: Date.now(),
             entries
         });
+        // Escribir detalles de aciertos por board en Realtime DB
+        const rtdbUpdates = {};
+        for (const board of boardsList) {
+            const boardPreds = predsByBoard.get(board.id) || [];
+            const history = boardPreds.map(p => ({
+                matchId: p.matchId,
+                localGoalPrediction: p.localGoalPrediction,
+                visitorGoalPrediction: p.visitorGoalPrediction,
+                points: p.points
+            }));
+            rtdbUpdates[`rankings_detail/${board.id}`] = {
+                updatedAt: Date.now(),
+                history
+            };
+        }
+        await rtdb().ref().update(rtdbUpdates);
         // Actualizar caché del partido en Firestore para el grupo
         const predsList = groupPredictionsMap.get(group.id) || [];
         const groupPredictions = boardsList.map((b) => {

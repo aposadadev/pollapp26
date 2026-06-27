@@ -47,6 +47,14 @@ const tableEntries = computed(() => {
 
   return props.entries
 })
+
+const selectedEntry = ref<RankingEntry | null>(null)
+const isModalOpen = ref(false)
+
+function showUserDetail(entry: RankingEntry) {
+  selectedEntry.value = entry
+  isModalOpen.value = true
+}
 </script>
 
 <template>
@@ -77,7 +85,7 @@ const tableEntries = computed(() => {
         v-if="showPodium"
         class="-mx-2 stagger-up stagger-d3"
       >
-        <BoardPodiumLayout :entries="entries" />
+        <BoardPodiumLayout :entries="entries" @click-entry="showUserDetail" />
       </div>
 
       <!-- Tabla completa -->
@@ -104,6 +112,7 @@ const tableEntries = computed(() => {
           <BoardPositionsTable
             :entries="tableEntries"
             :current-user-id="currentUserId"
+            @click-entry="showUserDetail"
           />
         </template>
       </div>
@@ -138,5 +147,19 @@ const tableEntries = computed(() => {
         </UButton>
       </div>
     </div>
+
+    <!-- Modal de detalle de board de usuario -->
+    <BoardDetailModal
+      v-model:open="isModalOpen"
+      :board-id="selectedEntry?.boardId ?? null"
+      :user-name="selectedEntry?.userDisplayName ?? ''"
+      :user-photo="selectedEntry?.userPhotoURL ?? ''"
+      :board-number="selectedEntry?.boardNumber ?? 0"
+      :total-points="selectedEntry?.totalPoints ?? 0"
+      :current-pos="selectedEntry?.currentPos ?? 0"
+      :preds-three-points="selectedEntry?.predsThreePoints ?? 0"
+      :preds-one-points="selectedEntry?.predsOnePoints ?? 0"
+      :total-teams-guessed="selectedEntry?.totalTeamsGuessed ?? 0"
+    />
   </div>
 </template>

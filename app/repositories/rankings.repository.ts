@@ -11,6 +11,7 @@ import {
   set,
   onValue,
   off,
+  get,
   type Database,
   type DatabaseReference,
   type Unsubscribe
@@ -62,18 +63,43 @@ export class RankingsRepository {
 
   /** Lectura única (sin suscripción) */
   async read(groupId: string): Promise<GroupRanking | null> {
-    return new Promise((resolve) => {
-      const ref = this.groupRef(groupId)
-      onValue(ref, (snap) => {
-        off(ref)
-        if (!snap.exists()) {
-          resolve(null)
-          return
-        }
-        const data = snap.val() as { updatedAt: number, entries: RankingEntry[] }
-        resolve({ groupId, updatedAt: data.updatedAt, entries: data.entries ?? [] })
-      }, { onlyOnce: true })
-    })
+    const ref = this.groupRef(groupId)
+    const snap = await get(ref)
+    if (!snap.exists()) {
+      return null
+    }
+    const data = snap.val() as { updatedAt: number, entries: RankingEntry[] }
+    return { groupId, updatedAt: data.updatedAt, entries: data.entries ?? [] }
+  }
+
+  /** Lectura única del detalle del board (historial de puntos) */
+  async readDetail(boardId: string): Promise<{
+    updatedAt: number
+    history: Array<{
+      matchId: string
+      localGoalPrediction: number | null
+      visitorGoalPrediction: number | null
+      points: number
+    }>
+  } | null> {
+    const ref = rtdbRef(getRtdb(), `rankings_detail/${boardId}`)
+    const snap = await get(ref)
+    if (!snap.exists()) {
+      return null
+    }
+    const data = snap.val() as {
+      updatedAt: number
+      history?: Array<{
+        matchId: string
+        localGoalPrediction: number | null
+        visitorGoalPrediction: number | null
+        points: number
+      }>
+    }
+    return {
+      updatedAt: data.updatedAt,
+      history: data.history ?? []
+    }
   }
 }
 

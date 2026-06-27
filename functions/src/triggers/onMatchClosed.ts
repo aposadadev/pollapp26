@@ -216,7 +216,12 @@ export const onMatchClosed = onDocumentUpdated(
       const predictionsSnaps = await Promise.all(predictionsPromises)
 
       // Agrupar predicciones por boardId
-      const predsByBoard = new Map<string, Array<{ points: number }>>()
+      const predsByBoard = new Map<string, Array<{
+        matchId: string
+        localGoalPrediction: number | null
+        visitorGoalPrediction: number | null
+        points: number
+      }>>()
       for (const snap of predictionsSnaps) {
         for (const doc of snap.docs) {
           const pData = doc.data()
@@ -224,7 +229,12 @@ export const onMatchClosed = onDocumentUpdated(
           if (!predsByBoard.has(bId)) {
             predsByBoard.set(bId, [])
           }
-          predsByBoard.get(bId)!.push({ points: pData.points as number })
+          predsByBoard.get(bId)!.push({
+            matchId: pData['matchId'] as string,
+            localGoalPrediction: pData['localGoalPrediction'] as number | null,
+            visitorGoalPrediction: pData['visitorGoalPrediction'] as number | null,
+            points: pData['points'] as number
+          })
         }
       }
 
@@ -270,6 +280,23 @@ export const onMatchClosed = onDocumentUpdated(
         updatedAt: Date.now(),
         entries
       })
+
+      // Escribir detalles de aciertos por board en Realtime DB
+      const rtdbUpdates: Record<string, any> = {}
+      for (const board of boardsList) {
+        const boardPreds = predsByBoard.get(board.id) || []
+        const history = boardPreds.map(p => ({
+          matchId: p.matchId,
+          localGoalPrediction: p.localGoalPrediction,
+          visitorGoalPrediction: p.visitorGoalPrediction,
+          points: p.points
+        }))
+        rtdbUpdates[`rankings_detail/${board.id}`] = {
+          updatedAt: Date.now(),
+          history
+        }
+      }
+      await rtdb().ref().update(rtdbUpdates)
 
       // Actualizar caché del partido en Firestore para el grupo
       const predsList = groupPredictionsMap.get(group.id) || []

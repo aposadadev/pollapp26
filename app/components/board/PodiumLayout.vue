@@ -7,6 +7,10 @@ interface Props {
 
 defineProps<Props>()
 
+const emit = defineEmits<{
+  (e: 'click-entry', entry: RankingEntry): void
+}>()
+
 const displayOrder = [1, 0, 2] // 2nd, 1st, 3rd
 </script>
 
@@ -18,8 +22,9 @@ const displayOrder = [1, 0, 2] // 2nd, 1st, 3rd
     <div
       v-for="(idx, i) in displayOrder"
       :key="entries[idx]?.userId || i"
-      class="flex-1 flex flex-col items-center gap-3 stagger-up transition-all duration-700"
+      class="flex-1 flex flex-col items-center gap-3 stagger-up transition-all duration-700 cursor-pointer hover:scale-[1.02]"
       :class="`stagger-d${i + 2}`"
+      @click="emit('click-entry', entries[idx]!)"
     >
       <div class="relative">
         <div

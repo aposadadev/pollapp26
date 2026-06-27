@@ -5,6 +5,12 @@
         ".read": "auth != null",
         ".write": "auth != null && auth.token.admin === true"
       }
+    },
+    "rankings_detail": {
+      "$boardId": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.token.admin === true"
+      }
     }
   }
 }

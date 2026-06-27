@@ -6,7 +6,7 @@ import dayjs from 'dayjs'
 import { predictionRepository } from '~/repositories/prediction.repository'
 import { matchRepository } from '~/repositories/match.repository'
 import { isMatchClosed } from '~/types/match'
-import type { PredictionWithMatch, MatchStatus } from '~/types'
+import type { PredictionWithMatch, MatchStatus, PredictionPoints } from '~/types'
 
 export class PredictionError extends Error {
   constructor(message: string, public code: string) {
@@ -72,6 +72,55 @@ export class PredictionService {
 
       acc.push({
         ...pred,
+        match: {
+          id: match.id,
+          localTeamName: match.localTeamName ?? '',
+          visitorTeamName: match.visitorTeamName ?? '',
+          localTeamLogo: match.localTeamLogo ?? '',
+          visitorTeamLogo: match.visitorTeamLogo ?? '',
+          localGoals: match.localGoals,
+          visitorGoals: match.visitorGoals,
+          localGoalsOT: match.localGoalsOT,
+          visitorGoalsOT: match.visitorGoalsOT,
+          localPenalties: match.localPenalties,
+          visitorPenalties: match.visitorPenalties,
+          date: match.date,
+          phase: match.phase,
+          matchNumber: match.matchNumber,
+          stadium: match.stadium,
+          status: match.status as MatchStatus,
+          isClosed: match.isClosed,
+          isActive: match.isActive
+        }
+      })
+      return acc
+    }, [])
+  }
+
+  /** Obtiene el historial de aciertos de RTDB y cruza con partidos en memoria */
+  async getRankingsDetailWithMatches(boardId: string): Promise<PredictionWithMatch[]> {
+    const detail = await (await import('~/repositories/rankings.repository')).rankingsRepository.readDetail(boardId)
+    if (!detail || !detail.history || detail.history.length === 0) {
+      return []
+    }
+
+    const board = await (await import('~/repositories/board.repository')).boardRepository.findById(boardId)
+    const tournamentId = board?.tournamentId ?? 'mundial2026'
+
+    const matches = await matchRepository.findVisibleByTournament(tournamentId)
+    const matchMap = new Map(matches.map(m => [m.id, m]))
+
+    return detail.history.reduce<PredictionWithMatch[]>((acc, hist) => {
+      const match = matchMap.get(hist.matchId)
+      if (!match) return acc
+
+      acc.push({
+        id: `${boardId}_${hist.matchId}`,
+        boardId,
+        matchId: hist.matchId,
+        localGoalPrediction: hist.localGoalPrediction,
+        visitorGoalPrediction: hist.visitorGoalPrediction,
+        points: hist.points as PredictionPoints,
         match: {
           id: match.id,
           localTeamName: match.localTeamName ?? '',

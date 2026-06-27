@@ -8,6 +8,10 @@ interface Props {
 
 defineProps<Props>()
 
+const emit = defineEmits<{
+  (e: 'click-entry', entry: RankingEntry): void
+}>()
+
 const runtimeConfig = useRuntimeConfig()
 const enableQualifiers = computed(() => runtimeConfig.public.enableQualifiers)
 </script>
@@ -17,11 +21,12 @@ const enableQualifiers = computed(() => runtimeConfig.public.enableQualifiers)
     <div
       v-for="(entry, i) in entries"
       :key="entry.boardId"
-      class="card-elevated flex items-center justify-between py-2.5 px-3.5 transition-all duration-300 stagger-up active:scale-[0.98]"
+      class="card-elevated flex items-center justify-between py-2.5 px-3.5 transition-all duration-300 stagger-up active:scale-[0.98] cursor-pointer hover:border-secondary-500/30 hover:shadow-md hover:bg-neutral-50/50 dark:hover:bg-neutral-900/30"
       :class="[
         entry.userId === currentUserId ? 'border-primary-500/30' : '',
         `stagger-d${Math.min(i + 1, 12)}`
       ]"
+      @click="emit('click-entry', entry)"
     >
       <div class="flex items-center gap-3 min-w-0">
         <!-- Rank -->

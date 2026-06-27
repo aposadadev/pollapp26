@@ -4,9 +4,13 @@ import type { PredictionPoints } from '~/types'
 interface Props {
   points: PredictionPoints | null
   size?: 'sm' | 'md' | 'lg'
+  hideIcon?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), { size: 'md' })
+const props = withDefaults(defineProps<Props>(), {
+  size: 'md',
+  hideIcon: false
+})
 
 const config = computed(() => {
   if (props.points === null) {
@@ -53,6 +57,7 @@ const sizeClass = computed(() => ({
     :class="[config.class, sizeClass]"
   >
     <UIcon
+      v-if="!hideIcon"
       :name="config.icon"
       class="size-4 shrink-0"
       :class="config.iconClass"
