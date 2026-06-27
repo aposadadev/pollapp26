@@ -93,7 +93,9 @@ async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text)
     copiedToClipboard.value = true
-    setTimeout(() => { copiedToClipboard.value = false }, 2000)
+    setTimeout(() => {
+      copiedToClipboard.value = false
+    }, 2000)
   } catch {
     toast.add({ title: 'Error al copiar', color: 'error' })
   }
@@ -114,7 +116,10 @@ onMounted(loadApiKey)
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <UIcon name="i-lucide-bot" class="size-4 text-primary-500" />
+        <UIcon
+          name="i-lucide-bot"
+          class="size-4 text-primary-500"
+        />
         <span class="font-heading text-sm font-bold text-(--ui-text-highlighted) uppercase tracking-wide">
           API Externa
         </span>
@@ -132,7 +137,10 @@ onMounted(loadApiKey)
     </div>
 
     <!-- Loading -->
-    <USkeleton v-if="loadingKey" class="h-12 rounded-xl" />
+    <USkeleton
+      v-if="loadingKey"
+      class="h-12 rounded-xl"
+    />
 
     <!-- No key -->
     <p
@@ -150,7 +158,10 @@ onMounted(loadApiKey)
         class="p-4 rounded-xl border-2 border-amber-500/60 bg-amber-500/5 space-y-2"
       >
         <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-xs">
-          <UIcon name="i-lucide-triangle-alert" class="size-4 shrink-0" />
+          <UIcon
+            name="i-lucide-triangle-alert"
+            class="size-4 shrink-0"
+          />
           Copia tu API Key ahora — no la volverás a ver
         </div>
         <div class="flex items-center gap-2">
@@ -172,26 +183,43 @@ onMounted(loadApiKey)
       <div class="flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div class="size-9 rounded-xl bg-primary-500/10 flex items-center justify-center shrink-0">
-            <UIcon name="i-lucide-key" class="size-4 text-primary-500" />
+            <UIcon
+              name="i-lucide-key"
+              class="size-4 text-primary-500"
+            />
           </div>
           <div class="min-w-0">
-            <p class="text-sm font-bold text-(--ui-text-highlighted) truncate">{{ apiKey.name }}</p>
+            <p class="text-sm font-bold text-(--ui-text-highlighted) truncate">
+              {{ apiKey.name }}
+            </p>
             <code class="text-xs text-(--ui-text-muted) font-mono">{{ apiKey.prefix }}...</code>
           </div>
         </div>
-        <UBadge color="success" variant="soft" class="rounded-full font-bold uppercase text-[10px] tracking-widest shrink-0">
+        <UBadge
+          color="success"
+          variant="soft"
+          class="rounded-full font-bold uppercase text-[10px] tracking-widest shrink-0"
+        >
           Activa
         </UBadge>
       </div>
 
       <div class="grid grid-cols-2 gap-2 text-xs">
         <div class="bg-(--ui-bg-muted) rounded-xl p-3">
-          <p class="text-(--ui-text-muted) uppercase tracking-wider font-bold text-[10px] mb-0.5">Creada</p>
-          <p class="text-(--ui-text-highlighted) font-medium leading-tight">{{ formatDate(apiKey.createdAt) }}</p>
+          <p class="text-(--ui-text-muted) uppercase tracking-wider font-bold text-[10px] mb-0.5">
+            Creada
+          </p>
+          <p class="text-(--ui-text-highlighted) font-medium leading-tight">
+            {{ formatDate(apiKey.createdAt) }}
+          </p>
         </div>
         <div class="bg-(--ui-bg-muted) rounded-xl p-3">
-          <p class="text-(--ui-text-muted) uppercase tracking-wider font-bold text-[10px] mb-0.5">Último uso</p>
-          <p class="text-(--ui-text-highlighted) font-medium leading-tight">{{ formatDate(apiKey.lastUsedAt) }}</p>
+          <p class="text-(--ui-text-muted) uppercase tracking-wider font-bold text-[10px] mb-0.5">
+            Último uso
+          </p>
+          <p class="text-(--ui-text-highlighted) font-medium leading-tight">
+            {{ formatDate(apiKey.lastUsedAt) }}
+          </p>
         </div>
       </div>
 
@@ -226,7 +254,10 @@ onMounted(loadApiKey)
         <div class="p-6 space-y-5">
           <div class="flex items-center gap-3">
             <div class="size-10 rounded-xl bg-primary-500/10 flex items-center justify-center">
-              <UIcon name="i-lucide-key" class="size-5 text-primary-500" />
+              <UIcon
+                name="i-lucide-key"
+                class="size-5 text-primary-500"
+              />
             </div>
             <div>
               <p class="font-bold text-(--ui-text-highlighted)">
@@ -242,7 +273,10 @@ onMounted(loadApiKey)
             v-if="apiKey"
             class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs flex items-start gap-2"
           >
-            <UIcon name="i-lucide-triangle-alert" class="size-4 shrink-0" />
+            <UIcon
+              name="i-lucide-triangle-alert"
+              class="size-4 shrink-0"
+            />
             <span>Regenerar invalidará la clave actual. Cualquier servicio que la use dejará de funcionar.</span>
           </div>
 
@@ -255,7 +289,12 @@ onMounted(loadApiKey)
           />
 
           <div class="flex gap-2 justify-end">
-            <UButton color="neutral" variant="ghost" class="rounded-full" @click="showGenerateModal = false">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              class="rounded-full"
+              @click="showGenerateModal = false"
+            >
               Cancelar
             </UButton>
             <UButton

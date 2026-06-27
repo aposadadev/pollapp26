@@ -69,17 +69,17 @@ async function main() {
 
     // 2. Procesar predicciones por cada board
     let processedCount = 0
-    const rtdbUpdates: Record<string, any> = {}
+    const rtdbUpdates: Record<string, unknown> = {}
 
     for (const board of boards) {
       console.log(`⏳ Procesando board de: ${board.userDisplayName} (${board.id})...`)
-      
+
       const predsSnap = await adminDb.collection('predictions')
         .where('boardId', '==', board.id)
         .where('points', '>', 0)
         .get()
 
-      const history = predsSnap.docs.map(doc => {
+      const history = predsSnap.docs.map((doc) => {
         const data = doc.data()
         return {
           matchId: data.matchId as string,

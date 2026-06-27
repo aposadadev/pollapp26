@@ -313,7 +313,7 @@ export default defineEventHandler(async (event) => {
       })
 
       // Escribir detalles de aciertos por board en Realtime DB
-      const rtdbUpdates: Record<string, any> = {}
+      const rtdbUpdates: Record<string, unknown> = {}
       for (const board of boardsList) {
         const boardPreds = predsByBoard.get(board.id) || []
         const history = boardPreds.map(p => ({

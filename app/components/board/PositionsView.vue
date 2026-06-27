@@ -85,7 +85,10 @@ function showUserDetail(entry: RankingEntry) {
         v-if="showPodium"
         class="-mx-2 stagger-up stagger-d3"
       >
-        <BoardPodiumLayout :entries="entries" @click-entry="showUserDetail" />
+        <BoardPodiumLayout
+          :entries="entries"
+          @click-entry="showUserDetail"
+        />
       </div>
 
       <!-- Tabla completa -->

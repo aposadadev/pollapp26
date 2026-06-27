@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { PredictionService } from './prediction.service'
-import type { PredictionWithMatch, PredictionPoints } from '~/types'
+import type { PredictionPoints } from '~/types'
 
 // ─── Mock Repositories ────────────────────────────────────────────────────────
 const mockPredictionRepo = vi.hoisted(() => ({
@@ -9,7 +9,7 @@ const mockPredictionRepo = vi.hoisted(() => ({
   findByMatch: vi.fn(),
   findByMatchAndGroup: vi.fn(),
   updateGoals: vi.fn(),
-  updatePoints: vi.fn(),
+  updatePoints: vi.fn()
 }))
 
 const mockMatchRepo = vi.hoisted(() => ({
@@ -22,15 +22,15 @@ const mockMatchRepo = vi.hoisted(() => ({
   updateTeams: vi.fn(),
   update: vi.fn(),
   closeMatch: vi.fn(),
-  findAll: vi.fn(),
+  findAll: vi.fn()
 }))
 
 const mockRankingsRepo = vi.hoisted(() => ({
-  readDetail: vi.fn(),
+  readDetail: vi.fn()
 }))
 
 const mockBoardRepo = vi.hoisted(() => ({
-  findById: vi.fn(),
+  findById: vi.fn()
 }))
 
 vi.mock('~/repositories/prediction.repository', () => ({ predictionRepository: mockPredictionRepo }))

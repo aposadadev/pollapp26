@@ -23,7 +23,7 @@ const emit = defineEmits<{
 
 const isOpen = computed({
   get: () => props.open,
-  set: (val) => emit('update:open', val)
+  set: val => emit('update:open', val)
 })
 
 const loading = ref(false)
@@ -78,9 +78,14 @@ const filteredPredictions = computed(() => {
 </script>
 
 <template>
-  <UModal v-model:open="isOpen">
+  <UModal
+    v-model:open="isOpen"
+    :ui="{
+      content: 'h-[85vh] max-h-[700px] flex flex-col overflow-hidden rounded-2xl'
+    }"
+  >
     <template #content>
-      <div class="flex flex-col h-[85vh] max-h-[700px] overflow-hidden rounded-2xl bg-(--ui-bg-elevated) text-(--ui-text-highlighted) border border-(--ui-border)">
+      <div class="flex flex-col h-full overflow-hidden text-(--ui-text-highlighted)">
         <!-- Header -->
         <div class="p-4 sm:p-5 flex items-center justify-between border-b border-(--ui-border) shrink-0 bg-(--ui-bg-muted)">
           <div class="flex items-center gap-3 min-w-0">
@@ -91,8 +96,11 @@ const filteredPredictions = computed(() => {
                 alt="Avatar"
                 class="size-full object-cover"
                 referrerpolicy="no-referrer"
-              />
-              <span v-else class="font-heading font-black text-sm text-primary-600 dark:text-primary-400">
+              >
+              <span
+                v-else
+                class="font-heading font-black text-sm text-primary-600 dark:text-primary-400"
+              >
                 {{ userName.substring(0, 2).toUpperCase() }}
               </span>
             </div>
@@ -136,7 +144,10 @@ const filteredPredictions = computed(() => {
         </div>
 
         <!-- Filter bar -->
-        <div v-if="!loading && phases.length > 2" class="px-4 py-2 border-b border-(--ui-border) shrink-0 overflow-x-auto flex gap-1.5 scrollbar-hide">
+        <div
+          v-if="!loading && phases.length > 2"
+          class="px-4 py-2 border-b border-(--ui-border) shrink-0 overflow-x-auto flex gap-1.5 scrollbar-hide"
+        >
           <button
             v-for="phase in phases"
             :key="phase"
@@ -155,27 +166,51 @@ const filteredPredictions = computed(() => {
         <!-- Body / Content -->
         <div class="flex-1 overflow-y-auto p-2 sm:p-4">
           <!-- Loading State -->
-          <div v-if="loading" class="space-y-2">
-            <USkeleton v-for="i in 6" :key="i" class="h-10 rounded-lg w-full" />
+          <div
+            v-if="loading"
+            class="space-y-2"
+          >
+            <USkeleton
+              v-for="i in 6"
+              :key="i"
+              class="h-10 rounded-lg w-full"
+            />
           </div>
 
           <!-- Empty State -->
-          <div v-else-if="!filteredPredictions.length" class="text-center py-12">
-            <UIcon name="i-lucide-trophy" class="size-12 mx-auto text-(--ui-text-muted)/40 mb-3" />
+          <div
+            v-else-if="!filteredPredictions.length"
+            class="text-center py-12"
+          >
+            <UIcon
+              name="i-lucide-trophy"
+              class="size-12 mx-auto text-(--ui-text-muted)/40 mb-3"
+            />
             <p class="font-heading font-bold text-sm text-(--ui-text-muted) uppercase tracking-wider">
               Sin aciertos en esta fase
             </p>
           </div>
 
           <!-- Predictions Table -->
-          <div v-else class="overflow-x-auto">
+          <div
+            v-else
+            class="overflow-x-auto"
+          >
             <table class="w-full text-left border-collapse table-fixed">
               <thead>
                 <tr class="border-b border-(--ui-border) text-[10px] text-(--ui-text-muted) font-bold uppercase tracking-wider bg-(--ui-bg-muted)/30">
-                  <th class="py-2.5 px-1.5 sm:px-3">Partido</th>
-                  <th class="py-2.5 px-1 text-center w-14 sm:w-16">Real</th>
-                  <th class="py-2.5 px-1 text-center w-14 sm:w-16">Pron.</th>
-                  <th class="py-2.5 px-1.5 sm:px-3 text-right w-16 sm:w-20">Pts</th>
+                  <th class="py-2.5 px-1.5 sm:px-3">
+                    Partido
+                  </th>
+                  <th class="py-2.5 px-1 text-center w-14 sm:w-16">
+                    Real
+                  </th>
+                  <th class="py-2.5 px-1 text-center w-14 sm:w-16">
+                    Pron.
+                  </th>
+                  <th class="py-2.5 px-1.5 sm:px-3 text-right w-16 sm:w-20">
+                    Pts
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -207,7 +242,11 @@ const filteredPredictions = computed(() => {
                     {{ pred.localGoalPrediction }} - {{ pred.visitorGoalPrediction }}
                   </td>
                   <td class="py-2.5 px-1.5 sm:px-3 text-right w-16 sm:w-20">
-                    <MatchResultBadge :points="pred.points" size="sm" hide-icon />
+                    <MatchResultBadge
+                      :points="pred.points"
+                      size="sm"
+                      hide-icon
+                    />
                   </td>
                 </tr>
               </tbody>
