@@ -225,7 +225,7 @@ async function handleUpdateTeams() {
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 mb-1">
                 <span class="text-[10px] font-mono text-primary-500 dark:text-primary-400 font-bold uppercase tracking-widest">
-                  #{{ match.matchNumber }} · {{ match.phase }}
+                  #{{ match.matchNumber }} · {{ match.phase }} - {{ match.date.toLocaleString() }}
                 </span>
                 <span
                   v-if="isMatchActive(match) && !isMatchClosed(match)"
